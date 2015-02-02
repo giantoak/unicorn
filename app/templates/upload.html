@@ -1,0 +1,54 @@
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+<form class="form-horizontal" 
+  method="POST" 
+  enctype="multipart/form-data" 
+  action="/_upload-documents">
+
+  
+<fieldset>
+<!-- Form Name -->
+<legend>Wildlife Trafficking Fusion Center Data Upload</legend>
+
+<!-- Select Multiple -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="selectproduct">Trafficking Type</label>
+  <div class="col-md-4">
+    <select id="selectproduct" name="selectproduct" class="form-control" multiple="multiple">
+      <option value="rhino" selected="selected">Rhino</option>
+      <option value="ivory">Ivory</option>
+    </select>
+  </div>
+</div>
+
+<!-- Select Multiple -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="selectsource">Data Source</label>
+  <div class="col-md-4">
+    <select id="selectsource" name="selectsource" class="form-control" multiple="multiple">
+      <option value="pathfinder" selected="selected">Pathfinder</option>
+    </select>
+  </div>
+</div>
+
+<!-- File Button --> 
+<div class="form-group">
+  <label class="col-md-4 control-label" for="filebutton">Upload Files (.doc, .docx, .pdf, .rtf, .txt)</label>
+  <div class="col-md-4">
+    <input id="filebutton" name="file[]" class="input-file" type="file" multiple>
+  </div>
+</div>
+
+<!-- Submit button -->
+<div class="form-group">
+  <div class="col-md-4">
+    <input type="submit" id="submitbutton" name="submitbutton" class="btn btn-primary"></input>
+  </div>
+</div>
+
+</fieldset>
+</form>
+

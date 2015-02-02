@@ -1,0 +1,165 @@
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Unicorn</title>
+		<script src=js/d3.min.js></script>
+        	<link rel="stylesheet" href=bootstrap/css/bootstrap.min.css type=text/css>
+        	<link rel="stylesheet" href=bootstrap/css/bootstrap-theme.min.css type=text/css>
+          <link rel="stylesheet" type="text/css" href=css/MyFontsWebfontsKit.css>
+        	<script type="text/javascript" src=js/jquery.min.js></script>
+        	<script src=bootstrap/js/bootstrap.min.js></script>     
+        <!--<link rel="stylesheet" href="css/style.css" type="text/css" />-->
+        <link rel="stylesheet" href="css/font-awesome.min.css">      
+   
+         <script type="text/javascript" src=tableExport.jquery.plugin/jquery.base64.js>
+
+         <script type="text/javascript" src=tableExport.jquery.plugin/tableExport.js>
+
+       
+        <script src=js/lib/jquery-ui-1.9.1.js></script> 
+        <script type="text/javascript" charset="utf8" src=DataTables-1.10.2/media/js/jquery.dataTables.js></script>
+	<!-- Styling for UI elements -->
+        <link href=css/jquery-ui-1.9.1.css rel=stylesheet type=text/css>
+        <link rel="stylesheet" type="text/css" href="DataTables-1.10.2/media/css/jquery.dataTables.css">
+        <script type="text/javascript" src=DataTables-1.10.2/extensions/TableTools/js/dataTables.tableTools.js></script>
+
+	<link rel="stylesheet" type="text/css" href="DataTables-1.10.2/extensions/TableTools/css/dataTables.tableTools.css">
+
+	<script src=js/d3.tip.v0.6.3.js></script>
+        
+
+<style>
+.home-search{
+    width:75px;
+}
+
+.node {
+  stroke-width: 1.5px;
+}
+
+.node:not(:hover) .nodetext {
+    display:none;
+}
+
+
+#network text {
+    font: 10px sans-serif;
+    pointer-events: none;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+
+.nav a{
+color:rgb(50,88,50);
+}
+
+.nav active a {
+color:"blue";
+}
+
+
+#sidebar {
+    position: absolute;
+    z-index: 2;
+    background-color: #FFF;
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #6895b4;
+    min-height: 3px;
+    min-width: 8px;
+}
+
+
+</style>
+
+
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Unicorn <img src="unicorn.png" height="35"><br /></a>
+        </div>
+</nav>
+<br>
+<form class="form-search">
+<div class="input-append">
+<input type="text" class="span2 search-query" id="search">
+    <button type="submit" class="btn" id="submit_search"><i class="fa fa-search"></i></button>
+</div>
+</form>
+
+<!--
+<br>
+<button class="btn btn-warning"><i class="fa fa-bars"></i>Export Table Data</button><br>
+<br>
+-->
+    <ul class="nav nav-tabs">
+        <li class="nav active"><a href="#documents" data-toggle="tab">Documents</a></li>
+        <li class="nav"><a href="#organizations" data-toggle="tab">Organizations</a></li>
+        <li class="nav"><a href="#accounts" data-toggle="tab">Accounts</a></li>
+        <li class="nav"><a href="#locations" data-toggle="tab">Locations</a></li>
+        <li class="nav"><a href="#phrases" data-toggle="tab">Transactions</a></li>
+	<li class="nav"><a href="#network" data-toggle="tab">Network</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div class="tab-pane fade in active" id="documents"></div>
+        <div class="tab-pane fade" id="organizations">Content inside tab B</div>
+        <div class="tab-pane fade" id="accounts">Content inside tab C</div>
+          <div class="tab-pane fade" id="locations"></div>
+          <div class="tab-pane fade" id="network"></div>
+    </div>
+
+<div id="container"></div><br><br><br><br>
+<script type="text/javascript">
+
+
+$(function () {
+    $("#submit_search").click(function(e){
+    console.log($("#search").val());
+    loader($("#search").val());
+    //localStorage.setItem('search_term', $("#search_text").val())
+    e.preventDefault();
+ 
+    });
+})
+
+
+
+
+
+function loader(query){
+
+
+
+$.get('search?term='+query,function(data){
+  console.log(data)
+var tbl_row=""
+var tbl_body=""
+list=JSON.parse(data)
+for(var i=0; i<list.length;i++){
+  tbl_row+="<tr><td>"+list[i] +"</td></tr>";
+ 
+}
+
+  tbl_body+='<table id="myTable" class="display"><thead><tr><th>Documents</th></tr></thead><tbody>'+tbl_row+"</tbody></table>"
+
+$('#documents').html(tbl_body)
+//$("#myTable").DataTable();
+});
+}
+
+
+//loader('dagoberto');
+                                                
+</script>
+                                                
+
+                                            
+
+</body>
