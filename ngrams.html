@@ -141,13 +141,14 @@ $.get('search?term='+query,function(data){
   console.log(data)
 var tbl_row=""
 var tbl_body=""
-list=JSON.parse(data)
-for(var i=0; i<list.length;i++){
-  tbl_row+="<tr><td>"+list[i] +"</td></tr>";
- 
+var data2=JSON.parse(data)
+for(key in data2){
+   console.log(data2[key])
+   tbl_row+="<tr><td>"+data2[key]['doc'] +"</td><td> " +data2[key]['snippet']+"</td></tr>";
+   
 }
 
-  tbl_body+='<table id="myTable" class="display"><thead><tr><th>Documents</th></tr></thead><tbody>'+tbl_row+"</tbody></table>"
+  tbl_body+='<table id="myTable" class="display"><thead><tr><th>Filename</th><th>Snippet</th></tr></thead><tbody>'+tbl_row+"</tbody></table>"
 
 $('#documents').html(tbl_body)
 //$("#myTable").DataTable();
