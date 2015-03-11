@@ -13,6 +13,8 @@ import json
 
 from elasticsearch_dsl import Search, Q
 
+DEFAULT_INDEX = 'dossiers'
+
 @app.route('/search/<query>')
 def search_endpoint(query):
     q = {
@@ -24,7 +26,7 @@ def search_endpoint(query):
 
             "highlight": { "fields": { "file": { } } }
             }
-    raw_response = es.search(body=q, index="dossiers", df="file")
+    raw_response = es.search(body=q, index=DEFAULT_INDEX, df="file")
     clean_response = []
 
     for resp in raw_response['hits']['hits']:
@@ -48,11 +50,12 @@ def upload_endpoint():
         sf = secure_filename(f.filename)
         outfile = tempfile.NamedTemporaryFile(delete=False)
 
-        f.save(outfile)
-        d[outfile.name] = outfile
+        es_dict = {
+                'file': f.read().encode('base64'),
+                'title': sf
+                }
+        es.index(index=DEFAULT_INDEX, doc_type='attachment', body=es_dict)
+        f.close()
         
-    session['file_dict'] = d
-    
-    import pprint; pprint.pprint(d)
-    [x.close() for x in d.values()]
-    del d
+
+    return redirect(url_for('root'))
