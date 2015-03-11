@@ -2,3 +2,4 @@
 *.swp
 data/
 ve/
+runconfig.py
