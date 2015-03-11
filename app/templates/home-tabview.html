@@ -2,7 +2,6 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Unicorn</title>
-		<script src={{url_for('static', filename='js/d3.min.js')}}></script>
                 <link rel="stylesheet" href={{url_for('static', filename='bootstrap/css/bootstrap.min.css')}} type=text/css>
                 <link rel="stylesheet" href={{url_for('static', filename='bootstrap/css/bootstrap-theme.min.css')}} type=text/css>
           <link rel="stylesheet" type="text/css" href={{url_for('static', filename='css/MyFontsWebfontsKit.css')}}>
@@ -10,31 +9,20 @@
         	<script src={{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}></script>     
         <link rel="stylesheet" href={{url_for('static', filename="css/font-awesome.min.css")}}>      
    
-
         <script src={{url_for('static', filename='js/lib/jquery-ui-1.9.1.js')}}></script> 
 	<!-- Styling for UI elements -->
         <link href={{url_for('static', filename='css/jquery-ui.min.css')}} rel=stylesheet type=text/css>
-
-	<script src={{url_for('static', filename='js/d3.tip.v0.6.3.js')}}></script>
         
-
 <style>
-.home-search{
-    width:75px;
+.form-search{
+    margin: auto;
+}
+.search-query {
+    width:50%;
 }
 
-.node {
-  stroke-width: 1.5px;
-}
-
-.node:not(:hover) .nodetext {
-    display:none;
-}
-
-
-#network text {
-    font: 10px sans-serif;
-    pointer-events: none;
+.search-holder {
+  text-align: center;
 }
 
 .link {
@@ -51,26 +39,6 @@ color:rgb(50,88,50);
 color:"blue";
 }
 
-
-#sidebar {
-    position: absolute;
-    z-index: 2;
-    background-color: #FFF;
-    padding: 10px;
-    margin: 5px;
-    border: 1px solid #6895b4;
-    min-height: 3px;
-    min-width: 8px;
-}
-
-table {
-      border: 1px solid black;
-}
-
-table td{
-      border: 1px solid black;
-}
-
 </style>
 
 
@@ -81,38 +49,27 @@ table td{
           <a class="navbar-brand" href="#">Unicorn <img src={{url_for('static', filename="unicorn.png")}} height="35"><br /></a>
         </div>
 </nav>
-<br>
+
+<div class="search-holder">
 <form class="form-search">
-<div class="input-append">
 <input type="text" class="span2 search-query" id="search">
     <button type="submit" class="btn" id="submit_search"><i class="fa fa-search"></i></button>
-</div>
 </form>
+</div>
 
-<!--
-<br>
-<button class="btn btn-warning"><i class="fa fa-bars"></i>Export Table Data</button><br>
-<br>
--->
-    <ul class="nav nav-tabs">
-        <li class="nav active"><a href="#documents" data-toggle="tab">Documents</a></li>
-        <li class="nav"><a href="#organizations" data-toggle="tab">Organizations</a></li>
-        <li class="nav"><a href="#accounts" data-toggle="tab">Accounts</a></li>
-        <li class="nav"><a href="#locations" data-toggle="tab">Locations</a></li>
-        <li class="nav"><a href="#phrases" data-toggle="tab">Transactions</a></li>
-	<li class="nav"><a href="#network" data-toggle="tab">Network</a></li>
-    </ul>
-
-    <!-- Tab panes -->
-    <div class="tab-content">
-        <div class="tab-pane fade in active" id="documents"></div>
-        <div class="tab-pane fade" id="organizations">Content inside tab B</div>
-        <div class="tab-pane fade" id="accounts">Content inside tab C</div>
-          <div class="tab-pane fade" id="locations"></div>
-          <div class="tab-pane fade" id="network"></div>
-    </div>
-
-<div id="container"></div><br><br><br><br>
+<div class="search-results">
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>File</th>
+      <th>Snippet</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div>
 <script type="text/javascript">
 
 
@@ -135,17 +92,30 @@ function loader(query){
 
 
   $.get('search/'+query,function(data){
-      console.log(data);
       var tbl_row="";
       var tbl_body="";
+      var tbl_elem = $('.search-results > table > tbody');
+      tbl_elem.html('');
       list=data['result'];
-      for(var i=0; i<list.length;i++){
-        tbl_row+="<tr><td>"+list[i] +"</td></tr>";
+      
+      for(var row=0; row<list.length; row++){
+        var row_elem = $('<tr>');
+
+        var i_elem = $('<th scope="row">').text(row + 1);
+        row_elem.append(i_elem);
+        
+        var doc_id = list[row][0];
+        for (var col=1; col<list[row].length; col++) {
+          var col_elem = $('<td>').text(list[row][col]);
+          if ( col == 1 ) {
+            col_elem.wrapInner("<a href=/download/" + doc_id + "></a>");
+          }
+          row_elem.append(col_elem);
+        }
+        tbl_elem.append(row_elem);
       }
 
-      tbl_body+='<table id="myTable" class="display"><thead><tr><th>Documents</th></tr></thead><tbody>'+tbl_row+"</tbody></table>"
-
-      $('#documents').html(tbl_body)
+      //tbl_selector.append(tbl_body)
       //$("#myTable").DataTable();
       });
 }
