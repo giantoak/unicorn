@@ -52,7 +52,7 @@ def search_endpoint(query):
 
             "highlight": { "fields": { "file": { } } }
             }
-    raw_response = es.search(body=q, index=DEFAULT_INDEX, df="file")
+    raw_response = es.search(body=q, index=DEFAULT_INDEX, df="file", size=50)
     clean_response = []
 
     for resp in raw_response['hits']['hits']:
