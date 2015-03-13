@@ -4,3 +4,4 @@ data/
 ve/
 runconfig.py
 app/config.py
+util/utilconfig.py
