@@ -1,19 +1,7 @@
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<title>Unicorn</title>
-                <link rel="stylesheet" href={{url_for('static', filename='bootstrap/css/bootstrap.min.css')}} type=text/css>
-                <link rel="stylesheet" href={{url_for('static', filename='bootstrap/css/bootstrap-theme.min.css')}} type=text/css>
-          <link rel="stylesheet" type="text/css" href={{url_for('static', filename='css/MyFontsWebfontsKit.css')}}>
-        	<script type="text/javascript" src={{url_for('static', filename='js/jquery.min.js')}}></script>
-        	<script src={{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}></script>     
-        <link rel="stylesheet" href={{url_for('static', filename="css/font-awesome.min.css")}}>      
-   
-        <script src={{url_for('static', filename='js/lib/jquery-ui-1.9.1.js')}}></script> 
-	<!-- Styling for UI elements -->
-        <link href={{url_for('static', filename='css/jquery-ui.min.css')}} rel=stylesheet type=text/css>
-        
-<style>
+{% extends "base.html.part" %}
+{% block title %}Search{% endblock %}
+{% block styles %}
+{{ super() }}
 .form-search{
     margin: auto;
 }
@@ -38,18 +26,9 @@ color:rgb(50,88,50);
 .nav active a {
 color:"blue";
 }
+{% endblock %}
 
-</style>
-
-
-</head>
-<body>
-<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">Unicorn <img src={{url_for('static', filename="unicorn.png")}} height="35"><br /></a>
-        </div>
-</nav>
-
+{% block content %}
 <div class="search-holder">
 <form class="form-search">
 <input type="text" class="span2 search-query" id="search">
@@ -70,10 +49,15 @@ color:"blue";
   </tbody>
 </table>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
 <script type="text/javascript">
 
-
 $(function () {
+    $('#search-navbar-item').attr('class', 'active');
+
     $("#submit_search").click(function(e){
     console.log($("#search").val());
     loader($("#search").val());
@@ -125,7 +109,5 @@ function loader(query){
                                                 
 </script>
                                                 
+{% endblock %}
 
-                                            
-
-</body>
