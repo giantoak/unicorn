@@ -1,8 +1,7 @@
-<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+{% extends "base.html.part" %}
+{% block title %}Upload{% endblock %}
 
+{% block content %}
 <form class="form-horizontal" 
   method="POST" 
   enctype="multipart/form-data" 
@@ -52,4 +51,12 @@
 
 </fieldset>
 </form>
+{% endblock %}
 
+{% block scripts %}
+<script type="text/javascript">
+$(function() {
+    $('#upload-navbar-item').attr('class', 'active');
+});
+</script>
+{% endblock %}
