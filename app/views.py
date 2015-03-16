@@ -20,6 +20,7 @@ import magic
 DEFAULT_INDEX = 'dossiers'
 
 def get_file(doc_id):
+    ''' Render base64 encoded contents of a given file by its doc_id '''
     q = {
             "query" : {
                 "match" : {
