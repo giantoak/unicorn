@@ -1,0 +1,30 @@
+{% extends "base.html.part" %}
+{% block title %}Document View{% endblock %}
+{% block styles %}
+
+{{ super() }}
+#pdf-content {
+  width: 500px;
+  height: 500px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-6">
+    <embed id="pdf-content" 
+      src="/pdf/{{doc_id}}"
+      type="application/pdf">
+    </embed>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+</script>
+                                                
+{% endblock %}
+

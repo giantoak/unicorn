@@ -15,11 +15,11 @@ import json
 
 from elasticsearch_dsl import Search, Q
 import io
+import magic
 
 DEFAULT_INDEX = 'dossiers'
 
-@app.route('/download/<doc_id>')
-def download_endpoint(doc_id):
+def get_file(doc_id):
     q = {
             "query" : {
                 "match" : {
@@ -30,12 +30,39 @@ def download_endpoint(doc_id):
     response = es.search(body=q, index=DEFAULT_INDEX)
     
     try:
-        f = io.BytesIO(response['hits']['hits'][0]['_source']['file']
-                .decode('base64'))
+        base64 = response['hits']['hits'][0]['_source']['file']
         fn = response['hits']['hits'][0]['_source']['title']
     except KeyError, IndexError:
         abort(404)
 
+    return base64, fn
+
+@app.route('/view/<doc_id>')
+def view_doc(doc_id):
+    ''' In-depth view of a particular document.
+    Displays pdf version of document, extracted entities,
+    as well as other analytics. '''
+
+    return render_template('doc-view.html', doc_id=doc_id)
+
+@app.route('/pdf/<doc_id>')
+def pdf_endpoint(doc_id):
+    base64, fn = get_file(doc_id)
+    b = base64.decode('base64')
+    mimetype = magic.from_buffer(b, mime=True)
+
+    if mimetype == 'application/pdf':
+        return send_file(io.BytesIO(b), as_attachment=True,
+                attachment_filename=fn)
+    
+    # else: convert to pdf, send back
+    return 'Not pdf'
+
+@app.route('/download/<doc_id>')
+def download_endpoint(doc_id):
+    
+    base64, fn = get_file(doc_id)
+    f = io.BytesIO(base64.decode('base64'))
     return send_file(f,
             as_attachment=True,
             attachment_filename=fn)

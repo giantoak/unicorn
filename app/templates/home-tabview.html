@@ -29,13 +29,13 @@ color:"blue";
 {% endblock %}
 
 {% block content %}
+<div class="container">
 <div class="search-holder">
 <form class="form-search">
 <input type="text" class="span2 search-query" id="search">
     <button type="submit" class="btn" id="submit_search"><i class="fa fa-search"></i></button>
 </form>
 </div>
-
 <div class="search-results">
 <table class="table table-striped">
   <thead>
@@ -48,6 +48,7 @@ color:"blue";
   <tbody>
   </tbody>
 </table>
+</div>
 </div>
 
 {% endblock %}
@@ -67,14 +68,7 @@ $(function () {
     });
 })
 
-
-
-
-
 function loader(query){
-
-
-
   $.get('search/'+query,function(data){
       var tbl_row="";
       var tbl_body="";
@@ -93,6 +87,10 @@ function loader(query){
           var col_elem = $('<td>').text(list[row][col]);
           if ( col == 1 ) {
             col_elem.wrapInner("<a href=/download/" + doc_id + "></a>");
+          }
+          else if ( col == 2 ) {
+            console.log(col);
+            col_elem.wrapInner("<a href=/view/" + doc_id + "></a>");
           }
           row_elem.append(col_elem);
         }
