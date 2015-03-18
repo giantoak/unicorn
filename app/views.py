@@ -12,9 +12,12 @@ from werkzeug import secure_filename
 import flask
 import tempfile
 import json
-
+import networkx as nx
+from itertools import combinations
+from networkx.readwrite import json_graph
 from elasticsearch_dsl import Search, Q
 import io
+import requests
 
 DEFAULT_INDEX = 'dossiers'
 
@@ -86,3 +89,27 @@ def upload_endpoint():
         
 
     return redirect(url_for('root'))
+
+@app.route('/viz/<query>')
+def viz_endpoint(query):
+    url='http://ec2-54-145-248-41.compute-1.amazonaws.com:9200/dossiers/_search'
+    q = {
+        "fields" : ["entities","title"],
+        "query" : {
+            "term" : { "file" : query }
+            }
+        }
+    r=requests.post(url,data=json.dumps(q))    
+    data=r.json()
+    g=nx.Graph()
+    for hits in data['hits']['hits']:
+        temp=[]
+        try:
+            for entity in hits['fields']['entities']:
+                temp.append(entity)
+                g.add_node
+            edges=combinations(temp,2)
+            g.add_edges_from(list(edges))
+        except KeyError:
+            pass
+    return json.dumps(json_graph.node_link_data(g))
