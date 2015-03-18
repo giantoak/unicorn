@@ -19,8 +19,8 @@ import magic
 
 DEFAULT_INDEX = 'dossiers'
 
-def get_file(doc_id):
-    ''' Render base64 encoded contents of a given file by its doc_id '''
+@app.route('/<doc_id>/debug')
+def request_doc(doc_id):
     q = {
             "query" : {
                 "match" : {
@@ -29,7 +29,11 @@ def get_file(doc_id):
                 },
             }
     response = es.search(body=q, index=DEFAULT_INDEX)
-    
+    return response
+
+def get_file(doc_id):
+    ''' Render base64 encoded contents of a given file by its doc_id '''
+    response = request_doc(doc_id)
     try:
         base64 = response['hits']['hits'][0]['_source']['file']
         fn = response['hits']['hits'][0]['_source']['title']
@@ -37,6 +41,16 @@ def get_file(doc_id):
         abort(404)
 
     return base64, fn
+
+@app.route('/<doc_id>/entities')
+def get_entities(doc_id):
+    response = request_doc(doc_id)
+    try:
+        entities = response['hits']['hits'][0]['_source']['entities']
+    except KeyError, IndexError:
+        return jsonify([])
+    
+    return jsonify({'entities': entities})
 
 @app.route('/view/<doc_id>')
 def view_doc(doc_id):

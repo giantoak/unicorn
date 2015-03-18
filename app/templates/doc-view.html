@@ -4,19 +4,27 @@
 
 {{ super() }}
 #pdf-content {
-  width: 800px;
-  height: 1000px;
+  width: 100% !important;
+  height: auto !important;
 }
 {% endblock %}
 
 {% block content %}
 <div class="container">
   <div class="row">
+    <!-- PDF viewer -->
     <div class="col-md-6">
     <embed id="pdf-content" 
       src="/pdf/{{doc_id}}"
       type="application/pdf">
     </embed>
+    </div>
+
+    <!-- Extracted entities -->
+    <div class="col-md-6">
+      <legend>Extracted entities</legend>
+      <ul class="list-group collapse" id="entities-list">
+      </ul> 
     </div>
   </div>
 </div>
@@ -24,6 +32,16 @@
 
 {% block scripts %}
 <script type="text/javascript">
+$('document').ready(function() {
+$.ajax('/{{doc_id}}/entities', dataType='json').done(function (data) {
+    var entities_list = $('#entities-list');
+    for (i in data['entities']) {
+      var elem = $('<li>').attr('class', 'list-group-item')
+                          .text(data['entities'][i]);
+      entities_list.append(elem); 
+      }
+    });
+});
 </script>
                                                 
 {% endblock %}
