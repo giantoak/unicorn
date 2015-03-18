@@ -12,8 +12,9 @@
                 <script type="text/javascript" src={{url_for('static', filename='js/jquery.min.js')}}></script>
                 <script src={{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}></script>     
         <link rel="stylesheet" href={{url_for('static', filename="css/font-awesome.min.css")}}>      
-   
-        <script src={{url_for('static', filename='js/lib/jquery-ui-1.9.1.js')}}></script> 
+        
+        <script src={{url_for('static', filename='js/lib/jquery-ui-1.9.1.js')}}></script>
+        <script src={{url_for('static', filename='js/d3.js')}}></script> 
         <!-- Styling for UI elements -->
         <link href={{url_for('static', filename='css/jquery-ui.min.css')}} rel=stylesheet type=text/css>
 
@@ -27,6 +28,9 @@
   stroke-opacity: .6;
 }
 
+.node:not(:hover) .nodetext {
+    display:none;
+}
 
 .nav a{
 color:rgb(50,88,50);

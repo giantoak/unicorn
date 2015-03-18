@@ -17,7 +17,14 @@
   stroke: #999;
   stroke-opacity: .6;
 }
+g.node:not(:hover) g.nodetext {
+    display:none;
+}
 
+#network text {
+    font: 10px sans-serif;
+    pointer-events: none;
+}
 
 .nav a{
 color:rgb(50,88,50);
@@ -34,6 +41,8 @@ color:"blue";
 <form class="form-search">
 <input type="text" class="span2 search-query" id="search">
     <button type="submit" class="btn" id="submit_search"><i class="fa fa-search"></i></button>
+    <button type="submit" class="btn" id="submit_viz"><i class="fa fa-eye-slash"></i></button>
+    <button type="submit" class="btn" id="submit_map"><i class="fa fa-globe"></i></button>
 </form>
 </div>
 <div class="search-results">
@@ -48,6 +57,7 @@ color:"blue";
   <tbody>
   </tbody>
 </table>
+<div id="network"></div>
 </div>
 </div>
 
@@ -66,7 +76,89 @@ $(function () {
     e.preventDefault();
  
     });
+
+     $("#submit_viz").click(function(e){
+    console.log($("#search").val());
+    network_loader($("#search").val());
+    //localStorage.setItem('search_term', $("#search_text").val())
+    e.preventDefault();
+ 
+    });
 })
+
+
+function network_loader(query){
+
+  $.get('viz/'+query,function(data){
+    
+ 
+    graph=JSON.parse(data);
+    console.log(graph);
+    var width = 1200,height = 1000;
+
+      var color = d3.scale.category20();
+
+      
+      var svg = d3.select("#network").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("pointer-events","all")
+        .append('svg:g')
+        .call(d3.behavior.zoom().on("zoom",redraw))
+        .append('svg:g');
+
+       var force = d3.layout.force()
+          .nodes(graph.nodes)
+          .links(graph.links)
+          .size([width, height])
+          .linkDistance(100)
+          .charge(-200)
+          .start();
+
+        function redraw(){
+          svg.attr("transform","translate("
+          + d3.event.translate+")"+" scale("+d3.event.scale+")");
+        }
+
+        var link = svg.append("g").selectAll(".link")
+            .data(graph.links)
+          .enter().append("line")
+            .attr("class", "link");
+
+      // Create the groups under svg
+      var gnodes = svg.selectAll('g.gnode')
+        .data(graph.nodes)
+        .enter()
+        .append('g')
+        .classed('gnode', true);
+
+      // Add one circle in each group
+      var node = gnodes.append("circle")
+        .attr("class", "node")
+        .attr("r", 5)
+        .attr("fill","cadetblue")
+        .call(force.drag);
+
+      var labels = gnodes.append("text")
+        .attr("fill","black")
+        .text(function(d) { return d.id; });
+
+      force.on("tick", function() {
+        // Update the links
+        link.attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+        // Translate the groups
+        gnodes.attr("transform", function(d) { 
+          return 'translate(' + [d.x, d.y] + ')'; 
+        });    
+
+      });
+});
+}
+
 
 function loader(query){
   $.get('search/'+query,function(data){
