@@ -21,6 +21,9 @@ g.node:not(:hover) g.nodetext {
     display:none;
 }
 
+#network {
+}
+
 #network text {
     font: 10px sans-serif;
     pointer-events: none;
@@ -40,11 +43,14 @@ color:"blue";
 <div class="search-holder">
 <form class="form-search">
 <input type="text" class="span2 search-query" id="search">
-    <button type="submit" class="btn" id="submit_search"><i class="fa fa-search"></i></button>
-    <button type="submit" class="btn" id="submit_viz"><i class="fa fa-eye-slash"></i></button>
-    <button type="submit" class="btn" id="submit_map"><i class="fa fa-globe"></i></button>
+    <button type="submit" class="btn btn-primary btn-lg" id="submit_search"><i class="fa fa-search"></i></button>
+    <button type="button" 
+     class="btn" data-toggle="modal" data-target="#viz-modal" 
+      id="submit_viz"><i class="fa fa-eye-slash"></i></button>
+    <button type="button" class="btn" id="submit_map"><i class="fa fa-globe"></i></button>
 </form>
 </div>
+
 <div class="search-results">
 <table class="table table-striped">
   <thead>
@@ -57,8 +63,23 @@ color:"blue";
   <tbody>
   </tbody>
 </table>
-<div id="network"></div>
 </div>
+
+<div id="viz-modal" class="modal fade" tabindex="-1" role="dialog" 
+  aria-labelledby="network-title" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="network-title">Entity Network</h4>
+      </div>
+      <div class="modal-body"> 
+        <div id="network"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 
 {% endblock %}
@@ -70,19 +91,14 @@ $(function () {
     $('#search-navbar-item').attr('class', 'active');
 
     $("#submit_search").click(function(e){
-    console.log($("#search").val());
-    loader($("#search").val());
-    //localStorage.setItem('search_term', $("#search_text").val())
-    e.preventDefault();
- 
+      console.log($("#search").val());
+      loader($("#search").val());
+      e.preventDefault();
     });
 
-     $("#submit_viz").click(function(e){
-    console.log($("#search").val());
-    network_loader($("#search").val());
-    //localStorage.setItem('search_term', $("#search_text").val())
-    e.preventDefault();
- 
+      $("#viz-modal").on('shown.bs.modal', function (e) {
+        console.log($("#search").val());
+        network_loader($("#search").val());
     });
 })
 
@@ -94,7 +110,9 @@ function network_loader(query){
  
     graph=JSON.parse(data);
     console.log(graph);
-    var width = 1200,height = 1000;
+    var network_container = $("#network");
+    var width = network_container.parent().width(),
+        height = width;
 
       var color = d3.scale.category20();
 
