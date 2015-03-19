@@ -17,9 +17,13 @@ from itertools import combinations
 from networkx.readwrite import json_graph
 from elasticsearch_dsl import Search, Q
 import io
-
+import re
 import magic
 import requests
+from nltk import word_tokenize
+from nltk.corpus import stopwords
+from collections import Counter
+
 
 DEFAULT_INDEX = 'dossiers'
 
@@ -150,9 +154,32 @@ def viz_endpoint(query):
         try:
             for entity in hits['fields']['entities']:
                 temp.append(entity)
-                g.add_node
+                g.add_node(entity,{"origin":hits['fields']['title'][0]})
             edges=combinations(temp,2)
             g.add_edges_from(list(edges))
         except KeyError:
             pass
     return json.dumps(json_graph.node_link_data(g))
+
+@app.route('/wordcloud/<query>')
+def wc(query):
+    stopset=set(stopwords.words('english'))
+    url='http://ec2-54-145-248-41.compute-1.amazonaws.com:9200/dossiers/_search'
+    q = {
+        "fields" : ["file"],
+        "query" : {
+            "term" : { "file" : query }
+            }
+        }
+    r=requests.post(url,data=json.dumps(q))    
+    data=r.json()['hits']['hits'][0]['fields']['file'][0]
+
+    nowhite=re.sub('\s', ' ', data)
+    nowhite=re.sub(r'[^\w\s]', '', data)
+    wt=word_tokenize(nowhite)
+    wc=dict(Counter(wt))
+    frequency=[]
+    for k,v in wc.iteritems():
+        frequency.append(dict({"text":k,"size":v*3}))
+    frequency=filter(lambda x:x['size']>3 and x['text'].lower() not in stopset,frequency)
+    return json.dumps(frequency)

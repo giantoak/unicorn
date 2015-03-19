@@ -36,6 +36,21 @@ color:rgb(50,88,50);
 .nav active a {
 color:"blue";
 }
+
+    body {
+        font-family:"Lucida Grande","Droid Sans",Arial,Helvetica,sans-serif;
+    }
+    .legend {
+        border: 1px solid #555555;
+        border-radius: 5px 5px 5px 5px;
+        font-size: 0.8em;
+        margin: 10px;
+        padding: 8px;
+    }
+    .bld {
+        font-weight: bold;
+    }
+
 {% endblock %}
 
 {% block content %}
@@ -47,6 +62,9 @@ color:"blue";
     <button type="button" 
      class="btn" data-toggle="modal" data-target="#viz-modal" 
       id="submit_viz"><i class="fa fa-eye-slash"></i></button>
+      <button type="button" 
+     class="btn" data-toggle="modal" data-target="#wc-modal" 
+      id="submit_wc"><i class="fa fa-cloud"></i></button>
 </form>
 </div>
 
@@ -70,7 +88,7 @@ color:"blue";
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="network-title">Entity Network</h4>
+        <h4 class="modal-title" id="network-title">Entity Network</h4><img src={{url_for('static', filename="unicorn.png")}} height="35">
       </div>
       <div class="modal-body"> 
         <div id="network"></div>
@@ -89,6 +107,12 @@ color:"blue";
 $(function () {
     $('#search-navbar-item').attr('class', 'active');
 
+    $("#submit_wc").click(function(e){
+      console.log($("#search").val());
+      wc_loader($("#search").val());
+      e.preventDefault();
+    });
+
     $("#submit_search").click(function(e){
       console.log($("#search").val());
       loader($("#search").val());
@@ -103,7 +127,7 @@ $(function () {
 
 
 function network_loader(query){
-
+  $("#network").html('');
   $.get('viz/'+query,function(data){
     
  
@@ -154,6 +178,9 @@ function network_loader(query){
         .attr("class", "node")
         .attr("r", 5)
         .attr("fill","cadetblue")
+        .on("click",function(d){
+          window.open("/view/"+d.origin)
+        })
         .call(force.drag);
 
       var labels = gnodes.append("text")
@@ -210,7 +237,43 @@ function loader(query){
       });
 }
 
+function wc_loader(query){
+$.get('wordcloud/'+query, function(data){
+  frequency_list=JSON.parse(data)
+  var color = d3.scale.linear()
+            .domain([0,1,2,3,4,5,6,10,15,20,100])
+            .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
 
+    d3.layout.cloud().size([800, 300])
+            .words(frequency_list)
+            .rotate(0)
+            .fontSize(function(d) { return d.size; })
+            .on("end", draw)
+            .start();
+
+    function draw(words) {
+        d3.select("body").append("svg")
+                .attr("width", 850)
+                .attr("height", 350)
+                .attr("class", "wordcloud")
+                .append("g")
+                // without the transform, words words would get cutoff to the left and top, they would
+                // appear outside of the SVG area
+                .attr("transform", "translate(320,200)")
+                .selectAll("text")
+                .data(words)
+                .enter().append("text")
+                .style("font-size", function(d) { return d.size + "px"; })
+                .style("fill", function(d, i) { return color(i); })
+                .attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                })
+                .text(function(d) { return d.text; });
+    }
+
+});
+
+}
 //loader('dagoberto');
                                                 
 </script>
