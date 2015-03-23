@@ -23,8 +23,10 @@ import requests
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
+import os
+import subprocess
 
-
+from config import tmp_dir
 
 DEFAULT_INDEX = 'dossiers'
 
@@ -79,8 +81,30 @@ def pdf_endpoint(doc_id):
         return send_file(io.BytesIO(b), as_attachment=True,
                 attachment_filename=fn)
     
-    # else: convert to pdf, send back
-    return 'Not pdf'
+    else:
+        fd, fname = tempfile.mkstemp(prefix=tmp_dir)
+        stream = os.fdopen(fd, 'wb')
+        stream.write(b)
+        out_fname = fname + '.out'
+        stream.close()
+
+        os.chmod(fname, 0777)
+        try:
+            subprocess.check_output(['unoconv', '-o', out_fname, fname],
+                    stderr=subprocess.STDOUT)
+            with open(out_fname, 'rb') as converted_stream:
+                out = send_file(out_fname, as_attachment=True,
+                        attachment_filename=fn + '.pdf')
+        except subprocess.CalledProcessError as e:
+            print e.output
+            # Return error pdf
+            out = "no pdf available"
+
+        
+        os.remove(fname)
+        os.remove(out_fname)
+        
+        return out
 
 @app.route('/download/<doc_id>')
 def download_endpoint(doc_id):
@@ -126,7 +150,6 @@ def upload_endpoint():
     d = {}
     for f in files:
         sf = secure_filename(f.filename)
-        outfile = tempfile.NamedTemporaryFile(delete=False)
 
         es_dict = {
                 'file': f.read().encode('base64'),

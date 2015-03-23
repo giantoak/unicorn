@@ -1,3 +1,4 @@
 es_url=''
 admin_username = ''
 admin_password = ''
+tmp_dir = '/tmp/'
