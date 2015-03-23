@@ -21,10 +21,10 @@ g.node:not(:hover) g.nodetext {
     display:none;
 }
 
-#network {
+#viz-container {
 }
 
-#network text {
+#viz-container text {
     font: 10px sans-serif;
     pointer-events: none;
 }
@@ -61,10 +61,10 @@ color:"blue";
     <button type="submit" class="btn btn-primary btn-lg" id="submit_search"><i class="fa fa-search"></i></button>
     <button type="button" 
      class="btn" data-toggle="modal" data-target="#viz-modal" 
-      id="submit_viz"><i class="fa fa-eye-slash"></i></button>
+      id="submit_net" data-controls="network"><i class="fa fa-eye-slash"></i></button>
       <button type="button" 
-     class="btn" data-toggle="modal" data-target="#wc-modal" 
-      id="submit_wc"><i class="fa fa-cloud"></i></button>
+     class="btn" data-toggle="modal" data-target="#viz-modal" 
+      id="submit_wc" data-controls="wordcloud"><i class="fa fa-cloud"></i></button>
 </form>
 </div>
 
@@ -91,7 +91,8 @@ color:"blue";
         <h4 class="modal-title" id="network-title">Entity Network</h4><img src={{url_for('static', filename="unicorn.png")}} height="35">
       </div>
       <div class="modal-body"> 
-        <div id="network"></div>
+        <div id="viz-container">
+        </div>
       </div>
     </div>
   </div>
@@ -107,40 +108,44 @@ color:"blue";
 $(function () {
     $('#search-navbar-item').attr('class', 'active');
 
-    $("#submit_wc").click(function(e){
-      console.log($("#search").val());
-      wc_loader($("#search").val());
-      e.preventDefault();
-    });
-
     $("#submit_search").click(function(e){
       console.log($("#search").val());
       loader($("#search").val());
       e.preventDefault();
     });
-
+    
+    /* Event handlers for visualizations to appear */
       $("#viz-modal").on('shown.bs.modal', function (e) {
-        console.log($("#search").val());
-        network_loader($("#search").val());
+        var search_term = $("#search").val(),
+          button = $(e.relatedTarget);
+
+        console.log(search_term);
+
+        if ( button.data('controls') == 'network') {
+          network_loader(search_term);
+        }
+        else if ( button.data('controls') == 'wordcloud') {
+          wc_loader(search_term);
+        }
     });
 })
 
 
 function network_loader(query){
-  $("#network").html('');
+  $("#viz-container").html('');
   $.get('viz/'+query,function(data){
     
  
     graph=JSON.parse(data);
     console.log(graph);
-    var network_container = $("#network");
+    var network_container = $("#viz-container");
     var width = network_container.parent().width(),
         height = width;
 
       var color = d3.scale.category20();
 
       
-      var svg = d3.select("#network").append("svg")
+      var svg = d3.select("#viz-container").append("svg")
         .attr("width", width)
         .attr("height", height)
         .attr("pointer-events","all")
@@ -238,13 +243,19 @@ function loader(query){
 }
 
 function wc_loader(query){
-$.get('wordcloud/'+query, function(data){
+  $("#viz-container").html('');
+  $.get('wordcloud/'+query, function(data){
   frequency_list=JSON.parse(data)
   var color = d3.scale.linear()
             .domain([0,1,2,3,4,5,6,10,15,20,100])
             .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
+    
+    var network_container = $("#viz-container");
+    var container_width = network_container.parent().outerWidth(),
+        width = network_container.parent().innerWidth()
+        height = width;
 
-    d3.layout.cloud().size([800, 300])
+    d3.layout.cloud().size([width*3/4, height*3/4])
             .words(frequency_list)
             .rotate(0)
             .fontSize(function(d) { return d.size; })
@@ -252,14 +263,14 @@ $.get('wordcloud/'+query, function(data){
             .start();
 
     function draw(words) {
-        d3.select("body").append("svg")
-                .attr("width", 850)
-                .attr("height", 350)
+        d3.select("#viz-container").append("svg")
+                .attr("width", container_width)
+                .attr("height", height)
                 .attr("class", "wordcloud")
                 .append("g")
                 // without the transform, words words would get cutoff to the left and top, they would
                 // appear outside of the SVG area
-                .attr("transform", "translate(320,200)")
+                .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
                 .selectAll("text")
                 .data(words)
                 .enter().append("text")
