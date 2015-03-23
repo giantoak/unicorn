@@ -1,1 +1,3 @@
-es_url='localhost' # change to elasticsearch connection string
+es_url=''
+admin_username = ''
+admin_password = ''

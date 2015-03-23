@@ -25,6 +25,7 @@ from nltk.corpus import stopwords
 from collections import Counter
 
 
+
 DEFAULT_INDEX = 'dossiers'
 
 @app.route('/<doc_id>/debug')
@@ -162,6 +163,7 @@ def viz_endpoint(query):
     return json.dumps(json_graph.node_link_data(g))
 
 @app.route('/wordcloud/<query>')
+@basic_auth.required
 def wc(query):
     stopset=set(stopwords.words('english'))
     url='http://ec2-54-145-248-41.compute-1.amazonaws.com:9200/dossiers/_search'
