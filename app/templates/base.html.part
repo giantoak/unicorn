@@ -52,7 +52,7 @@ color:"blue";
   <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
   {% block navbar %}
   <div class="navbar-header">
-  <a class="navbar-brand" href="#">Unicorn <img src={{url_for('static', filename="unicorn.png")}} height="35"><br /></a>
+    <a class="navbar-brand" href="{{url_for('root')}}">Unicorn <img src={{url_for('static', filename="unicorn.png")}} height="35"><br /></a>
   </div>
   <div class="collapse navbar-collapse">
   <ul class="nav navbar-nav">
