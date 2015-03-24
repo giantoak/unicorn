@@ -136,6 +136,10 @@ def search_endpoint(query):
 
     return Response(json.dumps({'result': clean_response}), mimetype='text/json')
 
+@app.route('/dash')
+def dash():
+    return render_template('index-dash.html')
+
 @app.route('/')
 def root():
     return render_template('home-tabview.html')
