@@ -49,16 +49,23 @@ color:"blue";
 
 <body>
 {% block body %}
-  <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+  <nav class="navbar navbar-inverse" role="navigation">
   {% block navbar %}
+    <div class="container">
   <div class="navbar-header">
-    <a class="navbar-brand" href="{{url_for('root')}}">Unicorn <img src={{url_for('static', filename="unicorn.png")}} height="35"><br /></a>
+    <a class="navbar-brand" href="{{url_for('root')}}"><img src={{url_for('static', filename="unicorn.png")}} height="35"><br /></a>
   </div>
   <div class="collapse navbar-collapse">
-  <ul class="nav navbar-nav">
+  <ul class="nav navbar-nav navbar-left">
     <li id="search-navbar-item"><a href="{{url_for('root')}}">Search</a></li>
-    <li id="upload-navbar-item"><a href="{{url_for('upload_form')}}">Upload</a></li>
+    <li id="search-navbar-item"><a href="#">Browse</a></li>
   </ul>
+  <ul class="nav navbar-nav navbar-right">
+    <li id="upload-navbar-item"><a href="{{url_for('upload_form')}}">Upload</a></li>
+    <li id="upload-navbar-item"><a href="#">Account</a></li>
+    <li id="upload-navbar-item"><a href="#">Logout</a></li>
+  </ul>
+    </div>
   </div>
   {% endblock %}
   </nav>
