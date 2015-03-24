@@ -207,3 +207,34 @@ def wc(query):
         frequency.append(dict({"text":k,"size":v*3}))
     frequency=filter(lambda x:x['size']>3 and x['text'].lower() not in stopset,frequency)
     return json.dumps(frequency)
+
+@app.route('/<doc_id>/related')
+def more_like_this(doc_id):
+    ''' Returns similar documents '''
+    q = {
+      "fields": ["title"],
+        "query": {
+            "more_like_this" : {
+            "docs" : [
+            {
+                "_index" : "dossiers",
+                "_type" : "attachment",
+                "_id" : doc_id
+            }]
+          }
+        },
+        "size": 10
+    }
+    
+    response = es.search(body=q, index=DEFAULT_INDEX)
+    results = {'results': []}
+    try:
+        for r in response['hits']['hits']:
+            results['results'].append({
+                'id': r['_id'],
+                'name': r['fields']['title'][0]
+                })
+    except KeyError, IndexError:
+        pass
+
+    return jsonify(results)

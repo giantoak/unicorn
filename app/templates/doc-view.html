@@ -22,9 +22,16 @@
 
     <!-- Extracted entities -->
     <div class="col-md-6">
+      <div class="row" id="entities-block">
+        <legend>Related documents</legend>
+        <ul class="list-group" id="related-list">
+        </ul>
+      </div>
+      <div class="row" id="entities-block">
       <legend>Extracted entities</legend>
       <ul class="list-group" id="entities-list">
       </ul> 
+    </div>
     </div>
   </div>
 </div>
@@ -34,6 +41,9 @@
 <script type="text/javascript">
 $('document').ready(function() {
 $.ajax('/{{doc_id}}/entities', dataType='json').done(function (data) {
+  if ($.isEmptyObject(data)) {
+    $('entities-block').hide()
+  }
     var entities_list = $('#entities-list');
     for (i in data['entities']) {
       var elem = $('<li>').attr('class', 'list-group-item')
@@ -41,6 +51,20 @@ $.ajax('/{{doc_id}}/entities', dataType='json').done(function (data) {
       entities_list.append(elem); 
       }
     });
+
+/* Load related items */
+$.ajax('/{{doc_id}}/related', dataType='json').done(function (data) {
+    var related_list = $('#related-list');
+    for (i in data['results']) {
+      var elem = $('<li>').attr('class', 'list-group-item')
+                          .text(data['results'][i]['name']);
+                          elem.wrapInner('<a href="/view/' + 
+                            data['results'][i]['id'] + '">');
+      related_list.append(elem); 
+      }
+    });
+
+
 });
 </script>
                                                 
