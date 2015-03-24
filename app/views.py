@@ -163,7 +163,7 @@ def upload_endpoint():
 
 @app.route('/viz/<query>')
 def viz_endpoint(query):
-    url='http://ec2-54-145-248-41.compute-1.amazonaws.com:9200/dossiers/_search'
+    url='http://localhost:9200/dossiers/_search'
     q = {
         "fields" : ["entities","title"],
         "query" : {
@@ -188,7 +188,7 @@ def viz_endpoint(query):
 @app.route('/wordcloud/<query>')
 def wc(query):
     stopset=set(stopwords.words('english'))
-    url='http://ec2-54-145-248-41.compute-1.amazonaws.com:9200/dossiers/_search'
+    url='http://localhost:9200/dossiers/_search'
     q = {
         "fields" : ["file"],
         "query" : {
