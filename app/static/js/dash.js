@@ -236,6 +236,28 @@ function LoadSparkLineScript(callback){
 	}
 }
 /*-------------------------------------------
+	Additional scripts written for Unicorn
+---------------------------------------------*/
+function LoadSearchContent(query, page) {
+  var search_url = '/search/';
+  $('.preloader').show();
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: search_url + query + '/' + page,
+		type: 'GET',
+		success: function(data) {
+			$('#ajax-content').html(data);
+			$('.preloader').hide();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			alert(errorThrown);
+		},
+		dataType: "html",
+		async: false
+
+  });
+}
+/*-------------------------------------------
 	Main scripts used by theme
 ---------------------------------------------*/
 //
@@ -2411,15 +2433,31 @@ $(document).ready(function () {
 			LoadAjaxContent(url);
 		}
 	});
+        /* Search-based event handlers */
+        /* Enter key is pressed in search bar */
+        function conduct_search(query, page) {
+              window.location.hash = 'search/' + query + '/' + page;
+              $('#content').removeClass('full-content');
+              LoadSearchContent(query, page);
+        }
 	$('#search').on('keydown', function(e){
 		if (e.keyCode == 13){
 			e.preventDefault();
-			$('#content').removeClass('full-content');
-			ajax_url = 'static/ajax/page_search.html';
-			window.location.hash = ajax_url;
-			LoadAjaxContent(ajax_url);
+                        var query = $('#search > input').val();
+                        conduct_search(query, 1);
 		}
 	});
+        /* Pagination is triggered in search page */
+        $(document).on('click', '.search-pag-link', function(e) {
+          var clicked = $(e.target).data('page'),
+              query = $('#search-pagination').data('query');
+
+          console.log('Going to page ' + clicked + ' : ' + query);
+          conduct_search(query, clicked);
+        });
+
+
+
 	$('#screen_unlock').on('mouseover', function(){
 		var header = 'Enter current username and password';
 		var form = $('<div class="form-group"><label class="control-label">Username</label><input type="text" class="form-control" name="username" /></div>'+

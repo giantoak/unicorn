@@ -116,9 +116,16 @@ def download_endpoint(doc_id):
             attachment_filename=fn)
 
 
-@app.route('/search/<query>')
-def search_endpoint(query):
+@app.route('/search/<query>/<page>')
+def search_endpoint(query, page):
+    # convert pages to records for ES 
+    start = int(page)
+    if start > 1:
+        start *= 10
+
     q = {
+            "fields": ["title", "highlight", "entities"],
+            "from": start,
             "query" : {
                 "match" : {
                     "file" : query
@@ -127,22 +134,31 @@ def search_endpoint(query):
 
             "highlight": { "fields": { "file": { } } }
             }
-    raw_response = es.search(body=q, index=DEFAULT_INDEX, df="file", size=50)
-    clean_response = []
+    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+            df="file", 
+            size=10)
+
+    hits = []
 
     for resp in raw_response['hits']['hits']:
-        clean_response.append((resp['_id'], resp['_source']['title'], 
-            resp['highlight']['file'][0]))
+        hits.append({'id': resp['_id'], 
+            'title': resp['fields']['title'][0],
+            'highlight': resp['highlight']['file'][0]
+            })
 
-    return Response(json.dumps({'result': clean_response}), mimetype='text/json')
-
-@app.route('/dash')
-def dash():
-    return render_template('index-dash.html')
+    results = {
+            'hits': hits,
+            'took': float(raw_response['took'])/1000,
+            'total': "{:,}".format(raw_response['hits']['total']),
+            'total_int': int(raw_response['hits']['total']),
+            'query': query,
+            'from': int(page)
+            }
+    return render_template('search-template.html', results=results)
 
 @app.route('/')
 def root():
-    return render_template('home-tabview.html')
+    return render_template('index-dash.html')
 
 @app.route('/upload/')
 def upload_form():
