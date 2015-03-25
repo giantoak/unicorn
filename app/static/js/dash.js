@@ -239,13 +239,17 @@ function LoadSparkLineScript(callback){
 	Additional scripts written for Unicorn
 ---------------------------------------------*/
 function LoadSearchContent(query, page) {
-  var search_url = '/search/';
+  var search_url = 'search';
+  if (typeof(query) !=='undefined') search_url += '/' + query;
+  if (typeof(page) !=='undefined') search_url += '/' + page;
+  console.log('search query: ' + search_url);
+
   $('#content').removeClass('full-content');
-  window.location.hash = 'search/' + query + '/' + page;
+  window.location.hash = search_url;
   $('.preloader').show();
   $.ajax({
 		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
-		url: search_url + query + '/' + page,
+		url: '/' + search_url,
 		type: 'GET',
 		success: function(data) {
 			$('#ajax-content').html(data);
@@ -2469,6 +2473,11 @@ $(document).ready(function () {
                         LoadSearchContent(query, 1);
 		}
 	});
+        /* Search is clicked in breadcrumbs */
+        $(document).on('click', '.search-breadcrumb-link', function(e) {
+          console.log('search breadcrumb link');
+          LoadSearchContent();
+        });
         /* Pagination is triggered in search page */
         $(document).on('click', '.search-pag-link', function(e) {
           var clicked = $(e.target).data('page'),

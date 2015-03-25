@@ -115,9 +115,19 @@ def download_endpoint(doc_id):
             as_attachment=True,
             attachment_filename=fn)
 
-
+@app.route('/search')
+@app.route('/search/<query>')
 @app.route('/search/<query>/<page>')
-def search_endpoint(query, page):
+def search_endpoint(query=None, page=None):
+    if not query and not page:
+        last_query = session.get('last_query', None)
+        if last_query:
+            query, page = last_query['query'], last_query['page']
+        else:
+            # better error
+            return abort(404)
+
+    session['last_query'] = {'query': query, 'page': page}
     # convert pages to records for ES 
     start = int(page)
     if start > 1:
