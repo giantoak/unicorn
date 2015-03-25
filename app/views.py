@@ -26,9 +26,25 @@ from collections import Counter
 import os
 import subprocess
 
+from bulk import bulk_download
 from config import tmp_dir
 
 DEFAULT_INDEX = 'dossiers'
+
+@app.route('/bulk_download')
+def bulk_download_route():
+    if 'last_query' not in session:
+        return abort(404)
+    
+    last_query = session['last_query']
+
+    ids = last_query['ids']
+    query = last_query['query']
+
+    data = bulk_download(ids)
+
+    return send_file(io.BytesIO(data.xls), as_attachment=True,
+            attachment_filename=query + '.xls')
 
 @app.route('/<doc_id>/debug')
 def request_doc(doc_id):
@@ -127,7 +143,7 @@ def search_endpoint(query=None, page=None):
             # better error
             return abort(404)
 
-    session['last_query'] = {'query': query, 'page': page}
+    session['last_query'] = {'query': query, 'page': page, 'ids': []}
     # convert pages to records for ES 
     start = int(page)
     if start > 1:
@@ -151,6 +167,10 @@ def search_endpoint(query=None, page=None):
     hits = []
 
     for resp in raw_response['hits']['hits']:
+        # Store returned ids
+        session['last_query']['ids'].append(resp['_id'])
+
+        # Flatten structure for individual hits
         hits.append({'id': resp['_id'], 
             'title': resp['fields']['title'][0],
             'highlight': resp['highlight']['file'][0]
