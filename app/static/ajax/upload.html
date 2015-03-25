@@ -1,0 +1,38 @@
+<div class="container">
+
+<form class="form-horizontal" 
+  method="POST" 
+  enctype="multipart/form-data" 
+  action="/_upload-documents">
+
+  
+<fieldset>
+<!-- Form Name -->
+<legend>Wildlife Trafficking Fusion Center Data Upload</legend>
+
+<!-- File Button --> 
+<div class="form-group">
+  <label class="col-md-4 control-label" for="filebutton">Upload Files (.doc, .docx, .pdf, .rtf, .txt)</label>
+  <div class="col-md-4">
+    <input id="filebutton" name="file[]" class="input-file" type="file" multiple>
+  </div>
+</div>
+
+<!-- Submit button -->
+<div class="form-group">
+  <div class="col-md-4"></div>
+  <div class="col-md-4">
+    <input type="submit" id="submitbutton" name="submitbutton" class="btn btn-primary"></input>
+  </div>
+</div>
+
+</fieldset>
+</form>
+
+</div>
+
+<script type="text/javascript">
+$(function() {
+    $('#upload-navbar-item').attr('class', 'active');
+});
+</script>

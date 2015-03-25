@@ -238,12 +238,33 @@ function LoadSparkLineScript(callback){
 /*-------------------------------------------
 	Additional scripts written for Unicorn
 ---------------------------------------------*/
+
+function LoadUploadPage() {
+  var upload_url = 'upload';
+  $('#content').removeClass('full-content');
+  window.location.hash = upload_url;
+  $('.preloader').show();
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: '/' + upload_url,
+		type: 'GET',
+		success: function(data) {
+			$('#ajax-content').html(data);
+			$('.preloader').hide();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			$('#ajax-content').text(errorThrown);
+		},
+		dataType: "html",
+		async: false
+  });
+}
+
 function LoadSearchContent(query, page) {
   var search_url = 'search';
   if (typeof(query) !=='undefined') search_url += '/' + query;
   if (typeof(page) !=='undefined') search_url += '/' + page;
   console.log('search query: ' + search_url);
-
   $('#content').removeClass('full-content');
   window.location.hash = search_url;
   $('.preloader').show();
@@ -260,9 +281,9 @@ function LoadSearchContent(query, page) {
 		},
 		dataType: "html",
 		async: false
-
   });
 }
+
 function LoadDocumentContent(doc) {
   var doc_url = '/view/';
   window.location.hash = 'view/' + doc;
