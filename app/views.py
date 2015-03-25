@@ -258,3 +258,7 @@ def more_like_this(doc_id):
         pass
 
     return jsonify(results)
+
+@app.route('/index.html')
+def reroute_index():
+    return redirect('/')
