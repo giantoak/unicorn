@@ -240,6 +240,8 @@ function LoadSparkLineScript(callback){
 ---------------------------------------------*/
 function LoadSearchContent(query, page) {
   var search_url = '/search/';
+  $('#content').removeClass('full-content');
+  window.location.hash = 'search/' + query + '/' + page;
   $('.preloader').show();
   $.ajax({
 		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
@@ -250,13 +252,34 @@ function LoadSearchContent(query, page) {
 			$('.preloader').hide();
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
-			alert(errorThrown);
+			$('#ajax-content').text(errorThrown);
 		},
 		dataType: "html",
 		async: false
 
   });
 }
+function LoadDocumentContent(doc) {
+  var doc_url = '/view/';
+  window.location.hash = 'view/' + doc;
+  $('#content').removeClass('full-content');
+  $('.preloader').show();
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: doc_url + doc,
+		type: 'GET',
+		success: function(data) {
+			$('#ajax-content').html(data);
+			$('.preloader').hide();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			$('#ajax-content').text(errorThrown);
+		},
+		dataType: "html",
+		async: false
+  });
+}
+
 /*-------------------------------------------
 	Main scripts used by theme
 ---------------------------------------------*/
@@ -2433,30 +2456,32 @@ $(document).ready(function () {
 			LoadAjaxContent(url);
 		}
 	});
-        /* Search-based event handlers */
+
+        /***********
+         * Unicorn event handlers 
+         ***********/
+
         /* Enter key is pressed in search bar */
-        function conduct_search(query, page) {
-              window.location.hash = 'search/' + query + '/' + page;
-              $('#content').removeClass('full-content');
-              LoadSearchContent(query, page);
-        }
 	$('#search').on('keydown', function(e){
 		if (e.keyCode == 13){
 			e.preventDefault();
                         var query = $('#search > input').val();
-                        conduct_search(query, 1);
+                        LoadSearchContent(query, 1);
 		}
 	});
         /* Pagination is triggered in search page */
         $(document).on('click', '.search-pag-link', function(e) {
           var clicked = $(e.target).data('page'),
               query = $('#search-pagination').data('query');
-
-          console.log('Going to page ' + clicked + ' : ' + query);
-          conduct_search(query, clicked);
+              console.log('Going to page ' + clicked + ' : ' + query);
+              LoadSearchContent(query, clicked);
         });
-
-
+        
+        /* Document is loaded into main panel */
+        $(document).on('click', '.doc-link', function(e) {
+          var doc = $(e.target).data('doc');
+          LoadDocumentContent(doc);
+        });
 
 	$('#screen_unlock').on('mouseover', function(){
 		var header = 'Enter current username and password';

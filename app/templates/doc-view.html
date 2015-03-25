@@ -1,72 +1,76 @@
-{% extends "base.html.part" %}
-{% block title %}Document View{% endblock %}
-{% block styles %}
-
-{{ super() }}
-#pdf-content {
-  width: 100% !important;
-  height: 700px !important;
-}
-{% endblock %}
-
-{% block content %}
 <div class="container">
   <div class="row">
     <!-- PDF viewer -->
     <div class="col-md-6">
     <embed id="pdf-content" 
       src="/pdf/{{doc_id}}"
-      type="application/pdf">
+      type="application/pdf"
+      height="700px"
+      width="100%">
     </embed>
     </div>
 
     <!-- Extracted entities -->
     <div class="col-md-6">
-      <div class="row" id="entities-block">
+      <div class="row" id="related-block">
         <legend>Related documents</legend>
+        <div class="related-preloader">
+          <i class="fa fa-spinner fa-spin"></i>
+        </div>
         <ul class="list-group" id="related-list">
         </ul>
       </div>
       <div class="row" id="entities-block">
       <legend>Extracted entities</legend>
+        <div class="entities-preloader">
+          <i class="fa fa-spinner fa-spin"></i>
+        </div>
       <ul class="list-group" id="entities-list">
       </ul> 
     </div>
     </div>
   </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script type="text/javascript">
 $('document').ready(function() {
-$.ajax('/{{doc_id}}/entities', dataType='json').done(function (data) {
-  if ($.isEmptyObject(data)) {
-    $('entities-block').hide()
-  }
-    var entities_list = $('#entities-list');
-    for (i in data['entities']) {
-      var elem = $('<li>').attr('class', 'list-group-item')
-                          .text(data['entities'][i]);
-      entities_list.append(elem); 
+    $('.entities-preloader').show();
+    $.ajax({
+      url: '/{{doc_id}}/entities',
+      dataType: 'json',
+      success: function (data) {
+        $('.entities-preloader').hide();
+        if ($.isEmptyObject(data)) {
+          $('entities-block').hide()
+        }
+        var entities_list = $('#entities-list');
+        for (i in data['entities']) {
+          var elem = $('<li>').attr('class', 'list-group-item')
+                              .text(data['entities'][i]);
+          entities_list.append(elem); 
+          }
       }
     });
 
 /* Load related items */
-$.ajax('/{{doc_id}}/related', dataType='json').done(function (data) {
-    var related_list = $('#related-list');
-    for (i in data['results']) {
-      var elem = $('<li>').attr('class', 'list-group-item')
-                          .text(data['results'][i]['name']);
-                          elem.wrapInner('<a href="/view/' + 
-                            data['results'][i]['id'] + '">');
-      related_list.append(elem); 
+    $('.related-preloader').show();
+    $.ajax({
+      url: '/{{doc_id}}/related', 
+      dataType: 'json',
+      success: function (data) {
+        $('.related-preloader').hide();
+        console.log(data);
+        var related_list = $('#related-list');
+        for (i in data['results']) {
+          var elem = $('<li>').attr('class', 'list-group-item')
+                              .text(data['results'][i]['name']);
+          elem.wrapInner('<a class="doc-link" data-doc="' 
+            + data['results'][i]['id'] + '" href="#">');
+
+          related_list.append(elem); 
+          }
       }
     });
 
-
 });
 </script>
-                                                
-{% endblock %}
-

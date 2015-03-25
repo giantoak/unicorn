@@ -11,7 +11,7 @@
           <p class="small">About {{results.total}} results ({{results.took}} seconds)</p>
                 {% for result in results.hits %}
 		<div class="one-result">
-                  <a href="#" class="large">{{ result.title }}</a>
+                  <a data-doc="{{result.id}}" href="#" class="doc-link large">{{ result.title }}</a>
                   <p class="txt-primary">{{ result.entities|join(', ') }}</p>
                   <p>...{{result.highlight | safe}}...</p>
 		</div>
