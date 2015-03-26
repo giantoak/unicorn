@@ -142,6 +142,9 @@ def search_endpoint(query=None, page=None):
         else:
             # better error
             return abort(404)
+    
+    if not page:
+        page = 1
 
     session['last_query'] = {'query': query, 'page': page, 'ids': []}
     # convert pages to records for ES 
