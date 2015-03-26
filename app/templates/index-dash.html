@@ -147,8 +147,8 @@
 			<ul class="nav main-menu">
 				<li>
 					<a href="static/ajax/dashboard.html" class="active ajax-link">
-						<i class="fa fa-dashboard"></i>
-						<span class="hidden-xs">Dashboard</span>
+						<i class="fa fa-heart"></i>
+						<span class="hidden-xs">Overview</span>
 					</a>
 				</li>
 				<li class="dropdown">
@@ -343,5 +343,9 @@
 <script src="{{url_for('static', filename='plugins/tinymce/jquery.tinymce.min.js')}}"></script>
 <!-- All functions for this theme + document.ready processing -->
 <script src="{{url_for('static', filename='js/dash.js')}}"></script>
+<script src={{url_for('static', filename='js/d3.js')}}></script> 
+<script src={{url_for('static', filename='js/d3.layout.cloud.js')}}></script>
+<script src='{{url_for('static', filename='js/force-graph.js')}}'></script>
+
 </body>
 </html>

@@ -12,9 +12,6 @@ from werkzeug import secure_filename
 import flask
 import tempfile
 import json
-import networkx as nx
-from itertools import combinations
-from networkx.readwrite import json_graph
 from elasticsearch_dsl import Search, Q
 import io
 import re
@@ -28,6 +25,7 @@ import subprocess
 
 from bulk import bulk_download
 from config import tmp_dir
+from util.network import make_graph
 
 DEFAULT_INDEX = 'dossiers'
 
@@ -214,6 +212,20 @@ def upload_endpoint():
 
     return redirect(url_for('root'))
 
+@app.route('/viz')
+def viz_all():
+    q = {
+        "fields" : ["entities","title"],
+        "query" : {
+            "match_all" : {}
+            },
+        "size": 500
+        }
+    r = es.search(body=q, index=DEFAULT_INDEX)
+    graph = make_graph(r)
+
+    return json.dumps(graph)
+
 @app.route('/viz/<query>')
 def viz_endpoint(query):
     url='http://localhost:9200/dossiers/_search'
@@ -225,18 +237,8 @@ def viz_endpoint(query):
         }
     r=requests.post(url,data=json.dumps(q))    
     data=r.json()
-    g=nx.Graph()
-    for hits in data['hits']['hits']:
-        temp=[]
-        try:
-            for entity in hits['fields']['entities']:
-                temp.append(entity)
-                g.add_node(entity,{"origin":hits['fields']['title'][0]})
-            edges=combinations(temp,2)
-            g.add_edges_from(list(edges))
-        except KeyError:
-            pass
-    return json.dumps(json_graph.node_link_data(g))
+    graph = make_graph(data)
+    return json.dumps(graph)
 
 @app.route('/wordcloud/<query>')
 def wc(query):
