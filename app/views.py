@@ -23,11 +23,26 @@ from collections import Counter
 import os
 import subprocess
 
-from bulk import bulk_download
+from bulk import bulk_download, bulk_search
 from config import tmp_dir
 from util.network import make_graph
+import time
 
 DEFAULT_INDEX = 'dossiers'
+
+@app.route('/_bulk_search', methods=['POST'])
+def bulk_search_route():
+
+    search_results = request.form['searches']
+    searches = search_results.split('\n')
+    
+    data = bulk_search(searches)
+    return send_file(io.BytesIO(data.xls), as_attachment=True,
+            attachment_filename='bulk_{}.xls'.format(time.time()))
+
+    # Bulk search all of these queries
+    # Bundle results into excel
+
 
 @app.route('/bulk_download')
 def bulk_download_route():
@@ -159,7 +174,10 @@ def search_endpoint(query=None, page=None):
                     }
                 },
 
-            "highlight": { "fields": { "file": { } } }
+            "highlight": { "fields": { "file": { } },
+                "pre_tags" : ["<span class='highlight'>"],
+                "post_tags" : ["</span>"]
+                }
             }
     raw_response = es.search(body=q, index=DEFAULT_INDEX,
             df="file", 
@@ -189,7 +207,10 @@ def search_endpoint(query=None, page=None):
 
 @app.route('/')
 def root():
-    return render_template('index-dash.html')
+    user_struct = {
+            'user': DEFAULT_INDEX
+            }
+    return render_template('index-dash.html', user=user_struct)
 
 @app.route('/upload/')
 def upload_form():

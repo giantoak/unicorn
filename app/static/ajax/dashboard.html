@@ -32,15 +32,13 @@ $(document).ready(function() {
 
 function network_loader(query){
   var endp = 'viz';
-  if (! query === undefined) endp += '/' + query;
+  if (! (query === undefined) ) endp += '/' + query;
   $("#network-container").html('');
   $.get(endp,function(data){
     
  
     graph=JSON.parse(data);
     var svg = get_force_graph(graph, $("#network-container").width())
-    
-    console.log(svg);
     $('#network-container').append(svg);
   });
 }
