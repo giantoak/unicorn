@@ -270,10 +270,20 @@ def viz_endpoint(query):
             "term" : { "file" : query }
             }
         }
-    r=requests.post(url,data=json.dumps(q))    
-    data=r.json()
+    #r=requests.post(url,data=json.dumps(q))
+    r=es.search(body=q,index=DEFAULT_INDEX)    
+    data=r
     graph = make_graph(data)
     return json.dumps(graph)
+
+@app.route('/viz_latest')
+def viz_latest():
+    return viz_endpoint(session['last_query']['query'])
+
+
+@app.route('/wc_latest')
+def wc_latest():
+    return wc(session['last_query']['query'])
 
 @app.route('/wordcloud/<query>')
 def wc(query):
@@ -285,8 +295,9 @@ def wc(query):
             "term" : { "file" : query }
             }
         }
-    r=requests.post(url,data=json.dumps(q))    
-    data=r.json()['hits']['hits'][0]['fields']['file'][0]
+    #r=requests.post(url,data=json.dumps(q))    
+    r=es.search(body=q,index=DEFAULT_INDEX)
+    data=r['hits']['hits'][0]['fields']['file'][0]
 
     nowhite=re.sub('\s', ' ', data)
     nowhite=re.sub(r'[^\w\s]', '', data)

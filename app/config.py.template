@@ -1,4 +1,9 @@
-es_url=''
-admin_username = ''
-admin_password = ''
+es_url='localhost'
+es_port=9200
+admin_username = 'admin'
+admin_password = 'admin'
 tmp_dir = '/tmp/'
+db_host = ''
+db_user = ''
+db_pw = ''
+db_name = ''

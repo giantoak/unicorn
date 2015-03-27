@@ -1,0 +1,12 @@
+
+node {
+    stroke: #000;
+    stroke-width: 1.5px;
+}
+
+line.link {
+    stroke: #000;
+    stroke-opacity: 0.6;
+}
+
+span.highlight { background-color: yellow; }
