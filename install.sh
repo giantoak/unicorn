@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Install pip, virtualenv, setup python environment
+apt-get install python-dev
 apt-get install python-pip
 pip install virtualenv
 virtualenv env

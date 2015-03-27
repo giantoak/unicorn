@@ -11,9 +11,10 @@ import base64
 
 from app.bulk import bulk_search
 
-class TestViews(unittest.TestCase):
+class TestUtils(unittest.TestCase):
     def setUp(self):
         self.app = app.app.test_client()
+        raise NotImplemented
 
     def open_with_auth(self, url, method, **args):
         return self.app.open(url,

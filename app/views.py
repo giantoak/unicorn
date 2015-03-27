@@ -1,4 +1,5 @@
-from app import app, es
+from app import app, es, db, flask_bcrypt, login_manager
+from app import User, Organization
 from flask import jsonify
 from flask import render_template
 from flask import url_for
@@ -7,7 +8,11 @@ from flask import Response
 from flask import request
 from flask import session
 from flask import abort
+from flask import flash
 from flask import send_file
+from flask.ext.login import (current_user, login_required, login_user, 
+        logout_user, confirm_login, fresh_login_required)
+
 from werkzeug import secure_filename
 import flask
 import tempfile
@@ -31,6 +36,7 @@ import time
 DEFAULT_INDEX = 'dossiers'
 
 @app.route('/_bulk_search', methods=['POST'])
+@login_required
 def bulk_search_route():
 
     search_results = request.form['searches']
@@ -45,6 +51,7 @@ def bulk_search_route():
 
 
 @app.route('/bulk_download')
+@login_required
 def bulk_download_route():
     if 'last_query' not in session:
         return abort(404)
@@ -60,6 +67,7 @@ def bulk_download_route():
             attachment_filename=query + '.xls')
 
 @app.route('/<doc_id>/debug')
+@login_required
 def request_doc(doc_id):
     q = {
             "query" : {
@@ -83,6 +91,7 @@ def get_file(doc_id):
     return base64, fn
 
 @app.route('/<doc_id>/entities')
+@login_required
 def get_entities(doc_id):
     response = request_doc(doc_id)
     try:
@@ -93,6 +102,7 @@ def get_entities(doc_id):
     return jsonify({'entities': entities})
 
 @app.route('/view/<doc_id>')
+@login_required
 def view_doc(doc_id):
     ''' In-depth view of a particular document.
     Displays pdf version of document, extracted entities,
@@ -101,6 +111,7 @@ def view_doc(doc_id):
     return render_template('doc-view.html', doc_id=doc_id)
 
 @app.route('/pdf/<doc_id>')
+@login_required
 def pdf_endpoint(doc_id):
     base64, fn = get_file(doc_id)
     b = base64.decode('base64')
@@ -136,6 +147,7 @@ def pdf_endpoint(doc_id):
         return out
 
 @app.route('/download/<doc_id>')
+@login_required
 def download_endpoint(doc_id):
     
     base64, fn = get_file(doc_id)
@@ -147,6 +159,7 @@ def download_endpoint(doc_id):
 @app.route('/search')
 @app.route('/search/<query>')
 @app.route('/search/<query>/<page>')
+@login_required
 def search_endpoint(query=None, page=None):
     if not query and not page:
         last_query = session.get('last_query', None)
@@ -206,6 +219,7 @@ def search_endpoint(query=None, page=None):
     return render_template('search-template.html', results=results)
 
 @app.route('/')
+@login_required
 def root():
     user_struct = {
             'user': DEFAULT_INDEX,
@@ -215,22 +229,20 @@ def root():
     return render_template('index-dash.html', user=user_struct)
 
 @app.route('/user')
+@login_required
 def user_page():
-    return render_template('user-template.html')
+    # If current user is admin
 
-@app.route('/register', methods=['POST'])
-def handle_registration():
-    username = request.form['username']
-    password = request.form['password']
-    email = request.form['email']
+    return render_template('user-invite.html')
 
-    print 'Handled registration attempt: ' + username
 
 @app.route('/upload/')
+@login_required
 def upload_form():
     return render_template('upload.html')
 
 @app.route('/_upload-documents', methods=['POST'])
+@login_required
 def upload_endpoint():
     files = request.files.getlist('file[]') 
     d = {}
@@ -248,6 +260,7 @@ def upload_endpoint():
     return redirect(url_for('root'))
 
 @app.route('/viz')
+@login_required
 def viz_all():
     q = {
         "fields" : ["entities","title"],
@@ -262,6 +275,7 @@ def viz_all():
     return json.dumps(graph)
 
 @app.route('/viz/<query>')
+@login_required
 def viz_endpoint(query):
     url='http://localhost:9200/dossiers/_search'
     q = {
@@ -277,15 +291,18 @@ def viz_endpoint(query):
     return json.dumps(graph)
 
 @app.route('/viz_latest')
+@login_required
 def viz_latest():
     return viz_endpoint(session['last_query']['query'])
 
 
 @app.route('/wc_latest')
+@login_required
 def wc_latest():
     return wc(session['last_query']['query'])
 
 @app.route('/wordcloud/<query>')
+@login_required
 def wc(query):
     stopset=set(stopwords.words('english'))
     url='http://localhost:9200/dossiers/_search'
@@ -310,6 +327,7 @@ def wc(query):
     return json.dumps(frequency)
 
 @app.route('/<doc_id>/related')
+@login_required
 def more_like_this(doc_id):
     ''' Returns similar documents '''
     q = {
@@ -341,5 +359,55 @@ def more_like_this(doc_id):
     return jsonify(results)
 
 @app.route('/index.html')
+@login_required
 def reroute_index():
     return redirect('/')
+
+@app.route('/register', methods=['POST'])
+@login_required
+def handle_registration():
+    email = request.form['email']
+    password = request.form['password']
+    
+    # Change this to: current user's group
+    organization = 'Focus Africa'
+    
+    org = Organization.query.filter_by(organization=organization).first()
+    pw_hashed = flask_bcrypt.generate_password_hash(password)
+    new_user = User(email=email,
+                    password=pw_hashed,
+                    organization=org)
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return 'Handled registration attempt: ' + username
+
+######################################
+# Registration blueprint:
+######################################
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == 'GET':
+        return render_template("/user-login.html")
+
+    email = request.form["email"]
+    password = request.form["password"]
+    user = User.query.filter_by(email=email).first()
+    if user and flask_bcrypt.check_password_hash(user.password, 
+            password):
+            if login_user(user):
+                return redirect('/')
+            else:
+                flash("Invalid email or password")
+
+    return render_template("/user-login.html")
+
+@login_manager.unauthorized_handler
+def login_redirect():
+    return redirect('/login')
+
+@login_manager.user_loader
+def load_user(userid):
+    return User.query.get(userid)
