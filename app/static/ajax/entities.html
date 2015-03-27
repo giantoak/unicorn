@@ -93,8 +93,9 @@ $(document).ready(function() {
       });
 
    
-
-var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(graph.links));
+var dtemp=graph.links.map(function(x){return {'s':x.source.id,'t':x.target.id,'file':x.target.origin}})
+console.log(dtemp)
+var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dtemp));
 $("#dljs").attr("href", 'data:' + data );
 $("#dljs").attr("download","data.json")
  });
