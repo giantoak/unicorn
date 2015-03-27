@@ -6,18 +6,27 @@
         </ol>
     </div>
 </div>
-<div class="well"><div id="viz-container"></div></div>
+<div class="well"><a type="button" class="btn btn-default" id="dljs">Export JSON</a><div id="viz-container"></div></div>
 
 <script type="text/javascript">
+
+/*$("#button").click( function()
+           {
+       
+             alert('button clicked');
+           }
+        );*/
 $(document).ready(function() {
+
     $.get('/viz_latest', function(data){
          $("#viz-container").html('');
+
      
     graph=JSON.parse(data)
     console.log(graph)
     var network_container = $("#viz-container");
     var width = network_container.parent().width(),
-        height = width;
+        height = 500;
 
       var color = d3.scale.category20();
 
@@ -83,6 +92,11 @@ $(document).ready(function() {
 
       });
 
-    });
+   
+
+var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(graph.links));
+$("#dljs").attr("href", 'data:' + data );
+$("#dljs").attr("download","data.json")
+ });
 });
 </script>
