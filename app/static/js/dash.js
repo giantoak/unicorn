@@ -239,17 +239,16 @@ function LoadSparkLineScript(callback){
 	Additional scripts written for Unicorn
 ---------------------------------------------*/
 
-function LoadUploadPage() {
-  var upload_url = 'upload';
+function LoadPageWithPreloader(endpoint, window_hash) {
   $('#content').removeClass('full-content');
-  window.location.hash = upload_url;
   $('.preloader').show();
   $.ajax({
 		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
-		url: '/' + upload_url,
+		url: endpoint,
 		type: 'GET',
 		success: function(data) {
 			$('#ajax-content').html(data);
+                        window.location.hash = window_hash;
 			$('.preloader').hide();
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
@@ -258,51 +257,32 @@ function LoadUploadPage() {
 		dataType: "html",
 		async: false
   });
+}
+
+function LoadUploadPage() {
+  var upload_hash = 'upload',
+      upload_url = '/' + upload_hash;
+  LoadPageWithPreloader(upload_url, upload_hash);
 }
 
 function LoadSearchContent(query, page) {
-  var search_url = 'search';
-  if (typeof(query) !=='undefined') search_url += '/' + query;
-  if (typeof(page) !=='undefined') search_url += '/' + page;
-  console.log('search query: ' + search_url);
-  $('#content').removeClass('full-content');
-  window.location.hash = search_url;
-  $('.preloader').show();
-  $.ajax({
-		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
-		url: '/' + search_url,
-		type: 'GET',
-		success: function(data) {
-			$('#ajax-content').html(data);
-			$('.preloader').hide();
-		},
-		error: function (jqXHR, textStatus, errorThrown) {
-			$('#ajax-content').text(errorThrown);
-		},
-		dataType: "html",
-		async: false
-  });
+  var hash = 'search';
+  if (typeof(query) !=='undefined') hash += '/' + query;
+  if (typeof(page) !=='undefined') hash += '/' + page;
+  var search_url = '/' + hash;
+  LoadPageWithPreloader(search_url, hash);
 }
 
 function LoadDocumentContent(doc) {
-  var doc_url = '/view/';
-  window.location.hash = 'view/' + doc;
-  $('#content').removeClass('full-content');
-  $('.preloader').show();
-  $.ajax({
-		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
-		url: doc_url + doc,
-		type: 'GET',
-		success: function(data) {
-			$('#ajax-content').html(data);
-			$('.preloader').hide();
-		},
-		error: function (jqXHR, textStatus, errorThrown) {
-			$('#ajax-content').text(errorThrown);
-		},
-		dataType: "html",
-		async: false
-  });
+  var doc_hash = 'view/' + doc,
+      doc_url = '/' + doc_hash;
+  LoadPageWithPreloader(doc_url, doc_hash);
+}
+
+function LoadUserSettings() {
+  var user_hash = 'user',
+      user_url = '/' + user_hash;
+  LoadPageWithPreloader(user_hash, user_url);
 }
 
 /*-------------------------------------------
@@ -2481,6 +2461,15 @@ $(document).ready(function () {
 			LoadAjaxContent(url);
 		}
 	});
+	
+        $('#screen_unlock').on('mouseover', function(){
+		var header = 'Enter current username and password';
+		var form = $('<div class="form-group"><label class="control-label">Username</label><input type="text" class="form-control" name="username" /></div>'+
+					'<div class="form-group"><label class="control-label">Password</label><input type="password" class="form-control" name="password" /></div>');
+		var button = $('<div class="text-center"><a href="index.html" class="btn btn-primary">Unlock</a></div>');
+		OpenModalBox(header, form, button);
+	});
+
 
         /***********
          * Unicorn event handlers 
@@ -2513,13 +2502,10 @@ $(document).ready(function () {
           LoadDocumentContent(doc);
         });
 
-	$('#screen_unlock').on('mouseover', function(){
-		var header = 'Enter current username and password';
-		var form = $('<div class="form-group"><label class="control-label">Username</label><input type="text" class="form-control" name="username" /></div>'+
-					'<div class="form-group"><label class="control-label">Password</label><input type="password" class="form-control" name="password" /></div>');
-		var button = $('<div class="text-center"><a href="index.html" class="btn btn-primary">Unlock</a></div>');
-		OpenModalBox(header, form, button);
-	});
+        /* User settings are clicked */
+        $(document).on('click', '#user-settings-link', function(e) {
+          LoadUserSettings();
+        });
 });
 
 

@@ -4,7 +4,6 @@
 		<meta charset="utf-8">
 		<title>Unicorn</title>
 		<meta name="description" content="description">
-		<meta name="author" content="DevOOPS">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link href="{{url_for('static', filename='plugins/bootstrap/bootstrap.css')}}" rel="stylesheet">
 		<link href="{{url_for('static', filename='plugins/jquery-ui/jquery-ui.min.css')}}" rel="stylesheet">
@@ -67,7 +66,9 @@
 							<li class="hidden-xs">
 								<a href="index.html" class="modal-link">
 									<i class="fa fa-bell"></i>
-									<span class="badge">7</span>
+                                                                        {% if user.notifs > 0 %}
+                                                                        <span class="badge">{{user.notifs}}</span>
+                                                                        {% endif %}
 								</a>
 							</li>
 							<li class="dropdown">
@@ -82,36 +83,14 @@
 									</div>
 								</a>
 								<ul class="dropdown-menu">
+                                                                        {% if user.role == 'admin' %}
 									<li>
-										<a href="#">
-											<i class="fa fa-user"></i>
-											<span>Profile</span>
+										<a id="user-settings-link" href="#">
+											<i class="fa fa-user-plus"></i>
+											<span>(Admin) Invite user</span>
 										</a>
 									</li>
-									<li>
-										<a href="static/ajax/page_messages.html" class="ajax-link">
-											<i class="fa fa-envelope"></i>
-											<span>Messages</span>
-										</a>
-									</li>
-									<li>
-										<a href="static/ajax/gallery_simple.html" class="ajax-link">
-											<i class="fa fa-picture-o"></i>
-											<span>Albums</span>
-										</a>
-									</li>
-									<li>
-										<a href="static/ajax/calendar.html" class="ajax-link">
-											<i class="fa fa-tasks"></i>
-											<span>Tasks</span>
-										</a>
-									</li>
-									<li>
-										<a href="#">
-											<i class="fa fa-cog"></i>
-											<span>Settings</span>
-										</a>
-									</li>
+                                                                        {% endif %}
 									<li>
 										<a href="#">
 											<i class="fa fa-power-off"></i>

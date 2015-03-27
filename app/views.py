@@ -208,9 +208,23 @@ def search_endpoint(query=None, page=None):
 @app.route('/')
 def root():
     user_struct = {
-            'user': DEFAULT_INDEX
+            'user': DEFAULT_INDEX,
+            'role': 'admin',
+            'notifs': 0
             }
     return render_template('index-dash.html', user=user_struct)
+
+@app.route('/user')
+def user_page():
+    return render_template('user-template.html')
+
+@app.route('/register', methods=['POST'])
+def handle_registration():
+    username = request.form['username']
+    password = request.form['password']
+    email = request.form['email']
+
+    print 'Handled registration attempt: ' + username
 
 @app.route('/upload/')
 def upload_form():
