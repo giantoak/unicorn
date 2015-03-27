@@ -25,6 +25,8 @@ $(document).ready(function() {
     var container_width = network_container.parent().outerWidth(),
         width = network_container.parent().innerWidth()
         height = width;
+        width=500;
+        height=500;
 
     d3.layout.cloud().size([width*3/4, height*3/4])
             .words(frequency_list)
