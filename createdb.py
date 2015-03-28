@@ -9,6 +9,7 @@ admin_group = Organization('admins')
 
 admin_pw_hash = flask_bcrypt.generate_password_hash(admin_password)
 admin = User(admin_username, admin_pw_hash, organization=admin_group, 
+        moderator=True,
         admin=True)
 
 db.session.add(focus)

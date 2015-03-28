@@ -80,11 +80,11 @@
 									<i class="fa fa-angle-down pull-right"></i>
 									<div class="user-mini pull-right">
 										<span class="welcome">Welcome,</span>
-                                                                                <span>{{user.user}}</span>
+                                                                                <span>{{current_user.email}}</span>
 									</div>
 								</a>
 								<ul class="dropdown-menu">
-                                                                        {% if user.role == 'admin' %}
+                                                                        {% if current_user.moderator %}
 									<li>
 										<a id="user-settings-link" href="#">
 											<i class="fa fa-user-plus"></i>

@@ -222,8 +222,6 @@ def search_endpoint(query=None, page=None):
 @login_required
 def root():
     user_struct = {
-            'user': DEFAULT_INDEX,
-            'role': 'admin',
             'notifs': 0
             }
     return render_template('index-dash.html', user=user_struct)
@@ -366,22 +364,24 @@ def reroute_index():
 @app.route('/register', methods=['POST'])
 @login_required
 def handle_registration():
+    if not current_user.moderator:
+        return redirect('/')
+
     email = request.form['email']
     password = request.form['password']
     
     # Change this to: current user's group
-    organization = 'Focus Africa'
+    organization = current_user.organization
     
-    org = Organization.query.filter_by(organization=organization).first()
     pw_hashed = flask_bcrypt.generate_password_hash(password)
     new_user = User(email=email,
                     password=pw_hashed,
-                    organization=org)
+                    organization=organization)
 
     db.session.add(new_user)
     db.session.commit()
 
-    return 'Handled registration attempt: ' + username
+    return redirect('/')
 
 ######################################
 # Registration blueprint:

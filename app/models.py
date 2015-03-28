@@ -34,5 +34,5 @@ class Organization(db.Model):
         self.domain=domain
 
     def __repr__(self):
-        return '<Organization %r>' % self.name
+        return '<Organization %r>' % self.organization
 
