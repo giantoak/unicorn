@@ -1,44 +1,89 @@
 <div class="row">
-	<div id="breadcrumb" class="col-md-12">
-		<ol class="breadcrumb">
-                  <li><a href="{{url_for('root')}}">Home</a></li>
-			<li class="disabled"><a href="#">Document search</a></li>
-		</ol>
-	</div>
+  <div id="breadcrumb" class="col-md-12">
+    <ol class="breadcrumb">
+      <li><a href="{{url_for('root')}}">Home</a></li>
+      <li class="disabled"><a href="#">Search results</a></li>
+    </ol>
+  </div>
 </div>
 <div class="row">
-	<div class="col-xs-9">
-          <p class="small">About {{results.total}} results ({{results.took}} seconds)</p>
-                {% for result in results.hits %}
-		<div class="one-result">
-                  <a data-doc="{{result.id}}" href="#" class="doc-link large">{{ result.title }}</a>
-                  <p class="txt-primary">{{ result.entities|join(', ') }}</p>
-                  <p>...{{result.highlight | safe}}...</p>
-		</div>
-                {% endfor %}
-        
-                <ul id="search-pagination" data-query="{{ results.query }}" class="pagination">
-                  {# Previous button is disabled on the first page #}
-                  <li class="prev {% if results.from <= 1 %}disabled{% endif %}"><a data-page={{results.from-1}} href="#">← Previous</a></li>
-                  
-                  {# Construct pagination. Results per page is hardcoded here. #}
-                  {% for i in range(1, (results.total_int/10)|int +1) %}
-                  
-                  {# Highlight active page #}
-                  <li {% if i == results.from %}class="active"{% endif %}>
-                    <a class="search-pag-link" data-page={{i}} href="#">{{i}}</a>
-                    </li>
-                  {%endfor%}
+  <div class="col-xs-6">
+    <div class="box">
+      <div class="box-header">
+        <div class="box-name">
+          <i class="fa fa-calendar-o"></i>
+          <span>Search results</span>
+        </div>
+        <div class="box-icons pull-right">
+          <a class="collapse-link">
+            <i class="fa fa-chevron-up"></i>
+          </a>
+          <a class="expand-link">
+            <i class="fa fa-expand"></i>
+          </a>
+          <a class="close-link">
+            <i class="fa fa-times"></i>
+          </a>
+        </div>
+        <div class="no-move"></div>
+      </div>
+      <div class="box-content">
+        <p class="small">About {{results.total}} results ({{results.took}} seconds). <a href="{{url_for('bulk_download_route')}}">Download All</a></p>
+        {% for result in results.hits %}
+        <div class="one-result">
+          <a data-doc="{{result.id}}" href="#" class="doc-link large">{{ result.title }}</a>
+          <p class="txt-primary">{{ result.entities|join(', ') }}</p>
+          <p>...{{result.highlight | safe}}...</p>
+        </div>
+        {% endfor %}
 
-                  {# Disables the next button if it's the last page #}
-                  <li class="next {% if results.from >= (results.total_int/10)|int %} disabled {%endif%}">
-                  <a href="#" class="search-pag-link" data-page={{results.from+1}}>Next → </a></li></ul>
-	</div>
+        <ul id="search-pagination" data-query="{{ results.query }}" class="pagination">
+          {# Previous button is disabled on the first page #}
+          <li class="prev {% if results.from <= 1 %}disabled{% endif %}"><a data-page={{results.from-1}} href="#">← Previous</a></li>
 
-	<div class="col-xs-3">
-		<ul class="nav nav-search">
-			<li class="active"><a href="#">Results</a></li>
-                        <li><a href="{{url_for('bulk_download_route')}}">Download All</a></li>
-		</ul>
-	</div>
+          {# Construct pagination. Results per page is hardcoded here. #}
+          {% for i in range(1, (results.total_int/10)|int +1) %}
+
+          {# Highlight active page #}
+          <li {% if i == results.from %}class="active"{% endif %}>
+          <a class="search-pag-link" data-page={{i}} href="#">{{i}}</a>
+          </li>
+          {%endfor%}
+
+          {# Disables the next button if it's the last page #}
+          <li class="next {% if results.from >= (results.total_int/10)|int %} disabled {%endif%}">
+          <a href="#" class="search-pag-link" data-page={{results.from+1}}>Next → </a></li></ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-6">
+    <div class="box">
+      <div class="box-header">
+        <div class="box-name">
+          <i class="fa fa-calendar-o"></i>
+          <span>Document viewer</span>
+        </div>
+        <div class="box-icons pull-right">
+          <a class="collapse-link">
+            <i class="fa fa-chevron-up"></i>
+          </a>
+          <a class="expand-link">
+            <i class="fa fa-expand"></i>
+          </a>
+          <a class="close-link">
+            <i class="fa fa-times"></i>
+          </a>
+        </div>
+        <div class="no-move"></div>
+      </div>
+      <div class="box-content">
+        <ul class="nav nav-search">
+<ul class="nav nav-tabs" role="tablist" id="doc-viewer-tabs">
+</ul>
+<div class="tab-content" id="doc-viewer-content">
+</div>
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>

@@ -285,6 +285,35 @@ function LoadUserSettings() {
   LoadPageWithPreloader(user_hash, user_url);
 }
 
+function LoadDocumentTab(doc, text) {
+  var doc_hash = 'view/' + doc,
+      doc_url = '/' + doc_hash;
+  // Remove active tab
+  $('#doc-viewer-tabs li').removeClass('active');
+  $('#doc-viewer-content div').removeClass('active');
+  
+  var title = text.substring(0, 6) + '...';
+  // Make new tab active
+  var new_tab = $('<li role="presentation" class="active"><a href="#'+doc+'" aria-controls="'+doc+'" role="tab" data-toggle="tab">'+title+'</a></li>');
+  
+  $('#doc-viewer-tabs').append(new_tab);
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: doc_url,
+		type: 'GET',
+		success: function(data) {
+                        var doc_div = $('<div role="tabpanel" class="tab-pane active">').attr('id', doc);
+			doc_div.html(data);
+                        $('#doc-viewer-content').append(doc_div);
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			$('#ajax-content').text(errorThrown);
+		},
+		dataType: "html",
+		async: false
+  });
+}
+
 /*-------------------------------------------
 	Main scripts used by theme
 ---------------------------------------------*/
@@ -2499,7 +2528,8 @@ $(document).ready(function () {
         /* Document is loaded into main panel */
         $(document).on('click', '.doc-link', function(e) {
           var doc = $(e.target).data('doc');
-          LoadDocumentContent(doc);
+          var title = $(e.target).text();
+          LoadDocumentTab(doc, title);
         });
 
         /* User settings are clicked */

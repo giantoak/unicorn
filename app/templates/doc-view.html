@@ -1,46 +1,44 @@
 
-
 <div class="row">
         <div id="breadcrumb" class="col-md-12">
                 <ol class="breadcrumb">
                   <li><a href="{{url_for('root')}}">Home</a></li>
-                  <li><a class="search-breadcrumb-link" href="#">Document search</a></li>
+                  <li><a class="search-breadcrumb-link" href="#">Search results</a></li>
                   <li class="disabled"><a href="#">Viewer</a></li>
                 </ol>
         </div>
 </div>
 
-  <div class="row">
-    <!-- PDF viewer -->
-    <div class="col-md-6">
+<div class="row">
+  <!-- PDF viewer -->
+  <div class="col-md-12">
     <embed id="pdf-content" 
       src="/pdf/{{doc_id}}"
       type="application/pdf"
       height="700px"
       width="100%">
     </embed>
-    </div>
-
-    <!-- Extracted entities -->
-    <div class="col-md-6">
-      <div class="row" id="related-block">
-        <legend>Related documents</legend>
-        <div class="related-preloader">
-          <i class="fa fa-spinner fa-spin"></i>
-        </div>
-        <ul class="list-group" id="related-list">
-        </ul>
-      </div>
-      <div class="row" id="entities-block">
-      <legend>Extracted entities</legend>
-        <div class="entities-preloader">
-          <i class="fa fa-spinner fa-spin"></i>
-        </div>
-      <ul class="list-group" id="entities-list">
-      </ul> 
-    </div>
-    </div>
   </div>
+</div>
+<div class="row">
+  <!-- Extracted entities -->
+  <div class="col-md-6">
+    <legend>Related documents</legend>
+    <div class="related-preloader">
+      <i class="fa fa-spinner fa-spin"></i>
+    </div>
+    <ul class="list-group" id="related-list">
+    </ul>
+  </div>
+  <div class="col-md-6">
+    <legend>Extracted entities</legend>
+    <div class="entities-preloader">
+      <i class="fa fa-spinner fa-spin"></i>
+    </div>
+    <ul class="list-group" id="entities-list">
+    </ul> 
+  </div>
+</div>
 
 <script type="text/javascript">
 $('document').ready(function() {
