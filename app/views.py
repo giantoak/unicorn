@@ -107,8 +107,11 @@ def view_doc(doc_id):
     ''' In-depth view of a particular document.
     Displays pdf version of document, extracted entities,
     as well as other analytics. '''
-
-    return render_template('doc-view.html', doc_id=doc_id)
+    
+    if is_owner_of_doc(doc_id):
+        return render_template('doc-view.html', doc_id=doc_id)
+    else:
+        return abort(403)
 
 @app.route('/pdf/<doc_id>')
 @login_required
@@ -184,7 +187,7 @@ def search_endpoint(query=None, page=None, box_only=False):
         start *= 10
 
     q = {
-            "fields": ["title", "highlight", "entities"],
+            "fields": ["title", "highlight", "entities", "owner"],
             "from": start,
             "query" : {
                 "match" : {
@@ -202,16 +205,24 @@ def search_endpoint(query=None, page=None, box_only=False):
             size=10)
 
     hits = []
-
+    
     for resp in raw_response['hits']['hits']:
         # Store returned ids
         session['last_query']['ids'].append(resp['_id'])
+        
+        if is_owner(resp['fields']['owner'][0]):
+            # Flatten structure for individual hits
+            hits.append({'id': resp['_id'], 
+                'title': resp['fields']['title'][0],
+                'highlight': resp['highlight']['file'][0],
+                'permissions': True
+                })
+        else:
+            hits.append({'id': resp['_id'], 
+                'title': resp['fields']['title'][0],
+                'permissions': False
+                })
 
-        # Flatten structure for individual hits
-        hits.append({'id': resp['_id'], 
-            'title': resp['fields']['title'][0],
-            'highlight': resp['highlight']['file'][0]
-            })
 
     results = {
             'hits': hits,
@@ -258,11 +269,11 @@ def upload_endpoint():
 
         es_dict = {
                 'file': f.read().encode('base64'),
-                'title': sf
+                'title': sf,
+                'owner': current_owner.organization.organization
                 }
         es.index(index=DEFAULT_INDEX, doc_type='attachment', body=es_dict)
         f.close()
-        
 
     return redirect(url_for('root'))
 
@@ -427,3 +438,16 @@ def login_redirect():
 @login_manager.user_loader
 def load_user(userid):
     return User.query.get(userid)
+
+def is_owner_of_doc(doc):
+    owner = es.get(index=DEFAULT_INDEX, doc_type='attachment', id=doc, 
+            fields='owner')['fields']['owner'][0]
+    return is_owner(owner)
+
+def is_owner(org):
+    return current_user.organization.organization == 'admins' or \
+            current_user.organization.organization == org
+
+@app.errorhandler(403)
+def permission_denied(e):
+    return render_template('permission-denied.html'), 403

@@ -1,9 +1,14 @@
 <p class="small">About {{results.total}} results ({{results.took}} seconds). <a href="{{url_for('bulk_download_route')}}">Download All</a></p>
 {% for result in results.hits %}
 <div class="one-result">
+  {% if result.permissions %}
   <a data-doc="{{result.id}}" href="#" class="doc-link large">{{ result.title }}</a>
-  <p class="txt-primary">{{ result.entities|join(', ') }}</p>
   <p>...{{result.highlight | safe}}...</p>
+  {% else %}
+  <a href="#" class="large"><i class="fa fa-lock"></i>{{ result.title }}</a>
+  <p class="txt-primary">You don't have permissions to view this file.</p>
+  {% endif %} 
+
 </div>
 {% endfor %}
 
