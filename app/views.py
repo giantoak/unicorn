@@ -156,11 +156,16 @@ def download_endpoint(doc_id):
             as_attachment=True,
             attachment_filename=fn)
 
+@app.route('/search/<query>/<page>/preserve')
+@login_required
+def search_preserve(query, page):
+    return search_endpoint(query, page, box_only=True)
+
 @app.route('/search')
 @app.route('/search/<query>')
 @app.route('/search/<query>/<page>')
 @login_required
-def search_endpoint(query=None, page=None):
+def search_endpoint(query=None, page=None, box_only=False):
     if not query and not page:
         last_query = session.get('last_query', None)
         if last_query:
@@ -216,6 +221,10 @@ def search_endpoint(query=None, page=None):
             'query': query,
             'from': int(page)
             }
+
+    if box_only:
+        return render_template('search-results-box.html', results=results)
+
     return render_template('search-template.html', results=results)
 
 @app.route('/')

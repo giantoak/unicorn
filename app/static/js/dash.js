@@ -239,20 +239,22 @@ function LoadSparkLineScript(callback){
 	Additional scripts written for Unicorn
 ---------------------------------------------*/
 
-function LoadPageWithPreloader(endpoint, window_hash) {
-  $('#content').removeClass('full-content');
+function LoadPageWithPreloader(endpoint, window_hash, target) {
+  if (typeof(target) === 'undefined') target = $('#ajax-content');
+  console.log(target);
+  target.html();
   $('.preloader').show();
   $.ajax({
 		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
 		url: endpoint,
 		type: 'GET',
 		success: function(data) {
-			$('#ajax-content').html(data);
+			target.html(data);
                         window.location.hash = window_hash;
 			$('.preloader').hide();
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
-			$('#ajax-content').text(errorThrown);
+			target.text(errorThrown);
 		},
 		dataType: "html",
 		async: false
@@ -265,12 +267,19 @@ function LoadUploadPage() {
   LoadPageWithPreloader(upload_url, upload_hash);
 }
 
-function LoadSearchContent(query, page) {
-  var hash = 'search';
+function LoadSearchContent(query, page, preserve_page) {
+  var hash = 'search', target;
   if (typeof(query) !=='undefined') hash += '/' + query;
   if (typeof(page) !=='undefined') hash += '/' + page;
   var search_url = '/' + hash;
-  LoadPageWithPreloader(search_url, hash);
+
+  // Should we only render this page? True if this argument is set
+  if (typeof(preserve_page) !== 'undefined') {
+    search_url += '/preserve';
+    target = $('#search-results-box');
+  }
+
+  LoadPageWithPreloader(search_url, hash, target);
 }
 
 function LoadDocumentContent(doc) {
@@ -2522,7 +2531,7 @@ $(document).ready(function () {
           var clicked = $(e.target).data('page'),
               query = $('#search-pagination').data('query');
               console.log('Going to page ' + clicked + ' : ' + query);
-              LoadSearchContent(query, clicked);
+              LoadSearchContent(query, clicked, true);
         });
         
         /* Document is loaded into main panel */
