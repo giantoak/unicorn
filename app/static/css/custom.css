@@ -10,3 +10,5 @@ line.link {
 }
 
 span.highlight { background-color: yellow; }
+
+div {word-wrap: break-word;}
