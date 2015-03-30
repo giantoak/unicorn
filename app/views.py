@@ -413,6 +413,13 @@ def login():
 
     return render_template("/user-login.html")
 
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/login')
+
+
 @login_manager.unauthorized_handler
 def login_redirect():
     return redirect('/login')
