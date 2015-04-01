@@ -1,7 +1,7 @@
 <div class="row">
     <div id="breadcrumb" class="col-md-12">
         <ol class="breadcrumb">
-            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="index.html">Home</a></li>
             <li><a href="#">Entity Co-occurence Network</a></li>
         </ol>
     </div>
@@ -10,89 +10,145 @@
 
 <script type="text/javascript">
 
-/*$("#button").click( function()
-           {
-       
-             alert('button clicked');
-           }
-        );*/
 $(document).ready(function() {
+    $.get('/viz_latest', function(data) { 
+      var graph = JSON.parse(data);
+      links = graph.links;
+      nodes = graph.nodes;
+      adj = graph.adj;
 
-    $.get('/viz_latest', function(data){
-         $("#viz-container").html('');
+      console.log(graph);
+      var width = $("#viz-container").parent().width(),
+      height = 960,
+      ent_colors = d3.scale.category20();
 
-     
-    graph=JSON.parse(data)
-    console.log(graph)
-    var network_container = $("#viz-container");
-    var width = network_container.parent().width(),
-        height = 500;
+      console.log(ent_colors);
+      var force = d3.layout.force()
+        .nodes(d3.values(nodes))
+        .links(links)
+        .size([width, height])
+        .linkDistance(50)
+        .charge(-300)
+        .on("tick", tick)
+        .start();
 
-      var color = d3.scale.category20();
-
-      
       var svg = d3.select("#viz-container").append("svg")
         .attr("width", width)
-        .attr("height", height)
-        .attr("pointer-events","all")
-        .append('svg:g')
-        .call(d3.behavior.zoom().on("zoom",redraw))
-        .append('svg:g');
+        .attr("height", height);
 
-       var force = d3.layout.force()
-          .nodes(graph.nodes)
-          .links(graph.links)
-          .size([width, height])
-          .linkDistance(100)
-          .charge(-200)
-          .start();
+      var path = svg.append("g").selectAll("path")
+        .data(force.links())
+        .enter().append("path")
+        .attr("class", "link");
+      
+            var circle = svg.append("g").selectAll("circle")
+        .data(force.nodes())
+        .enter().append("circle")
+        ////////////////////////////////////////////////
+        // Different styling for documents vs. entities
+        .attr("class", function (d) { return "node " + d.type; })
+        ////////////////////////////////////////////////
+        // Fill in colors based off type of entity (vs. single color documents)
+        .style("fill", function(d) { 
+            return d.type == "entity" ? ent_colors(d.category) : "white";
+          })
+        ////////////////////////////////////////////////
+        // Size nodes based off the number of connections
+        .attr("r", function(d) { return Object.keys(adj[d.id]).length + 3; })
+        .call(force.drag)
+        ////////////////////////////////////////////////
+        // Event handler for when node is clicked
+        .on("click", function(d) {
+            console.log(d);
+            })
+        .on("mouseover", handle_mouseover)
+        .on("mouseout", handle_mouseout);
 
-        function redraw(){
-          svg.attr("transform","translate("
-          + d3.event.translate+")"+" scale("+d3.event.scale+")");
+      var text = svg.append("g").selectAll("text")
+        .data(force.nodes())
+        .enter().append("text")
+        .attr("x", 8)
+        .attr("y", "1em")
+        .text(function(d) { 
+            if (d.type == "entity") return d.id ;
+            });
+        
+            function tick() {
+        path.attr("d", linkArc);
+        circle.attr("transform", transform);
+        text.attr("transform", transform);
+      }
+
+      function linkArc(d) {
+        var dx = d.target.x - d.source.x,
+            dy = d.target.y - d.source.y;
+        return "M" + d.source.x + "," + d.source.y 
+              + "L" + d.target.x + "," + d.target.y;
+      }
+
+      function transform(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+      }
+
+            function handle_mouseover(node) {
+        // neighbors of neighbors:
+        // track number of shared links between neighbors of neighbors
+        var neighbors = {},
+            neighbor_max = 1;
+        for (var x in adj[node.id]) {
+          neighbors[x] = x in neighbors ? neighbors[x]+1 : 1;
+          for (var y in adj[x]) {
+            if (y in neighbors && y != node.id){
+              neighbors[y] += 1;
+              neighbor_max = neighbors[y] > neighbor_max ? 
+                neighbors[y] : neighbor_max;
+            }
+            else
+              neighbors[y] = 1;
+          }
         }
+        neighbors[node.id] = neighbor_max;
 
-        var link = svg.append("g").selectAll(".link")
-            .data(graph.links)
-          .enter().append("line")
-            .attr("class", "link");
+        var delay = 100;
+        circle.transition()
+          .duration(delay)
+          .style("opacity", function (d) {
+            return (d.id in neighbors) ? neighbors[d.id]/neighbor_max + 0.1 : 0;
+            });
+        path.transition()
+          .duration(delay)
+          .style("stroke-width", function (d) {
+            if (d.target.id in adj[node.id] || d.source.id in adj[node.id]) {
+              if (node === d.target || node === d.source)
+              {
+                return 3;
+              }
+              else {
+                return 1;
+              }
+            }
+            else {
+              return 0; 
+            }
+          })
+          .style("stroke-dasharray", function(d) {
+            if (d.target.id in adj[node.id] || d.source.id in adj[node.id]) {
+            }
+          })
+        ;
 
-      // Create the groups under svg
-      var gnodes = svg.selectAll('g.gnode')
-        .data(graph.nodes)
-        .enter()
-        .append('g')
-        .classed('gnode', true);
-
-      // Add one circle in each group
-      var node = gnodes.append("circle")
-        .attr("class", "node")
-        .attr("r", 5)
-        .attr("fill","cadetblue")
-        .on("click",function(d){
-          window.open("/view/"+d.origin)
-        })
-        .call(force.drag);
-
-      var labels = gnodes.append("text")
-        .attr("fill","black")
-        .text(function(d) { return d.id; });
-
-      force.on("tick", function() {
-        // Update the links
-        link.attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
-
-        // Translate the groups
-        gnodes.attr("transform", function(d) { 
-          return 'translate(' + [d.x, d.y] + ')'; 
-        });    
-
-      });
-
-   
+        text.transition()
+          .duration(delay)
+          .style("opacity", function (d) {
+            return (d.id in neighbors) ? 1 : 0;
+          });
+      }
+    function handle_mouseout(node) {
+        circle.transition().style("opacity", 1);
+        path.transition().style("stroke-width", .1);
+        text.transition().style("opacity", 1);
+      }
+ 
 var dtemp=graph.links.map(function(x){return {'s':x.source.id,'t':x.target.id,'file':x.target.origin}})
 console.log(dtemp)
 var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dtemp));

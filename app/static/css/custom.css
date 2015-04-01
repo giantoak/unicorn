@@ -1,13 +1,29 @@
-
-node {
-    stroke: #000;
-    stroke-width: 1.5px;
+.link {
+  fill: none;
+  stroke: #333;
+  stroke-width: 0.1px;
 }
 
-line.link {
-    stroke: #000;
-    stroke-opacity: 0.6;
+.node {
+  stroke-width: 1.5px;
 }
+
+.node.entity {
+  stroke: #000;
+  fill: #FFF;
+}
+
+.node.document {
+  stroke: #333;
+  fill: #333;
+}
+
+text {
+  font: 10px sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
 
 span.highlight { background-color: yellow; }
 

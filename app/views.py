@@ -30,7 +30,7 @@ import subprocess
 
 from bulk import bulk_download, bulk_search
 from config import tmp_dir
-from util.network import make_graph
+from util.network import make_graph, document_graph
 import time
 
 DEFAULT_INDEX = 'dossiers'
@@ -285,10 +285,10 @@ def viz_all():
         "query" : {
             "match_all" : {}
             },
-        "size": 500
+        "size": 100
         }
     r = es.search(body=q, index=DEFAULT_INDEX)
-    graph = make_graph(r)
+    graph = document_graph(r['hits']['hits'])
 
     return json.dumps(graph)
 
@@ -297,15 +297,18 @@ def viz_all():
 def viz_endpoint(query):
     url='http://localhost:9200/dossiers/_search'
     q = {
+        "_source": ["entity"],
         "fields" : ["entities","title"],
         "query" : {
             "term" : { "file" : query }
-            }
+            },
+        "size": 100
         }
     #r=requests.post(url,data=json.dumps(q))
     r=es.search(body=q,index=DEFAULT_INDEX)    
     data=r
-    graph = make_graph(data)
+    #graph = make_graph(data)
+    graph = document_graph(data['hits']['hits'])
     return json.dumps(graph)
 
 @app.route('/viz_latest')
