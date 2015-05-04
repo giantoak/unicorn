@@ -263,7 +263,7 @@ function LoadPageWithPreloader(endpoint, window_hash, target) {
 
 function LoadUploadPage() {
   var upload_hash = 'upload',
-      upload_url = '/' + upload_hash;
+      upload_url = upload_hash;
   LoadPageWithPreloader(upload_url, upload_hash);
 }
 
@@ -271,7 +271,7 @@ function LoadSearchContent(query, page, preserve_page) {
   var hash = 'search', target;
   if (typeof(query) !=='undefined') hash += '/' + query;
   if (typeof(page) !=='undefined') hash += '/' + page;
-  var search_url = '/' + hash;
+  var search_url = hash;
 
   // Should we only render this page? True if this argument is set
   if (typeof(preserve_page) !== 'undefined') {
@@ -284,26 +284,26 @@ function LoadSearchContent(query, page, preserve_page) {
 
 function LoadDocumentContent(doc) {
   var doc_hash = 'view/' + doc,
-      doc_url = '/' + doc_hash;
+      doc_url = doc_hash;
   LoadPageWithPreloader(doc_url, doc_hash);
 }
 
 function LoadUserSettings() {
   var user_hash = 'user',
-      user_url = '/' + user_hash;
+      user_url = user_hash;
   LoadPageWithPreloader(user_hash, user_url);
 }
 
 function LoadDocumentTab(doc, text) {
   var doc_hash = 'view/' + doc,
-      doc_url = '/' + doc_hash;
+      doc_url = doc_hash;
   // Remove active tab
   $('#doc-viewer-tabs li').removeClass('active');
   $('#doc-viewer-content div').removeClass('active');
   
   var title = text.substring(0, 6) + '...';
   // Make new tab active
-  var new_tab = $('<li role="presentation" class="active"><a href="#'+doc+'" aria-controls="'+doc+'" role="tab" data-toggle="tab">'+title+'</a></li>');
+  var new_tab = $('<li role="presentation" class="active"><a ="#'+doc+'" aria-controls="'+doc+'" role="tab" data-toggle="tab">'+title+'</a></li>');
   
   $('#doc-viewer-tabs').append(new_tab);
   $.ajax({
@@ -1943,7 +1943,7 @@ function displayFlickrImages(data){
 	var res;
 	$.each(data.items, function(i,item){
 		if (i >11) { return false;}
-		res = "<a href=" + item.link + " title=" + item.title + " target=\"_blank\"><img alt=" + item.title + " src=" + item.media.m + " /></a>";
+		res = "<a =" + item.link + " title=" + item.title + " target=\"_blank\"><img alt=" + item.title + " src=" + item.media.m + " /></a>";
 		$('#box-one-content').append(res);
 		});
 		setTimeout(function(){
@@ -2430,9 +2430,10 @@ $(document).ready(function () {
 			}
 			var url = $(this).attr('href');
 			window.location.hash = url;
+            console.log(url);
 			LoadAjaxContent(url);
 		}
-		if ($(this).attr('href') == '#') {
+		if ($(this).attr('') == '#') {
 			e.preventDefault();
 		}
 	});
@@ -2494,7 +2495,7 @@ $(document).ready(function () {
 			else {
 				$('#content').removeClass('full-content');
 			}
-			var url = $(this).attr('href');
+			var url = $(this).attr('');
 			window.location.hash = url;
 			LoadAjaxContent(url);
 		}
@@ -2504,7 +2505,7 @@ $(document).ready(function () {
 		var header = 'Enter current username and password';
 		var form = $('<div class="form-group"><label class="control-label">Username</label><input type="text" class="form-control" name="username" /></div>'+
 					'<div class="form-group"><label class="control-label">Password</label><input type="password" class="form-control" name="password" /></div>');
-		var button = $('<div class="text-center"><a href="index.html" class="btn btn-primary">Unlock</a></div>');
+		var button = $('<div class="text-center"><a ="index.html" class="btn btn-primary">Unlock</a></div>');
 		OpenModalBox(header, form, button);
 	});
 

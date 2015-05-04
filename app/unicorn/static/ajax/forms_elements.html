@@ -11,10 +11,10 @@
 <script type="text/javascript">
 console.log($('#search'))
 $(document).ready(function() {
-	$.get('/viz_latest'), function(data){
+	$.get('viz_latest'), function(data){
 		console.log(data)
 	}
-	$.get('/wc_latest', function(data){
+	$.get('wc_latest', function(data){
 		 $("#viz-container").html('');
   frequency_list=JSON.parse(data)
   var color = d3.scale.linear()

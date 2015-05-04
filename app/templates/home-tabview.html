@@ -227,10 +227,10 @@ function loader(query){
         for (var col=1; col<list[row].length; col++) {
           var col_elem = $('<td>').html(list[row][col]);
           if ( col == 1 ) {
-            col_elem.wrapInner("<a href=/download/" + doc_id + "></a>");
+            col_elem.wrapInner("<a href=download/" + doc_id + "></a>");
           }
           else if ( col == 2 ) {
-            col_elem.wrapInner("<a href=/view/" + doc_id + "></a>");
+            col_elem.wrapInner("<a href=view/" + doc_id + "></a>");
           }
           row_elem.append(col_elem);
         }

@@ -15,7 +15,7 @@
         var DEFAULT_ALPHA = 0.9;
 
 
-        $.get('/viz_latest', function(data) { 
+        $.get('viz_latest', function(data) { 
 
             var graph = JSON.parse(data);
             links = graph.links;

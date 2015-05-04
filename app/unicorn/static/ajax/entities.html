@@ -23,7 +23,7 @@
                  .type("entity"),
          graph_export_data;
 
-     $.get('/viz_latest', function(data) {
+     $.get('viz_latest', function(data) {
      
              var graph_data = JSON.parse(data);
              svg.datum(graph_data)

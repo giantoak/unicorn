@@ -93,7 +93,7 @@
                 </li>
                 {% endif %}
                 <li>
-                <a href="{{url_for('logout')}}">
+                <a href="{{url_for('.logout')}}">
                   <i class="fa fa-power-off"></i>
                   <span>Logout</span>
                 </a>
@@ -114,7 +114,7 @@
     <div id="sidebar-left" class="col-xs-2 col-sm-2">
       <ul class="nav main-menu">
         <li>
-        <a href="{{url_for('search_endpoint')}}" class="active ajax-link">
+        <a href="{{url_for('.search_endpoint')}}" class="active ajax-link">
           <i class="fa fa-heart"></i>
           <span class="hidden-xs">Search Results</span>
         </a>
