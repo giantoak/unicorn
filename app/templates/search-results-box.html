@@ -1,4 +1,4 @@
-<p class="small">About {{results.total}} results ({{results.took}} seconds). <a href="{{url_for('bulk_download_route')}}">Download All</a></p>
+<p class="small">About {{results.total}} results ({{results.took}} seconds). <a href="{{url_for('.bulk_download_route')}}">Download All</a></p>
 {% for result in results.hits %}
 <div class="one-result">
   {% if result.permissions %}

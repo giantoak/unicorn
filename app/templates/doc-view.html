@@ -2,7 +2,7 @@
 <div class="row">
         <div id="breadcrumb" class="col-md-12">
                 <ol class="breadcrumb">
-                  <li><a href="{{url_for('root')}}">Home</a></li>
+                  <li><a href="{{url_for('.root')}}">Home</a></li>
                   <li><a class="search-breadcrumb-link" href="#">Search results</a></li>
                   <li class="disabled"><a href="#">Viewer</a></li>
                 </ol>
@@ -13,7 +13,7 @@
   <!-- PDF viewer -->
   <div class="col-md-12">
     <embed id="pdf-content" 
-      src="/pdf/{{doc_id}}"
+      src="pdf/{{doc_id}}"
       type="application/pdf"
       height="700px"
       width="100%">
@@ -55,7 +55,7 @@
 $('document').ready(function() {
     $('.entities-preloader').show();
     $.ajax({
-      url: '/{{doc_id}}/entities',
+      url: '{{doc_id}}/entities',
       dataType: 'json',
       success: function (data) {
         $('.entities-preloader').hide();
@@ -74,7 +74,7 @@ $('document').ready(function() {
 /* Load related items */
     $('.related-preloader').show();
     $.ajax({
-      url: '/{{doc_id}}/related', 
+      url: '{{doc_id}}/related', 
       dataType: 'json',
       success: function (data) {
         $('.related-preloader').hide();

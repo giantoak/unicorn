@@ -1,0 +1,27 @@
+<div class="row full-calendar" id="url_results">
+
+
+
+</div>
+<script>
+$(document).ready(function() {
+	$.get('/unicorn/url_list', function(data){
+		 tbl_row="";
+		 tbl_body="";
+         data=JSON.parse(data)
+         var i=1;
+		 for (var key in data) {
+		 	console.log(data[key])
+
+		 	tbl_row+="<tr><td>"+key+'</td><td>'+data[key]+'</td></tr>';
+          //$('#topics_words').append(data['topics'][key].toString()+'\n');
+          i++;
+        }
+         tbl_body+='<table id="url_table" class="display"><thead><tr><th>URL</th><th>Count</th></thead><tbody>'+tbl_row+"</tbody></table>"
+         $("#url_results").html(tbl_body)
+         $("#url_table").dataTable({
+ 			"sDom": '<"top">rt<"bottom"lp><"clear">'
+         	});
+	});
+});
+</script>

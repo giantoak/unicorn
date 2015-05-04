@@ -1,0 +1,38 @@
+<div class="row">
+    <div id="breadcrumb" class="col-md-12">
+        <ol class="breadcrumb">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="#">Entity Co-occurence Network</a></li>
+        </ol>
+    </div>
+</div>
+<div class="well"><a type="button" class="btn btn-default" id="dljs">Export JSON</a><div id="viz-container"></div></div>
+
+<script type="text/javascript">
+ $(document).ready(function() {
+     "use strict";
+  
+     var width = $("#viz-container").parent().width(),
+         height = 960,
+         svg = d3.select("#viz-container").append("svg")
+                 .attr("width", width)
+                 .attr("height", height),
+         graph = NetworkGraph()
+                 .width(width)
+                 .height(height)
+                 .type("entity"),
+         graph_export_data;
+
+     $.get('viz_latest', function(data) {
+     
+             var graph_data = JSON.parse(data);
+             svg.datum(graph_data)
+                     .call(graph);
+             graph_export_data = graph.getExport();
+     });
+    
+    $("#dljs").attr("href", "data:" + graph_export_data);
+    $("#dljs").attr("download", "data.json");
+});
+
+</script>
