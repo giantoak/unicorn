@@ -33,6 +33,13 @@ from config import tmp_dir
 from util.network import make_graph, document_graph
 import time
 
+import sklearn
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn import decomposition
+import corex as ce
+import numpy as np
+
+
 DEFAULT_INDEX = 'dossiers'
 
 @app.route('/_bulk_search', methods=['POST'])
@@ -148,6 +155,23 @@ def pdf_endpoint(doc_id):
         os.remove(out_fname)
         
         return out
+
+@app.route('/topics/<doc_id>')
+def get_topics(doc_id):
+    topics=json.loads(open('/home/gmueller/unicorn/topics.json').read())
+    return json.dumps(topics['documents'][doc_id])
+
+@app.route('/all_topics')
+def alltopics():
+    topics=json.loads(open('/home/gmueller/unicorn/topics.json').read())
+    docs=len(topics['documents'])
+    dist={}
+    for idx,x in enumerate(np.bincount([np.argmax(item[1]) for item in topics['documents'].items()])):
+        dist['topic'+str(idx+1)]=float(x)/docs
+    topics['dist']=dist
+    return json.dumps(topics)
+
+
 
 @app.route('/download/<doc_id>')
 @login_required
@@ -322,6 +346,32 @@ def viz_latest():
 def wc_latest():
     return wc(session['last_query']['query'])
 
+
+@app.route('/url_list/<query>')
+@login_required
+def url_fetch(query):
+    stopset=set(stopwords.words('english'))
+    url='http://localhost:9200/dossiers/_search'
+    query="mozambique"
+    q = {
+        "fields" : ["file"],
+        "query" : {
+            "term" : { "file" : query }
+            }
+        }
+    #r=requests.post(url,data=json.dumps(q))    
+    r=es.search(body=q,index=DEFAULT_INDEX)
+    data=r['hits']['hits']
+    urls=[]
+    for doc in data:
+        try:
+            urls.append(re.findall(r'(https?://[^\s]+)', doc['fields']['file'][0]))
+        except KeyError:
+            pass
+    urls=filter(lambda x: x!=[],urls)
+    urls_flat=reduce(lambda x,y: x.extend(y),urls)
+    return json.dumps(dict(Counter(urls_flat)))
+
 @app.route('/wordcloud/<query>')
 @login_required
 def wc(query):
@@ -346,6 +396,29 @@ def wc(query):
         frequency.append(dict({"text":k,"size":v*3}))
     frequency=filter(lambda x:x['size']>3 and x['text'].lower() not in stopset,frequency)
     return json.dumps(frequency)
+
+@app.route('/topicmodel/<query>')
+#@login_required
+def tm(query):
+    #count_vectorizer.fit_transform(train_set)
+    #print "Vocabulary:", count_vectorizer.vocabulary
+    # Vocabulary: {'blue': 0, 'sun': 1, 'bright': 2, 'sky': 3}
+    #freq_term_matrix = count_vectorizer.transform(test_set)
+    #print freq_term_matrix.todense()
+    stopset=set(stopwords.words('english'))
+    url='http://localhost:9200/dossiers/_search'
+    q = {
+        "fields" : ["file"],
+        "query" : {
+            "term" : { "file" : query }
+            }
+        }
+    
+  
+    return json.dumps(topic_words[0])
+
+
+
 
 @app.route('/<doc_id>/related')
 @login_required
