@@ -12,6 +12,9 @@ apt-get install -y unoconv
 # Install packages for SSL
 apt-get install -y libssl-dev libffi-dev
 
+# Install psycopg dependencies
+apt-get install libpq-dev
+
 # Install Python dependencies
 source env/bin/activate
 pip install -r requirements.txt
