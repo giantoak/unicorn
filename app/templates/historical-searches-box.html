@@ -1,0 +1,13 @@
+<a href="#" id="clear-all-history">Clear all</a>
+<div id="history-list">
+{% for hist in history | reverse %}
+<div class="historical-searches">
+    <input class="historical-checkbox" type="checkbox" name="checkbox" 
+    data-query="{{hist.query |e}}" 
+    {% if hist.active %} checked {% endif %}
+    >
+    {{hist.query}}
+</div>
+{% endfor %}
+</div>
+

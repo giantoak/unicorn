@@ -7,7 +7,33 @@
   </div>
 </div>
 <div class="row">
-  <div class="col-xs-6">
+  <div class="col-xs-2">
+    <div class="box">
+      <div class="box-header">
+        <div class="box-name">
+          <i class="fa fa-calendar-o"></i>
+          <span>History</span>
+        </div>
+        <div class="box-icons pull-right">
+          <a class="collapse-link">
+            <i class="fa fa-chevron-up"></i>
+          </a>
+          <a class="expand-link">
+            <i class="fa fa-expand"></i>
+          </a>
+          <a class="close-link">
+            <i class="fa fa-times"></i>
+          </a>
+        </div>
+        <div class="no-move"></div>
+      </div>
+      <div class="box-content" id="previous-searches">
+          {% include 'historical-searches-box.html' %}
+      </div>
+    </div>
+  </div>
+<div class="row">
+  <div class="col-xs-4">
     <div class="box">
       <div class="box-header">
         <div class="box-name">
@@ -32,7 +58,7 @@
       </div>
     </div>
   </div>
-  <div class="col-xs-6">
+  <div class="col-xs-5">
     <div class="box">
       <div class="box-header">
         <div class="box-name">
@@ -53,12 +79,10 @@
         <div class="no-move"></div>
       </div>
       <div class="box-content">
-        <ul class="nav nav-search">
-<ul class="nav nav-tabs" role="tablist" id="doc-viewer-tabs">
-</ul>
-<div class="tab-content" id="doc-viewer-content">
-</div>
-        </ul>
+              <ul class="nav nav-tabs" role="tablist" id="doc-viewer-tabs">
+              </ul>
+              <div class="tab-content" id="doc-viewer-content">
+              </div>
       </div>
     </div>
   </div>

@@ -296,7 +296,40 @@ function LoadUserSettings() {
       user_url = user_hash;
   LoadPageWithPreloader(user_hash, user_url);
 }
-
+function DeleteHistory() {
+  var hist_url = 'hist/delete';
+  console.log('Delete history: ' + hist_url);
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: hist_url,
+		type: 'GET',
+		success: function(data) {
+            console.log('Delete successful');
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			$('#ajax-content').text(errorThrown);
+		},
+		dataType: "html",
+		async: false
+  }) 
+}
+function UpdateHistory(query, active) {
+  var hist_url = 'hist/update/' + escape(query) + '/' + (active?1:0);
+  console.log('Update history: ' + hist_url);
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: hist_url,
+		type: 'GET',
+		success: function(data) {
+            console.log('Update successful');
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			$('#ajax-content').text(errorThrown);
+		},
+		dataType: "html",
+		async: false
+  }) 
+}
 function LoadDocumentTab(doc, text) {
   var doc_hash = 'view/' + doc,
       doc_url = doc_hash;
@@ -2548,6 +2581,18 @@ $(document).ready(function () {
         /* User settings are clicked */
         $(document).on('click', '#user-settings-link', function(e) {
           LoadUserSettings();
+        });
+
+        /* History checkboxes are clicked */
+        $(document).on('change', '.historical-checkbox', function(e) {
+          var cbox = $(e.target);
+          UpdateHistory(cbox.data('query'), cbox.is(":checked"));
+        });
+        
+        /* History checkboxes are deleted */
+        $(document).on('click', '#clear-all-history', function(e) {
+          DeleteHistory();
+          $('.historical-searches').html('');
         });
 });
 
