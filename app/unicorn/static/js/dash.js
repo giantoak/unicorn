@@ -2,6 +2,9 @@
 //    Main script of DevOOPS v1.0 Bootstrap Theme
 //
 "use strict";
+
+// Disable Ajax caching
+$.ajaxSetup({ cache: false });
 /*-------------------------------------------
 	Dynamically load plugin scripts
 ---------------------------------------------*/
