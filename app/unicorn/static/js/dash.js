@@ -313,6 +313,43 @@ function DeleteHistory() {
 		async: false
   }) 
 }
+function EmitHandler(event, node, relatives) {
+    var type = node.type,
+        cat = node.category === null ? '' : node.category,
+        name = type == 'document' ? node.title : node.id,
+        neighbors = [],
+        cousins = [];
+
+    for (var elem in relatives) {
+        if (relatives[elem] == 1) {
+            neighbors.push(elem);
+        }
+        else {
+            cousins.push(elem);
+        }
+    }
+    
+    switch (event) {
+        case 'mouseout':
+            $("#node-current-name").text('No node selected');
+            $("#node-current-type").text('');
+            $("#node-current-category").text('');
+            break;
+        case 'mouseover':
+            $("#node-current-name").text(name);
+            $("#node-current-type").text(type);
+            $("#node-current-category").text(cat);
+            break
+        case 'mouseup':
+            $("#node-name").text(name);
+            $("#node-type").text(type);
+            $("#node-category").text(cat);
+            $("#node-neighbors").text(neighbors);
+            $("#node-cousins").text(cousins);
+            break
+    }
+    return;
+}
 function DrawEntityGraph() {
     $("#viz-container").html('');
     var width = $("#viz-container").parent().width(),
@@ -323,7 +360,8 @@ function DrawEntityGraph() {
          graph = NetworkGraph()
                  .width(width)
                  .height(height)
-                 .type("entity"),
+                 .type("entity")
+                 .nodeCallback(EmitHandler),
          graph_export_data;
 
      $.get('hist/and', function(data) {
@@ -345,7 +383,6 @@ function UpdateHistory(query, active) {
 		type: 'GET',
 		success: function(data) {
             DrawEntityGraph();
-            console.log('Update successful');
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
 			$('#ajax-content').text(errorThrown);

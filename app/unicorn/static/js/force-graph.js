@@ -15,6 +15,7 @@ function NetworkGraph() {
         charge = -300,
         DEFAULT_ALPHA = 0.9,
         type = "",
+        nodeEmitter = null,
         graph;
     
     //////////////////////////////////////////////////////////////////////
@@ -51,6 +52,11 @@ function NetworkGraph() {
         return makeGraph;
     }
     
+    // Setup callback function for node events
+    makeGraph.nodeCallback = function(f) {
+        nodeEmitter = f;
+        return makeGraph;
+    }
     //////////////////////////////////////////////////////////////////////
     // Functions that are not chainable
     //////////////////////////////////////////////////////////////////////
@@ -66,8 +72,14 @@ function NetworkGraph() {
         var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dtemp));
         return data;
     }
-
-
+    
+    function emit(e, node, neighbors) {
+        if (nodeEmitter !== null) {
+            console.log('emit: ', e, neighbors);
+            nodeEmitter(e, node, neighbors);
+        }
+    }
+    
     //////////////////////////////////////////////////////////////////////
     // Main constructor
     //////////////////////////////////////////////////////////////////////
@@ -114,15 +126,17 @@ function NetworkGraph() {
             var dragged_distance = dist(drag_pos, d);
             console.log(dragged_distance);
             if (!d.fixed || dragged_distance > 3) {
-                d3.select(this).style('stroke-width', '5px');
+                d3.select(this).classed({'fixed': true});
                 d.fixed = true; 
+                tick();
+                force.stop();
             }
             else {
-                d3.select(this).style('stroke-width', null);
+                d3.select(this).classed({'fixed': false})
                 d.fixed = false;
+                tick();
+                force.resume();
             }
-            tick();
-            force.resume();
         }
 
         function dist(d1, d2) {
@@ -158,6 +172,8 @@ function NetworkGraph() {
             .on("click", function(d) {
                 console.log(d);
             })
+            .on("mousedown", handle_mousedown)
+            .on("mouseup", handle_mouseup)
             .on("mouseover", handle_mouseover)
             .on("mouseout", handle_mouseout);
 
@@ -188,12 +204,12 @@ function NetworkGraph() {
             return "M" + d.source.x + "," + d.source.y 
             + "L" + d.target.x + "," + d.target.y;
         }
-
-        function handle_mouseover(node) {
+        
+        function get_neighbors(node) {
             // neighbors of neighbors:
             // track number of shared links between neighbors of neighbors
             var neighbors = {},
-            neighbor_max = 1;
+                neighbor_max = 1;
             for (var x in adj[node.id]) {
                 neighbors[x] = x in neighbors ? neighbors[x]+1 : 1;
                 for (var y in adj[x]) {
@@ -208,11 +224,18 @@ function NetworkGraph() {
             }
             neighbors[node.id] = neighbor_max;
 
-            var delay = 100;
+            return neighbors;
+        }
+        function highlight_node(node) {
+            // neighbors of neighbors:
+            // track number of shared links between neighbors of neighbors
+            var neighbors = get_neighbors(node),
+                delay = 100;
+
             circle.transition()
             .duration(delay)
             .style("opacity", function (d) {
-                return (d.id in neighbors) ? neighbors[d.id]/neighbor_max + 0.1 : 0;
+                return (d.id in neighbors) ? neighbors[d.id]/neighbor_max + 0.1 : 0.1;
             });
             path.transition()
             .duration(delay)
@@ -233,21 +256,32 @@ function NetworkGraph() {
             .style("stroke-dasharray", function(d) {
                 if (d.target.id in adj[node.id] || d.source.id in adj[node.id]) {
                 }
-            })
-            ;
+            });
 
             text.transition()
             .duration(delay)
             .style("opacity", function (d) {
-                return (d.id in neighbors) ? DEFAULT_ALPHA : 0;
+                return (d.id in neighbors) ? DEFAULT_ALPHA : 0.1;
             });
         }
-        function handle_mouseout(node) {
+        function unhighlight() {
             circle.transition().style("opacity", DEFAULT_ALPHA);
             path.transition().style("stroke-width", .1);
             text.transition().style("opacity", 1);
         }
-
+        function handle_mousedown(node) {
+        }
+        function handle_mouseup(node) {
+            var neighbors = get_neighbors(node);
+            console.log('mouseup: ', node, neighbors);
+            emit('mouseup', node, neighbors)
+        }
+        function handle_mouseover(node) {
+            emit('mouseover', node);
+        }
+        function handle_mouseout(node) {
+            emit('mouseout', node);
+        }
     }
 
     return makeGraph;
