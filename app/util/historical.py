@@ -1,5 +1,13 @@
 MAX_HIST = 10
 
+def active_history_terms(hist):
+    terms = []
+    for q in hist:
+        if q['active']:
+            terms.append(q['query'])
+
+    return terms
+
 def update_history(hist, query, active):
     for q in hist:
         if q['query'] == query:

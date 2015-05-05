@@ -313,6 +313,29 @@ function DeleteHistory() {
 		async: false
   }) 
 }
+function DrawEntityGraph() {
+    $("#viz-container").html('');
+    var width = $("#viz-container").parent().width(),
+         height = 960,
+         svg = d3.select("#viz-container").append("svg")
+                 .attr("width", width)
+                 .attr("height", height),
+         graph = NetworkGraph()
+                 .width(width)
+                 .height(height)
+                 .type("entity"),
+         graph_export_data;
+
+     $.get('hist/and', function(data) {
+             var graph_data = JSON.parse(data);
+             svg.datum(graph_data)
+                     .call(graph);
+             graph_export_data = graph.getExport();
+     });
+    
+    $("#dljs").attr("href", "data:" + graph_export_data);
+    $("#dljs").attr("download", "data.json");
+}
 function UpdateHistory(query, active) {
   var hist_url = 'hist/update/' + escape(query) + '/' + (active?1:0);
   console.log('Update history: ' + hist_url);
@@ -321,6 +344,7 @@ function UpdateHistory(query, active) {
 		url: hist_url,
 		type: 'GET',
 		success: function(data) {
+            DrawEntityGraph();
             console.log('Update successful');
 		},
 		error: function (jqXHR, textStatus, errorThrown) {

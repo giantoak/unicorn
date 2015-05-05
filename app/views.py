@@ -33,7 +33,8 @@ import subprocess
 from bulk import bulk_download, bulk_search
 from config import tmp_dir
 from util.network import make_graph, document_graph
-from util.historical import amend_history, update_history
+from util.historical import (amend_history, update_history,
+                             active_history_terms)
 import time
 
 DEFAULT_INDEX = 'dossiers'
@@ -180,6 +181,30 @@ def update_history_route(query, active):
 def delete_history():
     session['history'] = []
     return make_response(json.dumps(session['history']))
+
+@uni.route('/hist/and')
+@login_required
+def history_query():
+    ''' AND query over all active history terms '''
+    terms = active_history_terms(session['history'])
+    body =  {
+            "_source": ["entity"],
+            "fields": ["entities", "title"],
+            "query": {
+                "constant_score" : {
+                    "filter" : {
+                        "terms" : {
+                            "file" : terms,
+                            "execution": "and"
+                            }
+                        }
+                    }
+                }
+            }
+    r = es.search(body=body, index=DEFAULT_INDEX, size=100)
+    graph = make_response(json.dumps(document_graph(r['hits']['hits'])))
+
+    return graph
 
 @uni.route('/search')
 @uni.route('/search/<query>')
