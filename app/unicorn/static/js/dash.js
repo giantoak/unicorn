@@ -315,11 +315,13 @@ function DeleteHistory() {
 }
 function EmitHandler(event, node, relatives) {
     var type = node.type,
-        cat = node.category === null ? '' : node.category,
-        name = type == 'document' ? node.title : node.id,
+        cat,
+        name,
+        name_html,
         neighbors = [],
         cousins = [];
-
+    
+    // TODO: stop this madness
     for (var elem in relatives) {
         if (relatives[elem] == 1) {
             neighbors.push(elem);
@@ -329,6 +331,20 @@ function EmitHandler(event, node, relatives) {
         }
     }
     
+    if (type == 'document') {
+        name = node.title;
+        name_html = "<a href=# class=doc-link data-doc='" + node.id +"'>" +
+                        name + "</div>";
+        
+        cat = "";
+    }
+    else if (type == 'entity') {
+        name = node.id;
+        name_html = "<a href=# class=search-link data-query='" + 
+                        name + "'>" + name + "</div>";
+
+        cat = node.category;
+    } 
     switch (event) {
         case 'mouseout':
             $("#node-current-name").text('No node selected');
@@ -336,16 +352,16 @@ function EmitHandler(event, node, relatives) {
             $("#node-current-category").text('');
             break;
         case 'mouseover':
-            $("#node-current-name").text(name);
+            $("#node-current-name").html(name_html);
             $("#node-current-type").text(type);
             $("#node-current-category").text(cat);
             break
         case 'mouseup':
-            $("#node-name").text(name);
+            $("#node-name").html(name_html);
             $("#node-type").text(type);
             $("#node-category").text(cat);
-            $("#node-neighbors").text(neighbors);
-            $("#node-cousins").text(cousins);
+            //$("#node-neighbors").text(neighbors);
+            //$("#node-cousins").text(cousins);
             break
     }
     return;
@@ -2612,13 +2628,13 @@ $(document).ready(function () {
          ***********/
 
         /* Enter key is pressed in search bar */
-	$('#search').on('keydown', function(e){
-		if (e.keyCode == 13){
-			e.preventDefault();
-                        var query = $('#search > input').val();
-                        LoadSearchContent(query, 1);
-		}
-	});
+        $('#search').on('keydown', function(e){
+            if (e.keyCode == 13){
+                e.preventDefault();
+                            var query = $('#search > input').val();
+                            LoadSearchContent(query, 1);
+            }
+        });
         /* Search is clicked in breadcrumbs */
         $(document).on('click', '.search-breadcrumb-link', function(e) {
           console.log('search breadcrumb link');
@@ -2654,6 +2670,14 @@ $(document).ready(function () {
         $(document).on('click', '#clear-all-history', function(e) {
           DeleteHistory();
           $('.historical-searches').html('');
+        });
+
+        /* Links are clicked */
+        $(document).on('click', '.search-link', function(e) {
+            var name = $(e.target).data('query');
+            LoadSearchContent(name, 1);
+            console.log('entity: ', name);
+
         });
 });
 
