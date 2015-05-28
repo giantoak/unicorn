@@ -39,6 +39,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn import decomposition
 import corex as ce
 import numpy as np
+import phonenumbers
+from phonenumbers import geocoder
 
 
 DEFAULT_INDEX = 'dossiers'
@@ -351,7 +353,10 @@ def wc_latest():
 @uni.route('/url_list')
 @uni.route('/url_list/<query>')
 @login_required
-def url_fetch(query="mozambique"):
+def url_fetch(query=""):
+    #query="http"
+    if not query:
+        query=session['last_query']['query']
     stopset=set(stopwords.words('english'))
     url='http://localhost:9200/dossiers/_search'
     q = {
@@ -364,14 +369,18 @@ def url_fetch(query="mozambique"):
     r=es.search(body=q,index=DEFAULT_INDEX)
     data=r['hits']['hits']
     urls=[]
+    pn=[]
     for doc in data:
+        urls.append(re.findall(r'(https?://[^\s]+)', doc['fields']['file'][0]))
         try:
-            urls.append(re.findall(r'(https?://[^\s]+)', doc['fields']['file'][0]))
+            for match in phonenumbers.PhoneNumberMatcher(doc['fields']['file'][0], region=None):
+                    pn.append({'number':phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164),'location':geocoder.description_for_number(match.number,"en")})     
         except KeyError:
             pass
     urls=filter(lambda x: x!=[],urls)
-    urls_flat=reduce(lambda x,y: x.extend(y),urls)
-    return json.dumps(dict(Counter(urls_flat)))
+    #urls_flat=reduce(lambda x,y: x.extend(y),urls)
+    urls_flat=[item for sublist in urls for item in sublist]
+    return json.dumps({'urls':dict(Counter(urls_flat)), 'pn':pn})
 
 @uni.route('/wordcloud/<query>')
 @login_required
