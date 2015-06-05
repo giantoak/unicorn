@@ -8,15 +8,34 @@
 </div>
 <script type="text/javascript">
 // Load OpenLayers library and create map
-function OpenLayersFS(){
-	LoadOpenLayersScript(FullScreenMap);
-}
+
 $(document).ready(function() {
-	// Add class for fullscreen view
 	$('#content').addClass('full-content');
-	// Set height of block
 	SetMinBlockHeight($('.fullscreenmap'));
-	// Load Google Map API and after this load OpenLayers
-	$.getScript('http://maps.google.com/maps/api/js?sensor=false&callback=OpenLayersFS');
+var baseLayer = L.tileLayer('https://{s}.tiles.mapbox.com/v3/cwhong.map-hziyh867/{z}/{x}/{y}.png',{
+maxZoom: 18
+}
+);
+//setup map and add layers
+var center = [39.2833,-76.6167];
+var map = new L.Map('full-map', {
+center: new L.LatLng(39.2833, -76.6167),
+zoom: 4,
+layers: [baseLayer]
+});
+
+
+//map.invalidateSize(false);
+ $.get('geo', function(data) {
+ 	data=JSON.parse(data)
+ 	for(var i=0; i<=data.length;i++){
+ 	L.marker([data[i]['lat'], data[i]['lon']]).addTo(map)
+ 	.bindPopup(data[i]['name'])
+    .openPopup();
+}
+ })
+
+
+
 });
 </script>

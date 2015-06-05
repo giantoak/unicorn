@@ -16,6 +16,7 @@
 <link href="{{url_for('static', filename='css/style.css')}}" rel="stylesheet">
 <link href="{{url_for('static', filename='css/custom.css')}}" rel="stylesheet">
 <link href="{{url_for('static', filename='css/jquery.dataTables.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename='js/leaflet.css')}}" rel="stylesheet">
 <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
 <!--[if lt IE 9]>
                                 <script src="http://getbootstrap.com/docs-assets/js/html5shiv.js"></script>
@@ -141,8 +142,14 @@
         </li>
          <li>
         <a class="ajax-link" href="static/ajax/urls.html">
-          <i class="fa fa-globe"></i>
+          <i class="fa fa-desktop"></i>
           <span class="hidden-xs">Urls</span>
+        </a>
+        </li>
+          <li>
+        <a class="ajax-link" href="static/ajax/map_fullscreen.html">
+          <i class="fa fa-globe"></i>
+          <span class="hidden-xs">Map</span>
         </a>
         </li>
        <li>
@@ -185,6 +192,6 @@
 <script src={{url_for('static', filename='js/d3.layout.cloud.js')}}></script>
 <script src={{url_for('static', filename='js/jquery.dataTables.js')}}></script>
 <script src='{{url_for('static', filename='js/force-graph.js')}}'></script>
-
+<script src={{url_for('static', filename='js/leaflet.js')}}></script>
 </body>
 </html>

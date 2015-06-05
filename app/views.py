@@ -26,7 +26,7 @@ import requests
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
-import os
+import os,sys
 import subprocess
 
 from bulk import bulk_download, bulk_search
@@ -42,6 +42,10 @@ import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
 
+parent = os.path.dirname(os.path.realpath(__file__))
+sys.path.append('/home/gmueller/geodict') #change path to MITIE top level
+
+import geodict_lib
 
 DEFAULT_INDEX = 'dossiers'
 uni = Blueprint('unicorn', __name__, url_prefix='/unicorn')
@@ -319,6 +323,33 @@ def viz_all():
     graph = document_graph(r['hits']['hits'])
 
     return json.dumps(graph)
+
+
+@uni.route('/geo')
+@login_required
+def geo_endpoint():
+    query=session['last_query']['query']
+    url='http://localhost:9200/dossiers/_search'
+    q = {
+        "fields" : ["file"],
+        "query" : {
+            "term" : { "file" : query }
+            }
+        }
+    #r=requests.post(url,data=json.dumps(q))
+    r=es.search(body=q,index=DEFAULT_INDEX)
+    data=r
+    locations=[]
+    for hit in data['hits']['hits']:
+        for location in geodict_lib.find_locations_in_text(re.sub('\s', ' ', str(hit['fields']['file']))):
+            for token in location['found_tokens']:
+                locations.append({'lat':token['lat'],'lon':token['lon'],'name':token['matched_string']})
+    
+    #geo=map(lambda x: x['found_tokens'])
+    return json.dumps(locations)
+
+
+
 
 @uni.route('/viz/<query>')
 @login_required
