@@ -426,16 +426,22 @@ def wc(query):
         }
     #r=requests.post(url,data=json.dumps(q))
     r=es.search(body=q,index=DEFAULT_INDEX)
-    data=r['hits']['hits'][0]['fields']['file'][0]
-
-    nowhite=re.sub('\s', ' ', data)
-    nowhite=re.sub(r'[^\w\s]', '', data)
-    wt=word_tokenize(nowhite)
-    wc=dict(Counter(wt))
+    #r=requests.post(url,data=json.dumps(q))
+    data=r
     frequency=[]
+    documents=[]
+    for hit in data['hits']['hits']:
+        text=hit['fields']['file'][0]
+        nowhite=re.sub('\s', ' ', text)
+        nowhite=re.sub(r'[^\w\s]', '',text)
+        wt=word_tokenize(nowhite)
+        documents.append(wt)
+
+    docflat=[item for sublist in documents for item in sublist]
+    wc=dict(Counter(docflat))
     for k,v in wc.iteritems():
-        frequency.append(dict({"text":k,"size":v*3}))
-    frequency=filter(lambda x:x['size']>3 and x['text'].lower() not in stopset,frequency)
+                frequency.append(dict({"text":k,"size":v*3}))
+    frequency=filter(lambda x:x['size']>6 and x['text'].lower() not in stopset,frequency)
     return json.dumps(frequency)
 
 @uni.route('/topicmodel')
