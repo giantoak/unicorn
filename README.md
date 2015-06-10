@@ -11,3 +11,5 @@ Configure port and elasticsearch endpoint.
 $source ve/bin/activate
 $pip install -r requirements.txt```
 
+This branch requires geodict for geocoding:
+https://github.com/petewarden/geodict
