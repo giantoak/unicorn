@@ -18,9 +18,9 @@ Since the **Vagrantfile** is forwarding your port 5000 to your host, you should 
 # Removing the default index
 The quickstart comes pre-loaded with 1,000 historical documents from the National Archives. If you want to clear this out, run:
 
-```$curl -XDELETE "http://localhost:9200/dossiers/" ; curl -XPUT "http://localhost:9200/dossiers/" 
+```$curl -XDELETE "http://localhost:9200/dossiers/" ; curl -XPUT "http://localhost:9200/dossiers/"``` 
 
-$sudo elasticdump \
+```$sudo elasticdump \
   --bulk=true \
   --input=dossiers_mapping.json \
   --output=http://localhost:9200/dossiers \
