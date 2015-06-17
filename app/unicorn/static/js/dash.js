@@ -648,6 +648,12 @@ function SetMinBlockHeight(elem){
 	elem.css('min-height', window.innerHeight - 49)
 }
 //
+
+// Map specific function for setting min block height 
+function SetMinBlockHeightMap(elem){
+	elem.css('min-height', window.innerHeight/2)
+}
+
 //  Helper for correct size of Messages page
 //
 function MessagesMenuWidth(){
