@@ -82,6 +82,10 @@ sudo elasticdump \
   --output=http://localhost:9200/dossiers \
   --type=data
 
+bash db_setup.sh
+
+python run.py
+
 ###### uncomment the below if you do not want to initialize with any sample data! ####
 # curl -XDELETE "http://localhost:9200/dossiers/" ; curl -XPUT "http://localhost:9200/dossiers/" 
 

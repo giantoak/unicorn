@@ -10,7 +10,7 @@ db_conn_str = 'postgresql://unicorn:unicorn@127.0.0.1:5432/'
 
 Now, in the main directory, execute:
 
-```$ . install.sh ; bash db_setup.sh ; python run.py```
+```$bash install.sh```
 
 Since the **Vagrantfile** is forwarding your port 5000 to your host, you should be able to navigate to http://localhost:5000/unicorn to access the application.
 
