@@ -1,0 +1,53 @@
+<p class="small">About {{results.total}} results ({{results.took}} seconds). <a href="{{url_for('.bulk_download_route')}}">Download All</a></p>
+
+<div class="accordion" id="accordion2">
+{% for result in results.hits %}
+<div class="one-result">
+  {% if result.permissions %}
+
+
+
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#{{result.id}}">
+        {{ result.title }}
+      </a>
+      </br>
+      ...{{result.highlight | safe}}...
+    </div>
+    <div id="{{result.id}}" class="accordion-body collapse">
+      <div class="accordion-inner">
+        
+        {{result.body | safe}}
+      </div>
+    </div>
+  </div>
+
+
+  
+
+  {% else %}
+  <a href="#" class="large"><i class="fa fa-lock"></i>{{ result.title }}</a>
+  <p class="txt-primary">You don't have permissions to view this file.</p>
+  {% endif %} 
+
+</div>
+{% endfor %}
+</div>
+
+<ul id="search-pagination" data-query="{{ results.query }}" class="pagination">
+  {# Previous button is disabled on the first page #}
+  <li class="prev {% if results.from <= 1 %}disabled{% endif %}"><a data-page={{results.from-1}} href="#">← Previous</a></li>
+
+  {# Construct pagination. Results per page is hardcoded here. #}
+  {% for i in range(1, (results.total_int/10)|int +1) %}
+
+  {# Highlight active page #}
+  <li {% if i == results.from %}class="active"{% endif %}>
+  <a class="search-pag-link" data-page={{i}} href="#">{{i}}</a>
+  </li>
+  {%endfor%}
+
+  {# Disables the next button if it's the last page #}
+  <li class="next {% if results.from >= (results.total_int/10)|int %} disabled {%endif%}">
+  <a href="#" class="search-pag-link" data-page={{results.from+1}}>Next → </a></li></ul>
