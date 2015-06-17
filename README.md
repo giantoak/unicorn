@@ -35,4 +35,4 @@ unicorn uses Postgres for user authentification. If you would like to alter the 
 (change both instances of 'unicorn' to create a different default user). Note you then need to update the **db_conn_str**.
 
 # PDF Viewer
-unicorn requires a browser plug-in to render PDFs called PDF Viewer. It is available [here for Google Chrome]((https://chrome.google.com/webstore/detail/pdf-viewer/oemmndcbldboiebfnladdacbdfmadadm) and [here for Firefox](https://addons.mozilla.org/en-US/firefox/addon/pdfjs/). unicorn should work natively with Safari.
+unicorn requires a browser plug-in to render PDFs called PDF Viewer. It is available [here for Google Chrome](https://chrome.google.com/webstore/detail/pdf-viewer/oemmndcbldboiebfnladdacbdfmadadm) and [here for Firefox](https://addons.mozilla.org/en-US/firefox/addon/pdfjs/). unicorn should work natively with Safari.
