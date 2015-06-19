@@ -329,16 +329,13 @@ def timeline(query=None, page=None, box_only=False):
         except:
             date = ''
 
-    print str(len(dates)) + ' dates found'
-    print dates[0:100]
-
     df = pd.DataFrame(dates, columns=['Date'])
+    df['Date'] = df['Date'].apply(lambda x: pd.to_datetime(x))
+    df['Date'] = df['Date'].apply(lambda x: x - timedelta(days=x.isoweekday()))
+    df['Date'] = df['Date'].apply(lambda x: x.strftime('%Y-%m-%d'))
     date_count = pd.DataFrame(df.groupby(['Date'])['Date'].count())
     date_count.columns = ['Count']
     date_count = date_count.reset_index(level=0)
-    date_count['Date'] = date_count['Date'].apply(lambda x: pd.to_datetime(x))
-    date_count['Date'] = date_count['Date'].apply(lambda x: x - timedelta(days=x.isoweekday()))
-    date_count['Date'] = date_count['Date'].apply(lambda x: x.strftime('%Y-%m-%d'))
     date_count_json = date_count.to_json(orient='records')
 
     return date_count_json
@@ -459,7 +456,6 @@ def geo_endpoint():
             continue
             # print 'no locations'
     
-    print locations
     #geo=map(lambda x: x['found_tokens'])
     return json.dumps(locations)
 
