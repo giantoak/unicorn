@@ -106,6 +106,20 @@ $(document).ready(function() {
 		    b = brush.extent();
 		    console.log(b);
 
+
+		    $.ajax({
+            type: "POST",
+            url: "serve_timeline",
+            data: JSON.stringify({dates: b}),
+            contentType: "application/json",
+            success: function (response) {
+            var myDiv = $('#search-results-box'); // The place where you want to insert the template
+	        myDiv.html(response);
+	    	}})
+
+
+
+
 		    /* var localBrushYearStart = (brush.empty()) ? brushYearStart : Math.ceil(y(b[0])),
 		        localBrushYearEnd = (brush.empty()) ? brushYearEnd : Math.ceil(y(b[1]));
 

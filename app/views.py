@@ -596,6 +596,133 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
 
 
 
+
+
+
+
+
+
+@uni.route('/serve_timeline', methods=['POST'])
+@uni.route('/serve_timeline/<query>', methods=['POST'])
+@uni.route('/serve_timeline/<query>/<page>', methods=['POST'])
+@login_required
+def serve_timeline(query=None, page=None, box_only=True, dates={}):
+
+
+    if request.method == "POST":
+        json_dict = request.get_json()
+        print json_dict
+        print type(json_dict)
+
+
+    dates = json_dict['dates']
+    startdate = dates[0][0:10]
+    enddate = dates[1][0:10]
+
+    if startdate == enddate:
+        startdate = "1973-01-01"
+        enddate = "1974-01-01"
+    print startdate, enddate
+
+    print 'running a new query...'
+
+    if not query and not page:
+        last_query = session.get('last_query', None)
+        if last_query:
+            query, page = last_query['query'], last_query['page']
+        else:
+            # better error
+            return abort(404)
+
+    if not page:
+        page = 1
+
+    session['last_query'] = {'query': query, 'page': page, 'ids': []}
+    # convert pages to records for ES
+    start = int(page)
+    if start > 1:
+        start *= 10
+
+    q = {
+            "fields": ["title", "highlight", "entities", "owner", "date"],
+            "from": start,
+            "query" : {
+                "match" : {
+                    "file" : query
+                    }
+                },
+                "filter":{
+                "range" : {
+                    "date" : {
+                        "gte": startdate,
+                        "lte": enddate,
+                        "format": "yyyy-MM-dd"
+                }
+            }
+            },
+            "highlight": { "fields": { "file": { } },
+                "pre_tags" : ["<span class='highlight'>"],
+                "post_tags" : ["</span>"]
+                }
+            }
+
+    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+            df="file",
+            size=10)
+
+    print q
+    print raw_response
+
+    hits = []
+
+    for resp in raw_response['hits']['hits']:
+
+        # Store returned ids
+        session['last_query']['ids'].append(resp['_id'])
+
+        if is_owner(resp['fields']['owner'][0]):
+            # Flatten structure for individual hits
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'highlight': resp['highlight']['file'][0],
+                'permissions': True
+                })
+        else:
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'permissions': False
+                })
+
+
+
+    results = {
+            'hits': hits,
+            'took': float(raw_response['took'])/1000,
+            'total': "{:,}".format(raw_response['hits']['total']),
+            'total_int': int(raw_response['hits']['total']),
+            'query': query,
+            'from': int(page)
+            }
+
+    if box_only:
+        return render_template('search-results-box.html', results=results)
+
+    return render_template('search-template.html', results=results)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @uni.route('/viz/<query>')
 @login_required
 def viz_endpoint(query):
