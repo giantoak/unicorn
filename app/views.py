@@ -418,6 +418,7 @@ def geo_endpoint():
 
     q = {
         "size" : 100000,
+        "fields" : ["entities","title","file","entities"],
         "query" : {
             "query_string" : { "query" : query }
             }
@@ -439,8 +440,8 @@ def geo_endpoint():
 
     for hit in data['hits']['hits']:
         entity_locations = []
-        
-        entities = json.loads(hit['_source']['entities'])
+
+        entities = json.loads(hit['fields']['entities'][0])
 
         try:
             for ent in entities:
@@ -448,10 +449,18 @@ def geo_endpoint():
                     entity_locations.append(ent)
         except:
             locs = []
-       
+
+        try:
+            doc_file = str(hit['fields']['file'][0].replace('\n','<br>'))
+        
+        except:
+            continue
+
         try:
             for location in entity_locations:
-                locations.append({'lat':location['entity']['lat'],'lon':location['entity']['lon'],'name':location['entity']['placename'], 'title': hit['_source']['title']})
+                locations.append({'lat':location['entity']['lat'],'lon':location['entity']['lon'],
+                    'name':location['entity']['placename'], 'title': hit['fields']['title'],
+                    'file': doc_file})
         except: 
             continue
             # print 'no locations'
@@ -509,6 +518,7 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
 
     q = { 
        "fields": ["title", "highlight", "entities", "owner", "body"], 
+       "from": start,
        "query":{  
           "filtered":{  
              "query":{  
