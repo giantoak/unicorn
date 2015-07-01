@@ -8,7 +8,7 @@
 </div>
 <h4 class="page-header">Topics</h4>
 <div class="row">
-	<div class="col-xs-6">
+	<div class="col-xs-12">
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="row">
@@ -38,7 +38,8 @@
 							<div class="box-content">
 								<p class="page-header">Code</p>
 								<h4>Inline</h4>
-								<p>For example, <code>&lt;section&gt;</code> should be wrapped as inline.</p>
+								<p>For example, <code>&lt;section&gt;</code> should be 
+								ed as inline.</p>
 								<p><pre>For example, &lt;code&gt;&amp;lt;section&amp;gt;&lt;/code&gt; should<br />be wrapped as inline.</pre></p>
 								<h4>User input</h4>
 								<p>To switch directories, type <kbd>cd</kbd> followed by the name of the directory.</p>
@@ -63,7 +64,7 @@
 			</div>
 		</div>
 	</div> -->
-	<div class="col-xs-6">
+	<div class="col-xs-12">
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="box">
@@ -168,10 +169,11 @@ $(document).ready(function(){
 		 tbl_body="";
           
          var i=1;
+       	 console.log(data);
 		 for (var key in data['topics']) {
 		 	console.log(data['dist'][key])
 
-		 	tbl_row+="<tr><td>"+key+'</td><td>'+data['topics'][key].slice(0,5).toString()+'</td><td><div style="margin-left:'+ (100-100*data['dist'][key]).toFixed(2)+'%;background-color:#6AA6D6" class="proportion"><span class="proportion">&nbsp;</span></div></td><td>'+(100*data['dist'][key]).toFixed(2)+'&#37;</td></tr>';
+		 	tbl_row+="<tr><td>"+key+'</td><td>'+data['topics'][key].slice(0,10).join(', ')+'</td><td><div style="margin-left:'+ (100-100*data['dist'][key]).toFixed(2)+'%;background-color:#6AA6D6" class="proportion"><span class="proportion">&nbsp;</span></div></td><td>'+(100*data['dist'][key]).toFixed(2)+'&#37;</td></tr>';
           //$('#topics_words').append(data['topics'][key].toString()+'\n');
           i++;
         }
