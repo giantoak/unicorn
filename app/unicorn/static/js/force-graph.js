@@ -10,10 +10,10 @@
 function NetworkGraph() {
     var width = 400,
         height = 400,
-        gravity = 0.05,
-        linkDistance = 50,
-        charge = -300,
-        DEFAULT_ALPHA = 0.9,
+        gravity = 0.3,
+        linkDistance = 20,
+        charge = -200,
+        DEFAULT_ALPHA = 0.7,
         type = "",
         graph;
     

@@ -28,13 +28,13 @@ $(document).ready(function() {
     var container_width = network_container.parent().outerWidth(),
         width = network_container.parent().innerWidth()
         height = width;
-        width=500;
-        height=500;
+        width=750;
+        height=750;
 
-    d3.layout.cloud().size([width*3/4, height*3/4])
+    d3.layout.cloud().size([width*6/4, height*6/4])
             .words(frequency_list)
             .rotate(0)
-            .fontSize(function(d) { return d.size; })
+            .fontSize(function(d) { return d.size * 2; })
             .on("end", draw)
             .start();
 
@@ -46,7 +46,7 @@ $(document).ready(function() {
                 .append("g")
                 // without the transform, words words would get cutoff to the left and top, they would
                 // appear outside of the SVG area
-                .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
+                .attr("transform", "translate(" + width/2 + "," + height/2.5 + ")")
                 .selectAll("text")
                 .data(words)
                 .enter().append("text")

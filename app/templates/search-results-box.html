@@ -18,11 +18,13 @@
 
   {# Construct pagination. Results per page is hardcoded here. #}
   {% for i in range(1, (results.total_int/10)|int +1) %}
-
-  {# Highlight active page #}
-  <li {% if i == results.from %}class="active"{% endif %}>
-  <a class="search-pag-link" data-page={{i}} href="#">{{i}}</a>
-  </li>
+    {# Limit the number of page buttons to 10 #}
+    {% if i <= 10 %}
+      {# Highlight active page #}
+      <li {% if i == results.from %}class="active"{% endif %}>
+      <a class="search-pag-link" data-page={{i}} href="#">{{i}}</a>
+      </li>
+    {% endif %}
   {%endfor%}
 
   {# Disables the next button if it's the last page #}
