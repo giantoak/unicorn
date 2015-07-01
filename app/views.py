@@ -174,17 +174,68 @@ def pdf_endpoint(doc_id):
 
 @uni.route('/topics/<doc_id>')
 def get_topics(doc_id):
-    topics=json.loads(open('/home/gmueller/unicorn/topics.json').read())
+    topics=json.loads(open('topics.json').read())
     return json.dumps(topics['documents'][doc_id])
 
+
+@uni.route('/topics_latest')
+@login_required
+def topics_latest():
+    return alltopics(session['last_query']['query'])
+
+
+
 @uni.route('/all_topics')
-def alltopics():
-    topics=json.loads(open('/home/gmueller/unicorn/topics.json').read())
-    docs=len(topics['documents'])
+def alltopics(query):
+
+    q = {
+        "_source": False,
+        "query" : {
+            "match" : {
+                "file" : query
+                }
+            },
+        "size": 10000000
+        }
+
+    #r=requests.post(url,data=json.dumps(q))
+    r=es.search(body=q,index=DEFAULT_INDEX)
+
+    # return doc ids specific to session query
+    uids = []
+    for hit in r['hits']['hits']:
+        uids.append(str(hit['_id']))
+
+    print uids
+    print
+    print
+    topics=json.loads(open('topics.json').read())
+
+    #filter by uids
+    documents = { key: topics['documents'][key] for key in uids }
+
+    #pick random document to get number of topics
+    num_topics = len(documents[uids[0]])
+
+    docs=len(documents)
+
     dist={}
-    for idx,x in enumerate(np.bincount([np.argmax(item[1]) for item in topics['documents'].items()])):
-        dist['topic'+str(idx+1)]=float(x)/docs
+    count = 0
+    for idx,x in enumerate(np.bincount([np.argmax(item[1]) for item in documents.items()],  minlength=num_topics)):
+        print count, x
+        dist['topic'+str(count)]=float(x)/docs
+        count += 1
     topics['dist']=dist
+    print topics['dist']
+
+
+    count = 0
+    for i in documents:
+        count += len(documents[i])
+
+    print float(count)/docs
+
+
     return json.dumps(topics)
 
 

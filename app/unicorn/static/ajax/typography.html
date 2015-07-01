@@ -163,7 +163,7 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-    $.get('/unicorn/all_topics', function(data) { 
+    $.get('/unicorn/topics_latest', function(data) { 
     	data=JSON.parse(data)
     	 tbl_row="";
 		 tbl_body="";
@@ -180,6 +180,8 @@ $(document).ready(function(){
          tbl_body+='<table id="topics_table" class="display"><thead><tr><th>Topic</th><th>Top Terms</th><th>Proportion of Corpus</th><th></th></thead><tbody>'+tbl_row+"</tbody></table>"
          $("#topics_words").html(tbl_body)
          $("#topics_table").dataTable({
+         	// initialize with a descending sort on the proportion column (col 3)
+         	"order": [[ 3, "desc" ]],
  			"sDom": '<"top">rt<"bottom"lp><"clear">'
          	});
     })
