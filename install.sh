@@ -84,6 +84,8 @@ sudo elasticdump \
 
 bash db_setup.sh
 
+python createdb.py
+
 python run.py
 
 ###### uncomment the below if you do not want to initialize with any sample data! ####
