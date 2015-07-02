@@ -400,6 +400,28 @@ def viz_all():
     return json.dumps(graph)
 
 
+@uni.route('/clusters')
+@login_required
+def get_clusters():
+    query=session['last_query']['query']
+    #print 'Query: ' + query
+    url='http://localhost:9200/dossiers/attachment/_search_with_clusters'
+    request = {
+	"search_request": {
+	"query": {"match" : { "_all": query }},
+	"size": 100
+	},
+        "algorithm":"lingo",  
+	"max_hits": 0,
+	"query_hint": query,
+	"field_mapping": {
+	"title": ["_source.title"],
+	"content": ["_source.content"]
+	}
+      }
+    r=requests.post(url,data=json.dumps(request))
+    return json.dumps(r.json())
+
 
 
 @uni.route('/geo')
@@ -820,10 +842,8 @@ def wc(query):
 
     #r=requests.post(url,data=json.dumps(q))
     r=es.search(body=q,index=DEFAULT_INDEX)
-<<<<<<< HEAD
     #r=requests.post(url,data=json.dumps(q))
     data=r
-=======
 
     # swithced to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the uploader
     # to include the most relevant information (e.g. excluding headers)
@@ -835,7 +855,6 @@ def wc(query):
     nowhite=re.sub(r'[^A-Za-z\s]', '', data)
     wt=word_tokenize(nowhite)
     wc=dict(Counter(wt))
->>>>>>> 54f6c0fa43d5cc1320aeeee54b686f72aaa44e7d
     frequency=[]
     documents=[]
     for hit in data['hits']['hits']:
