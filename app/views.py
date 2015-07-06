@@ -206,9 +206,6 @@ def alltopics(query):
     for hit in r['hits']['hits']:
         uids.append(str(hit['_id']))
 
-    print uids
-    print
-    print
     topics=json.loads(open('topics.json').read())
 
     #filter by uids
@@ -221,20 +218,66 @@ def alltopics(query):
 
     dist={}
     count = 0
+
+    # use argmax to return the highest rated topic per document, then enumerate bins across all documents 
+    # returns proportion of results per document where each document can only be its maximum scored topic
     for idx,x in enumerate(np.bincount([np.argmax(item[1]) for item in documents.items()],  minlength=num_topics)):
-        print count, x
         dist['topic'+str(count)]=float(x)/docs
         count += 1
     topics['dist']=dist
-    print topics['dist']
+
+        
+    # initialize a blank dict    
+    date_ids = {}
+
+    # enumerate topic + i as keys to blank lists
+    for i in range(num_topics):
+        date_ids['topic' + str(i)] = []
+
+    # iterate over returned documents and pick best topic
+    # add doc id to date_ids list for best topic
+    for doc in documents:
+        doc_topic = np.argmax(documents[doc])
+        _id = doc
+        id_list = date_ids['topic' + str(doc_topic)]
+        id_list.append(_id)
+        date_ids['topic' + str(doc_topic)] = id_list
+        
+        
+    topic_dates = {}
+
+    for topic in date_ids:
+
+        q = {   
+                "query":{ 
+                    "ids":{ 
+                        "values": date_ids[topic] # should return list of ids for the given topic
+                        }
+                    },
+
+                "aggs" : {
+                        "articles_over_time" : {
+                            "date_histogram" : {
+                                "field" : "date",
+                                "interval" : "week"
+                            }
+                        }
+                    }
+                }
 
 
-    count = 0
-    for i in documents:
-        count += len(documents[i])
+        response = es.search(body=q, index=DEFAULT_INDEX)
 
-    print float(count)/docs
+        df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
+        df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
+        df.columns = ['Count','key','key_as_string','Date']
+        df = df.drop(['key','key_as_string'], axis=1)
+        date_count_json = df.to_json(orient='records')
 
+        topic_dates[topic] = date_count_json
+
+
+    topics['date_agg'] = topic_dates  
 
     return json.dumps(topics)
 
@@ -288,8 +331,17 @@ def search_endpoint(query=None, page=None, box_only=False):
             "highlight": { "fields": { "file": { } },
                 "pre_tags" : ["<span class='highlight'>"],
                 "post_tags" : ["</span>"]
+                },
+             
+        "aggs" : {
+                "articles_over_time" : {
+                    "date_histogram" : {
+                        "field" : "date",
+                        "interval" : "week"
+                    }
                 }
             }
+        }
 
     raw_response = es.search(body=q, index=DEFAULT_INDEX,
             df="file",
@@ -335,11 +387,12 @@ def search_endpoint(query=None, page=None, box_only=False):
 
 
 
+
 @uni.route('/timeline')
 @uni.route('/timeline/<query>')
 @uni.route('/timeline/<query>/<page>')
 @login_required
-def timeline(query=None, page=None, box_only=False):
+def timeline_new(query=None, page=None, box_only=False):
     if not query and not page:
         last_query = session.get('last_query', None)
         if last_query:
@@ -357,41 +410,41 @@ def timeline(query=None, page=None, box_only=False):
     if start > 1:
         start *= 10
 
-    date_q = {
-            "fields": ["date"],
+    q = {
+            "fields": ["title", "highlight", "entities", "owner", "date"],
             "from": start,
             "query" : {
                 "match" : {
                     "file" : query
                     }
+                },
+
+            "highlight": { "fields": { "file": { } },
+                "pre_tags" : ["<span class='highlight'>"],
+                "post_tags" : ["</span>"]
+                },
+             
+        "aggs" : {
+                "articles_over_time" : {
+                    "date_histogram" : {
+                        "field" : "date",
+                        "interval" : "week"
+                    }
                 }
             }
+        }
 
 
-    date_response = es.search(body=date_q, index=DEFAULT_INDEX,
-            df="file",
-            size=100000)
+    response = es.search(body=q, index=DEFAULT_INDEX)
 
 
-    dates = []
-    for resp in date_response['hits']['hits']:
-        try:
-            dates.append(resp['fields']['date'])
-        except:
-            date = ''
-
-    df = pd.DataFrame(dates, columns=['Date'])
-    df['Date'] = df['Date'].apply(lambda x: pd.to_datetime(x))
-    df['Date'] = df['Date'].apply(lambda x: x - timedelta(days=x.isoweekday()))
-    df['Date'] = df['Date'].apply(lambda x: x.strftime('%Y-%m-%d'))
-    date_count = pd.DataFrame(df.groupby(['Date'])['Date'].count())
-    date_count.columns = ['Count']
-    date_count = date_count.reset_index(level=0)
-    date_count_json = date_count.to_json(orient='records')
+    df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
+    df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
+    df.columns = ['Count','key','key_as_string','Date']
+    df = df.drop(['key','key_as_string'], axis=1)
+    date_count_json = df.to_json(orient='records')
 
     return date_count_json
-
-
 
 
 
