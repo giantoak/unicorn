@@ -167,23 +167,116 @@ $(document).ready(function(){
     	data=JSON.parse(data)
     	 tbl_row="";
 		 tbl_body="";
-          
-         var i=1;
-       	 console.log(data);
-		 for (var key in data['topics']) {
-		 	console.log(data['dist'][key])
 
-		 	tbl_row+="<tr><td>"+key+'</td><td>'+data['topics'][key].slice(0,10).join(', ')+'</td><td><div style="margin-left:'+ (100-100*data['dist'][key]).toFixed(2)+'%;background-color:#6AA6D6" class="proportion"><span class="proportion">&nbsp;</span></div></td><td>'+(100*data['dist'][key]).toFixed(2)+'&#37;</td></tr>';
+         var i=1;
+		 for (var key in data['topics']) {
+
+		 	tbl_row+="<tr><td>"+key+'</td><td><div id="dateline' + key + '"></div></td><td>'+data['topics'][key].slice(0,10).join(', ')+'</td><td><div style="margin-left:'+ (100-100*data['dist'][key]).toFixed(2)+'%;background-color:#6AA6D6" class="proportion"><span class="proportion">&nbsp;</span></div></td><td>'+(100*data['dist'][key]).toFixed(2)+'&#37;</td></tr>';
+
+		 	draw_timeline(data['date_agg'][key], key);
+
           //$('#topics_words').append(data['topics'][key].toString()+'\n');
           i++;
         }
-         tbl_body+='<table id="topics_table" class="display"><thead><tr><th>Topic</th><th>Top Terms</th><th>Proportion of Corpus</th><th></th></thead><tbody>'+tbl_row+"</tbody></table>"
+         tbl_body+='<table id="topics_table" class="display"><thead><tr><th>Topic</th><th>1973-74</th><th>Top Terms</th><th>% of results</th><th></th></thead><tbody>'+tbl_row+"</tbody></table>"
          $("#topics_words").html(tbl_body)
          $("#topics_table").dataTable({
          	// initialize with a descending sort on the proportion column (col 3)
-         	"order": [[ 3, "desc" ]],
+         	"order": [[ 4, "desc" ]],
+         	'iDisplayLength': 20,
  			"sDom": '<"top">rt<"bottom"lp><"clear">'
          	});
+
+		var i=1;
+		 for (var key in data['topics']) {
+		 	draw_timeline(data['date_agg'][key], key);
+          i++;
+        }
+
+
+
     })
-})
+});
+
+
+function draw_timeline(data, key) {
+	 	data=JSON.parse(data);
+
+	 	var	parseDate = d3.time.format("%Y-%m-%d").parse;
+
+
+
+	    data.forEach(function(d) {
+	        d.date = parseDate(d.Date);
+	        d.count = +d.Count;
+	    });
+
+	    //console.log(data);
+
+		var margin = {top: 15, right: 0, bottom: 5, left: 0},
+		    width = 75 - margin.left - margin.right,
+		    height = 50 - margin.top - margin.bottom;
+
+		// currently, number of months (e.g. date range) is hard coded
+		// to do...un-hardcode this
+		var num_months = 12;
+
+		// Parse the date / time
+		var x = d3.time.scale().range([width/num_months/2, width-width/num_months/2]);
+
+		var y = d3.scale.linear().range([height, 0]);
+
+		var xAxis = d3.svg.axis()
+		    .scale(x)
+		    .orient("bottom")
+		    .ticks(0)
+		    .tickSize(0);
+
+		var yAxis = d3.svg.axis()
+		    .scale(y)
+		    .orient("left")
+		    .ticks(10);
+
+
+		var cellid = "#dateline" + key
+		console.log(cellid);
+
+
+		var svg = d3.select(cellid).append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("height", height + margin.top + margin.bottom)
+		    .style("margin-bottom", "-10px")
+		    .style("margin-top", "-10px")
+		  .append("g")
+		    .attr("transform", 
+		          "translate(" + margin.left + "," + margin.top + ")");
+		
+		 x.domain([parseDate("1973-01-01"),parseDate("1974-01-01")]);
+		 y.domain([0, d3.max(data, function(d) { return d.count; })]);
+
+		  svg.append("g")
+		      .attr("class", "x axis")
+		      .attr("transform", "translate(0," + height + ")")
+		      .call(xAxis)
+
+		svg.selectAll("g .x.axis")
+			.style('fill', 'none')
+			.style('stroke','#bdbdbd')
+  			.style('shape-rendering', 'crispEdges')
+
+		  svg.selectAll("bar")
+		      .data(data)
+		    .enter().append("rect")
+		      .style("fill", "steelblue")
+		      .attr("width", width / num_months * 0.45)
+		      .attr("x", function(d) { return x(d.date) - (width/num_months)/2; })
+		      .attr("y", function(d) { return y(d.count); })
+		      .attr("height", function(d) { return height - y(d.count); });
+
+;}
+
+
+
+
+
 </script>
