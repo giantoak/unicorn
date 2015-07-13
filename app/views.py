@@ -725,8 +725,8 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
 
     if request.method == "POST":
         json_dict = request.get_json()
-        print json_dict
-        print type(json_dict)
+        #print json_dict
+        #print type(json_dict)
 
 
     dates = json_dict['dates']
@@ -736,9 +736,9 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
     if startdate == enddate:
         startdate = "1973-01-01"
         enddate = "1974-01-01"
-    print startdate, enddate
+    #print startdate, enddate
 
-    print 'running a new query...'
+    #print 'running a new query...'
 
     if not query and not page:
         last_query = session.get('last_query', None)
@@ -784,8 +784,8 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
             df="file",
             size=10)
 
-    print q
-    print raw_response
+    #print q
+    #print raw_response
 
     hits = []
 
