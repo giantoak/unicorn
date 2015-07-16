@@ -62,12 +62,13 @@ $('document').ready(function() {
         if ($.isEmptyObject(data)) {
           $('entities-block').hide()
         }
+        console.log(data)
         var entities_list = $('#entities-list');
-        for (i in data['entities']) {
-          var elem = $('<li>').attr('class', 'list-group-item')
-                              .text(data['entities'][i]);
-          entities_list.append(elem); 
-          }
+         for (i in data['entities']) {
+            var elem = $('<li>').attr('class', 'list-group-item')
+            .text(data['entities'][i]['entity']);
+            entities_list.append(elem);
+        }
       }
     });
 

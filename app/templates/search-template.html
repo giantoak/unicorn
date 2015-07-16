@@ -1,5 +1,27 @@
 <script src={{url_for('static', filename='js/timeline.js')}}></script>
 <style>
+ #foamtree, #circles {
+color: #888;
+height: 400px;
+}
+
+span.step {
+display: inline-block;
+margin: 10px;
+padding: 10px 20px;
+border-radius: 10px;
+background-color: rgba(0,0,0,.2);
+color: white;
+font-size: 20px;
+}
+
+.dropped {
+margin-top: 15px;
+}
+
+#noes {
+display: none;
+}
 
 body {
   font-family: sans-serif;
@@ -111,6 +133,39 @@ body {
       </div>
     </div>
   </div>
+ <div class="col-xs-6">
+  <div class="box">
+    <div class="box-header">
+        <div class="box-name">
+          <i class="fa fa-calendar-o"></i>
+          <span>Clusters</span>
+          </div>
+          <div class="box-icons pull-right">
+          <a class="collapse-link">
+            <i class="fa fa-chevron-up"></i>
+            </a>
+            <a class="expand-link">
+            <i class="fa fa-expand"></i>
+            </a>
+            <a class="close-link">
+            <i class="fa fa-times"></i>
+          </a>
+        </div>
+      <div class="no-move"></div>
+    </div>
+    <div class="box-content" id="timeline">
+	<div class="row">
+		<div id="foamtree" class="span6" style="width: 600px; height: 400px">
+			Loading Carrot Search FoamTree visualization...
+		</div>
+		<div id="circles" class="span6" style="width: 400px; height: 600px">
+			Loading Carrot Search Circles visualization...
+		</div>
+	</div>
+    </div>
+  </div>
+</div>
+
   <div class="col-xs-6">
     <div class="box">
       <div class="box-header">
@@ -142,3 +197,76 @@ body {
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function () {
+  
+
+  style="width: 800px; height: 600px"
+
+        // Initialize visualizations
+          var circles = new CarrotSearchCircles({
+            id: "circles",
+            groupOutlineColor: "#fff",
+            groupOutlineWidth: 3,
+            titleBar: "inscribed",
+            titleBarTextColor: "rgba(0,0,0,.5)",
+            visibleGroupCount: 10
+          });
+          var foamtree = new CarrotSearchFoamTree({
+            id: "foamtree",
+            backgroundColor: "#fff"
+          });
+
+
+         function doVisualize(){
+         $.get("/unicorn/clusters",function(result) {
+                console.log(result)
+                result=JSON.parse(result)
+         
+                // For hierarchical clustering calculate the number
+                // of unique documents contained in this and sub-clusters
+                function calculateUniqueDocumentsCount(cluster) {
+                  var uniqueIds = {};
+                  if (cluster.documents) {
+                    cluster.documents.forEach(function(id) {
+                      uniqueIds[id] = true;
+                    });
+                  }
+
+                  if (cluster.clusters) {
+                    cluster.clusters.forEach(function(subcluster) {
+                      for (var key in calculateUniqueDocumentsCount(subcluster)) {
+                        uniqueIds[key] = true;
+                      };
+                    });
+                  }
+                  cluster.uniqueDocumentsCount = Object.keys(uniqueIds).length;
+                  return uniqueIds;
+                }
+
+                result.clusters.forEach(function(cluster) {
+                  calculateUniqueDocumentsCount(cluster);
+
+            	 // Convert the results to the format required by the visualization:
+            	// http://download.carrotsearch.com/circles/demo/api/#dataObject
+            	var visualizationInput = {
+                	groups: result.clusters.map(function mapper(cluster) {
+                	return {
+                	label: cluster.phrases[0],
+                	weight: cluster.uniqueDocumentsCount,
+                	groups: (cluster.clusters || []).map(mapper)
+                	}
+                	})
+                	};
+                	foamtree.set("dataObject", visualizationInput);
+                	//circles.set("dataObject", visualizationInput);
+                	});
+
+              });
+            }
+doVisualize();
+});          	 
+
+
+</script> 

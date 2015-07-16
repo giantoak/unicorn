@@ -823,53 +823,34 @@ def url_fetch(query=""):
 @uni.route('/wordcloud/<query>')
 @login_required
 def wc(query):
-    stop_words=set(stopwords.words('english'))
-
-    # generating a corpus specific stopword list
-    stopset_state_specific = set(['review','na','declassifiedreleased','review','unclassified','confidential','secret','disposition','released','approved','document','classification','restrictions','state','department','date','eo','handling'])
-    stopset = stop_words.union(stopset_state_specific)
-    
-    url='http://localhost:9200/dossiers/_search'
-    
-    q = {
+        stop_words=set(stopwords.words('english'))
+        # generating a corpus specific stopword list
+        stopset_state_specific = set(['review','na','declassifiedreleased','review','unclassified','confidential','secret','disposition','released','approved','document','classification','restrictions','state','department','date','eo','handling'])
+        stopset = stop_words.union(stopset_state_specific)
+        url='http://localhost:9200/dossiers/_search'
+        q = {
         "fields" : ["file", "body"], #added body to query
         "query" : {
-            "match" : {
-                "file" : query
-                }
-            }
+        "match" : {
+        "file" : query
         }
-
-    #r=requests.post(url,data=json.dumps(q))
-    r=es.search(body=q,index=DEFAULT_INDEX)
-    #r=requests.post(url,data=json.dumps(q))
-    data=r
-
-    # swithced to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the uploader
-    # to include the most relevant information (e.g. excluding headers)
-    data=r['hits']['hits'][0]['fields']['body'][0]
-
-    nowhite=re.sub('\s', ' ', data)
-
-    #updated to disallow numbers from the wordcloud
-    nowhite=re.sub(r'[^A-Za-z\s]', '', data)
-    wt=word_tokenize(nowhite)
-    wc=dict(Counter(wt))
-    frequency=[]
-    documents=[]
-    for hit in data['hits']['hits']:
-        text=hit['fields']['file'][0]
-        nowhite=re.sub('\s', ' ', text)
-        nowhite=re.sub(r'[^\w\s]', '',text)
+        }
+        }
+        #r=requests.post(url,data=json.dumps(q))
+        r=es.search(body=q,index=DEFAULT_INDEX)
+        # swithced to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the uploader
+        # to include the most relevant information (e.g. excluding headers)
+        data=r['hits']['hits'][0]['fields']['body'][0]
+        nowhite=re.sub('\s', ' ', data)
+        #updated to disallow numbers from the wordcloud
+        nowhite=re.sub(r'[^A-Za-z\s]', '', data)
         wt=word_tokenize(nowhite)
-        documents.append(wt)
-
-    docflat=[item for sublist in documents for item in sublist]
-    wc=dict(Counter(docflat))
-    for k,v in wc.iteritems():
-                frequency.append(dict({"text":k,"size":v*3}))
-    frequency=filter(lambda x:x['size']>6 and x['text'].lower() not in stopset,frequency)
-    return json.dumps(frequency)
+        wc=dict(Counter(wt))
+        frequency=[]
+        for k,v in wc.iteritems():
+            frequency.append(dict({"text":k,"size":v*3}))
+        frequency=filter(lambda x:x['size']>3 and x['text'].lower() not in stopset,frequency)
+        return json.dumps(frequency)
 
 @uni.route('/topicmodel')
 @uni.route('/topicmodel/<query>')

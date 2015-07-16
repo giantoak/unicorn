@@ -248,7 +248,95 @@ function NetworkGraph() {
             text.transition().style("opacity", 1);
         }
 
+
+            function createFilter() {
+        d3.select(".filterContainer").selectAll("div")
+          .data(["Documents", "Entities"])
+          .enter()  
+          .append("div")
+          .attr("class", function(d){return "checkbox checkbox-info-"+d})
+          .each(function (d) {
+                // create checkbox for each data
+                d3.select(this).append("input")
+                  .attr("type", "checkbox")
+                  .attr("id", function (d) {
+                      return "chk_" + d;
+                   })
+                  .attr("checked", true)
+                  .on("click", function (d, i) {
+                      // register on click event
+                      var lVisibility = this.checked ? "visible" : "hidden";
+              filterGraph(d, lVisibility);
+                   })
+                d3.select(this).append("label")
+                    .attr("for",function (d) {
+                        return "chk_"+d;
+                    })
+            .text(function(d){
+                       return d;})
+            });
+        $("#filterContainer").append('<div><input type="text" id="gfilter"></div>')
+        $("#gfilter").on('change keyup paste',function(){
+        var term=$("#gfilter").val()
+        console.log(term);
+        filterGraph2(term);
+        })        
+        $("#sidebar").show(); 
+        }      
+
+        createFilter();
+
+        function filterGraph2(txt){
+        d3.selectAll('circle.node.entity').style("visibility", function(o){
+            console.log(o);
+         if(o.id.toLowerCase().indexOf(txt.toLowerCase()) > -1){
+         return "visible";
+         } 
+         else{
+         return "hidden";
+         }
+         
+        }); 
+
+
+        }
+
+    // Method to filter graph
+        function filterGraph(aType, aVisibility) {
+            // change the visibility of the connection path
+            d3.selectAll('circle.node.entity').style("visibility", function (o) {
+                console.log(o);
+                var lOriginalVisibility = $(this).css("visibility");
+                return o.type === aType ? aVisibility : lOriginalVisibility;
+            });
+            console.log(aType)
+            console.log("filtering!");
+            // change the visibility of the node
+            // if all the links with that node are invisibile, the node should also be invisible
+            // otherwise if any link related to that node is visibile, the node should be visible
+           /* node.style("visibility", function (o, i) {
+                var lHideNode = true;
+                node.each(function (d, i) {
+                    if (d.type ==o) {
+                        if ($(this).css("visibility") === "visible") {
+                            lHideNode = false;
+                            // we need show the text for this circle
+                            d3.select(d3.selectAll(".nodetext")[0][i]).style("visibility", "visible");
+                            return "visible";
+                        }
+                    }
+                });
+                if (lHideNode) {
+                    // we need hide the text for this circle 
+                    d3.select(d3.selectAll(".nodetext")[0][i]).style("visibility", "hidden");
+                    return "hidden";
+                }
+            });*/
+        }
+
     }
 
     return makeGraph;
 }
+
+
