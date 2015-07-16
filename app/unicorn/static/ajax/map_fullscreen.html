@@ -1,3 +1,4 @@
+
 <div class="row">
 	<div class="col-xs-12">
 
@@ -12,8 +13,9 @@
 	</div>
 </div>
 
-<div id="document" style="background-color:white; padding:15px 10px 10px 15px"><b>Hover over a point to return a document</b></div>
+<div id="document" style="background-color:white; padding:15px 10px 10px 15px">
 <div id="map_documents">
+</div>
 </div>
 
 
@@ -30,10 +32,10 @@
 				'northeast_lon': 300}};
 
 
-	/* var get_results = $.post("serve_geo_new", function(response) {
+	var get_results = $.post("serve_geo_new", function(response) {
 	        var myDiv = $('#map_documents'); // The place where you want to insert the template
 	        myDiv.html(response);
-	    }); */
+	    });
 
 
 
@@ -109,7 +111,7 @@ $(document).ready(function() {
 		    var file = JSON.parse(file);
         	var marker = L.marker(new L.LatLng(data[i]['lat'], data[i]['lon']), { title: placename, text: file, subject: subject });
 			marker.bindPopup('<strong>Location:</strong> ' + placename + '<br><strong>Document: </strong><i>' + subject + '<i>')
-				.on('mouseover', onClick);;
+				
 			markers.addLayer(marker);
 
         	//markers.addLayer(new L.Marker([data[i]['lat'], data[i]['lon']]))
@@ -121,13 +123,13 @@ $(document).ready(function() {
 			map.addLayer(markers);
 	})
 
-		function onClick(e) {
+		/* function onClick(e) {
 			    $("#document").html('<b>Hover over a point to return a document</b>');
 			    $("#document").html('<b>' + this.options.subject + ': </b></br>' + "<font face='courier new'>" + this.options.text + "</font>");
-			}
+			} */
 
 
-	/*	locationFilter.on("change", function (e, get_results) {
+		locationFilter.on("change", function (e, get_results) {
 	 	var bounds = e.bounds;
 	 	//console.log(e)
 
@@ -156,7 +158,7 @@ $(document).ready(function() {
 	        myDiv.html(response);
 	    });
 	console.log('removed!')
-}); */
+}); 
 
 
 

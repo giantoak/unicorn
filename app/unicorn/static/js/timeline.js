@@ -1,19 +1,23 @@
 $(document).ready(function() {
 
 	 $.get('timeline', function(data) {
-	 	data=JSON.parse(data);
+	 	data_outer=JSON.parse(data);
+	 	data = JSON.parse(data_outer.date_data)
 	 	console.log(data);
+
 
 	 	var	parseDate = d3.time.format("%Y-%m-%d").parse;
 
-	
+	 	timeline_min = parseDate(data_outer.time_min);
+	 	console.log(timeline_min)
 
 
 	    data.forEach(function(d) {
 	        d.date = parseDate(d.Date);
 	        d.count = +d.Count;
 	    });
-
+	 	console.log(d3.max(data, function(d) { return d.date; }));
+	
 	    console.log(data);
 
 		var margin = {top: 10, right: 10, bottom: 40, left: 10},
@@ -49,7 +53,7 @@ $(document).ready(function() {
 		    .attr("transform", 
 		          "translate(" + margin.left + "," + margin.top + ")");
 		
-		 x.domain([parseDate("1973-01-01"),parseDate("1974-01-01")]);
+		 x.domain([timeline_min, d3.max(data, function(d) { return d.date; }) ]);
 		 y.domain([0, d3.max(data, function(d) { return d.count; })]);
 
 		  svg.append("g")
@@ -67,8 +71,8 @@ $(document).ready(function() {
 		      .data(data)
 		    .enter().append("rect")
 		      .style("fill", "steelblue")
-		      .attr("width", width / data.length * width_adjuster)
-		      .attr("x", function(d) { return x(d.date) - (width/data.length)/2; })
+		      .attr("width", width / data.length * 0.9)
+		      .attr("x", function(d) { return x(d.date) -  width / data.length; })
 		      .attr("y", function(d) { return y(d.count); })
 		      .attr("height", function(d) { return height - y(d.count); });
 
