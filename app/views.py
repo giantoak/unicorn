@@ -34,7 +34,9 @@ import subprocess
 from bulk import bulk_download, bulk_search
 from config import tmp_dir
 from util.network import make_graph, document_graph
+from util.roundTime import round_month_up, round_month_down, week_delta
 import time
+import datetime
 from datetime import date, timedelta
 
 import sklearn
@@ -410,6 +412,41 @@ def timeline_new(query=None, page=None, box_only=False):
     if start > 1:
         start *= 10
 
+
+
+    q_daterange = {
+             
+        "aggs" : {
+
+                "max_date" : { "max" : { "field" : "date" } },
+                "min_date" : { "min" : { "field" : "date" } }
+            }
+        }
+
+    response = es.search(body=q_daterange, index=DEFAULT_INDEX)
+
+    print response['aggregations']['min_date']
+    print response['aggregations']['max_date']
+
+    print
+    min_date_datetime = round_month_down(datetime.datetime.strptime(response['aggregations']['min_date']['value_as_string'], "%Y-%m-%dT%H:%M:%S.%fZ"))
+    max_date_datetime = round_month_up(datetime.datetime.strptime(response['aggregations']['max_date']['value_as_string'], "%Y-%m-%dT%H:%M:%S.%fZ"))
+    min_date = min_date_datetime.strftime(format="%Y-%m-%d")
+    max_date = max_date_datetime.strftime(format="%Y-%m-%d")
+    time_delta = week_delta(min_date_datetime,max_date_datetime)
+    rng = pd.date_range(min_date, periods=time_delta, freq='w')
+    rng = rng.tolist()
+    rng = [date + datetime.timedelta(days=1) for date in rng]
+    rng = [date.strftime("%Y-%m-%d") for date in rng]
+    rngframe = pd.DataFrame(index=rng)
+
+    timeline_minimum = min_date_datetime - datetime.timedelta(days=7)
+    timeline_minimum = timeline_minimum.strftime(format="%Y-%m-%d")
+
+    print min_date
+    print max_date
+
+
     q = {
             "fields": ["title", "highlight", "entities", "owner", "date"],
             "from": start,
@@ -429,22 +466,36 @@ def timeline_new(query=None, page=None, box_only=False):
                     "date_histogram" : {
                         "field" : "date",
                         "interval" : "week"
-                    }
-                }
+                    }},
+                "max_date" : { "max" : { "field" : "date" } },
+                "min_date" : { "min" : { "field" : "date" } }
             }
         }
 
 
     response = es.search(body=q, index=DEFAULT_INDEX)
 
+    print response['aggregations']['articles_over_time']['buckets']
 
     df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
     df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
     df.columns = ['Count','key','key_as_string','Date']
     df = df.drop(['key','key_as_string'], axis=1)
-    date_count_json = df.to_json(orient='records')
+    df = df.set_index('Date')
 
-    return date_count_json
+    output = rngframe.join(df, how="left")
+    output = output.fillna(0)
+    output = output.reset_index()
+    output.columns = ['Date','Count']
+
+
+    date_count_json = output.to_json(orient='records')
+
+    out = {'date_data': date_count_json, 'time_min': timeline_minimum}
+
+    print json.dumps(out)
+
+    return json.dumps(out)
 
 
 
@@ -704,13 +755,6 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
         return render_template('search-results-map.html', results=results)
 
     return render_template('search-template.html', results=results)
-
-
-
-
-
-
-
 
 
 
