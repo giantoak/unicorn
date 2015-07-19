@@ -55,7 +55,7 @@ sudo service elasticsearch stop
 sudo /usr/share/elasticsearch/bin/plugin --install elasticsearch/elasticsearch-mapper-attachments/2.5.0
 
 # install the elasticsearch carrot2 plugin
-sudo /user/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.9.0
+sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.9.0
 
 
 
