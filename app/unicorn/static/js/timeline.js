@@ -108,9 +108,7 @@ $(document).ready(function() {
 		function brushmove() {
 		    y.domain(x.range()).range(x.domain());
 		    b = brush.extent();
-		    console.log(b);
-
-
+		
 		    $.ajax({
             type: "POST",
             url: "serve_timeline",

@@ -66,6 +66,31 @@ body {
   shape-rendering: crispEdges;
 }
 
+
+#foamtree path.slice{
+  stroke-width:2px;
+}
+
+
+#foamtree svg {
+  width: 100%;
+  height: 100%;
+}
+
+#foamtree polyline{
+  opacity: .3;
+  stroke: black;
+  stroke-width: 2px;
+  fill: none;
+}
+
+.arc {
+  cursor: pointer;
+
+  &:hover {
+    opacity: .85;
+  }
+
 </style>
 
 
@@ -133,6 +158,7 @@ body {
       </div>
     </div>
   </div>
+
  <div class="col-xs-6">
   <div class="box">
     <div class="box-header">
@@ -153,13 +179,9 @@ body {
         </div>
       <div class="no-move"></div>
     </div>
-    <div class="box-content" id="timeline">
+    <div class="box-content" id="clusters">
 	<div class="row">
 		<div id="foamtree" class="span6">
-			Loading Carrot Search FoamTree visualization...
-		</div>
-		<div id="circles" class="span6" style="width: 400px; height: 600px">
-			Loading Carrot Search Circles visualization...
 		</div>
 	</div>
     </div>
@@ -188,14 +210,14 @@ body {
       </div>
       <div class="box-content">
         <ul class="nav nav-search">
-<ul class="nav nav-tabs" role="tablist" id="doc-viewer-tabs">
-</ul>
-<div class="tab-content" id="doc-viewer-content">
-</div>
+        <ul class="nav nav-tabs" role="tablist" id="doc-viewer-tabs">
+        </ul>
+        <div class="tab-content" id="doc-viewer-content"></div>
         </ul>
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <script>
@@ -204,68 +226,245 @@ $(document).ready(function () {
 
   style="width: 800px; height: 600px"
 
-        // Initialize visualizations
-          var circles = new CarrotSearchCircles({
-            id: "circles",
-            groupOutlineColor: "#fff",
-            groupOutlineWidth: 3,
-            titleBar: "inscribed",
-            titleBarTextColor: "rgba(0,0,0,.5)",
-            visibleGroupCount: 10
-          });
-          var foamtree = new CarrotSearchFoamTree({
-            id: "foamtree",
-            backgroundColor: "#fff"
-          });
+
+      
 
 
-         function doVisualize(){
-         $.get("/unicorn/clusters",function(result) {
-                console.log(result)
-                result=JSON.parse(result)
-         
-                // For hierarchical clustering calculate the number
-                // of unique documents contained in this and sub-clusters
-                function calculateUniqueDocumentsCount(cluster) {
-                  var uniqueIds = {};
-                  if (cluster.documents) {
-                    cluster.documents.forEach(function(id) {
-                      uniqueIds[id] = true;
-                    });
-                  }
+         function doVisualize(data){
 
-                  if (cluster.clusters) {
-                    cluster.clusters.forEach(function(subcluster) {
-                      for (var key in calculateUniqueDocumentsCount(subcluster)) {
-                        uniqueIds[key] = true;
-                      };
-                    });
-                  }
-                  cluster.uniqueDocumentsCount = Object.keys(uniqueIds).length;
-                  return uniqueIds;
-                }
+          var svg = d3.select("#foamtree")
+            .append("svg")
+            .append("g")
 
-                result.clusters.forEach(function(cluster) {
-                  calculateUniqueDocumentsCount(cluster);
+          svg.append("g")
+            .attr("class", "slices");
+          svg.append("g")
+            .attr("class", "labels");
+          svg.append("g")
+            .attr("class", "lines");
+      
+          var width = 600,
+              height = 400,
+            radius = Math.min(width, height) / 2;
 
-            	 // Convert the results to the format required by the visualization:
-            	// http://download.carrotsearch.com/circles/demo/api/#dataObject
-            	var visualizationInput = {
-                	groups: result.clusters.map(function mapper(cluster) {
-                	return {
-                	label: cluster.phrases[0],
-                	weight: cluster.uniqueDocumentsCount,
-                	groups: (cluster.clusters || []).map(mapper)
-                	}
-                	})
-                	};
-                	foamtree.set("dataObject", visualizationInput);
-                	//circles.set("dataObject", visualizationInput);
-                	});
+          var pie = d3.layout.pie()
+            .sort(null)
+            .value(function(d) {
+              return d.value;
+            });
 
+          var arc = d3.svg.arc()
+            .outerRadius(radius * 0.8)
+            .innerRadius(radius * 0.4);
+
+          var outerArc = d3.svg.arc()
+            .innerRadius(radius * 0.9)
+            .outerRadius(radius * 0.9);
+
+          svg.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+          var key = function(d){ return d.data.label; };
+
+          var color = d3.scale.ordinal()
+            .domain(["Lorem ipsum", "dolor sit", "amet", "consectetur", "adipisicing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt"])
+            .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+            var g = svg.selectAll(".arc")
+              .data(pie(data))
+              .enter().append("g")
+              .attr("class", "arc")
+              .on("click", function(d, i) {
+                     console.log(JSON.stringify({'documents':d.data.documents}))
+                    $.ajax({
+                      type: "POST",
+                      url: "serve_clusters",
+                      data: JSON.stringify({'documents':d.data.documents}),
+                      contentType: "application/json",
+                      success: function (response) {
+                         var myDiv = $('#search-results-box'); // The place where you want to insert the template
+                         myDiv.html(response);
+                    }})
+                  });
+             
+
+              g.append("path")
+              .attr("d", arc)
+              .attr("fill", function(d, i) {
+                return color(i);
               });
+
+              svg.append("circle")
+             .attr("cx", 0)
+             .attr("cy", 0)
+             .attr("r", 100)
+             .attr("fill", "#fff") ; // If you want to change the colour of the inner circle, change it here.
+
+             var text = svg.select(".labels").selectAll("text")
+              .data(pie(data), key);
+
+              text.enter()
+                .append("text")
+                .attr("dy", ".35em")
+                .text(function(d) {
+                  return d.data.label;
+                });
+              
+            function midAngle(d){
+              return d.startAngle + (d.endAngle - d.startAngle)/2;
             }
-doVisualize();
+
+            text.transition().duration(1000)
+              .attrTween("transform", function(d) {
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                  var d2 = interpolate(t);
+                  var pos = outerArc.centroid(d2);
+                  pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+                  return "translate("+ pos +")";
+                };
+              })
+              .styleTween("text-anchor", function(d){
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                  var d2 = interpolate(t);
+                  return midAngle(d2) < Math.PI ? "start":"end";
+                };
+              });
+
+         
+
+            var polyline = svg.select(".lines").selectAll("polyline")
+              .data(pie(data), key);
+            
+            polyline.enter()
+              .append("polyline");
+
+            polyline.transition().duration(1000)
+              .attrTween("points", function(d){
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                  var d2 = interpolate(t);
+                  var pos = outerArc.centroid(d2);
+                  pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+                  return [arc.centroid(d2), outerArc.centroid(d2), pos];
+                };      
+              });
+
+
+            }
+
+ 
+              /*
+            // ------- PIE SLICES -------
+            var slice = svg.select(".slices").selectAll("path.slice")
+              .data(pie(data), key)
+
+
+            slice.enter()
+              .insert("path")
+              .style("fill", function(d) { return color(d.data.label); })
+              .attr("class", "slice")
+             .on("click", function(d, i) {
+                console.log("click")
+              });
+              
+            
+
+            slice   
+              .transition().duration(1000)
+              .attrTween("d", function(d) {
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                  return arc(interpolate(t));
+                };
+              })
+
+
+
+            slice.exit()
+              .remove();
+            */
+            /* ------- TEXT LABELS -------*/
+
+           
+            /*function midAngle(d){
+              return d.startAngle + (d.endAngle - d.startAngle)/2;
+            }
+
+            text.transition().duration(1000)
+              .attrTween("transform", function(d) {
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                  var d2 = interpolate(t);
+                  var pos = outerArc.centroid(d2);
+                  pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+                  return "translate("+ pos +")";
+                };
+              })
+              .styleTween("text-anchor", function(d){
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                  var d2 = interpolate(t);
+                  return midAngle(d2) < Math.PI ? "start":"end";
+                };
+              });
+
+            text.exit()
+              .remove();
+
+
+            var polyline = svg.select(".lines").selectAll("polyline")
+              .data(pie(data), key);
+            
+            polyline.enter()
+              .append("polyline");
+
+            polyline.transition().duration(1000)
+              .attrTween("points", function(d){
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                  var d2 = interpolate(t);
+                  var pos = outerArc.centroid(d2);
+                  pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+                  return [arc.centroid(d2), outerArc.centroid(d2), pos];
+                };      
+              });
+
+             
+            
+            polyline.exit()
+              .remove();
+          };
+
+
+
+           } */
+
+         $.get("/unicorn/clusters",function(result) {
+                result=JSON.parse(result)
+                console.log(result)
+                var docs=result.hits.total;
+                var data=_.map(result.clusters, function(x){ return {'documents':x.documents,'label':x['label'],'value': x['documents'].length/docs}});
+                
+                doVisualize(data);
+        
+              });
+           
+
 });          	 
 
 

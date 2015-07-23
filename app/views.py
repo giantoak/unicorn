@@ -779,6 +779,90 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
     return render_template('search-template.html', results=results)
 
 
+@uni.route('/serve_clusters', methods=['POST'])
+@uni.route('/serve_clusters/<query>', methods=['POST'])
+@uni.route('/serve_clusters/<query>/<page>', methods=['POST'])
+#@login_required
+def serve_clusters(query=None,page=None, box_only=True, dates={},documents={}):
+    if request.method == "POST":
+        json_dict = request.get_json()
+    
+    if not query and not page:
+        last_query = session.get('last_query', None)
+    if last_query:
+        query, page = last_query['query'], last_query['page']
+    else:
+        # better error
+        return abort(404)
+
+    q={   
+          "query": {
+
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    "file": query
+                  }
+                },
+                {
+                  "terms": {
+                    "_id":json_dict['documents']
+                  }
+                }
+              ]
+            }
+          },
+          "fields": ["title", "highlight", "entities", "owner", "date"],
+          "highlight": {
+            "fields": {
+              "file": {
+                "number_of_fragments": 1,
+                "pre_tags" : ["<span class='highlight'>"],
+                "post_tags" : ["</span>"]
+              }
+            }
+          }
+        }
+
+    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+            df="file",
+            size=10)
+
+    hits = []
+
+    for resp in raw_response['hits']['hits']:
+
+        # Store returned ids
+        session['last_query']['ids'].append(resp['_id'])
+
+        if is_owner(resp['fields']['owner'][0]):
+            # Flatten structure for individual hits
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'highlight': resp['highlight']['file'][0],
+                'permissions': True
+                })
+        else:
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'permissions': False
+                })
+
+
+    results = {
+            'hits': hits,
+            'took': float(raw_response['took'])/1000,
+            'total': "{:,}".format(raw_response['hits']['total']),
+            'total_int': int(raw_response['hits']['total']),
+            'query': query,
+            'from': int(page)
+            }
+
+    if box_only:
+        return render_template('search-results-box.html', results=results)
+
+    return render_template('search-template.html', results=results)
 
 
 

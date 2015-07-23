@@ -287,13 +287,23 @@ function NetworkGraph() {
         createFilter();
 
         function filterGraph2(txt){
-        d3.selectAll('circle.node.entity').style("visibility", function(o){
+        d3.selectAll('circle.node.entity').style("visibility", function(o,i){
             console.log(o);
+
+            
          if(o.id.toLowerCase().indexOf(txt.toLowerCase()) > -1){
+
+            d3.select(d3.selectAll("text")[0][o.index]).style("visibility", "visible");
+               path.style("visibility", function (o) {
+                       var lOriginalVisibility = $(this).css("visibility");
+                       return o.type === aType ? aVisibility : lOriginalVisibility;
+                   });
          return "visible";
          } 
          else{
+            d3.select(d3.selectAll("text")[0][o.index]).style("visibility", "hidden");
          return "hidden";
+
          }
          
         }); 
@@ -314,7 +324,7 @@ function NetworkGraph() {
             // change the visibility of the node
             // if all the links with that node are invisibile, the node should also be invisible
             // otherwise if any link related to that node is visibile, the node should be visible
-           /* node.style("visibility", function (o, i) {
+            node.style("visibility", function (o, i) {
                 var lHideNode = true;
                 node.each(function (d, i) {
                     if (d.type ==o) {
@@ -331,7 +341,7 @@ function NetworkGraph() {
                     d3.select(d3.selectAll(".nodetext")[0][i]).style("visibility", "hidden");
                     return "hidden";
                 }
-            });*/
+            });
         }
 
     }
