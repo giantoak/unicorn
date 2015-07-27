@@ -159,7 +159,19 @@ function NetworkGraph() {
                 console.log(d);
             })
             .on("mouseover", handle_mouseover)
-            .on("mouseout", handle_mouseout);
+            .on("mouseout", handle_mouseout)
+            .on("dblclick",function(d){
+                if(d.type=="document"){
+                    //window.open("/unicorn/pdf/"+d.id)
+                    $('.modal-title').html(d.title)
+                    var object = '<object data=\"/unicorn/pdf/'+d.id+"\" type=\"application/pdf\" width=\"500px\" height=\"300px\">";
+                    object += "</object>";
+                    console.log(object)
+                   //object = object.replace(/{FileName}/g, "Files/" + fileName);
+                    $('.modal-body').html(object)
+                    $('#myModal').modal('show')
+                }
+            });
 
         var text = svg.append("g").selectAll("text")
             .data(force.nodes())
