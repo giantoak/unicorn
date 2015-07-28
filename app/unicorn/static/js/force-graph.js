@@ -164,11 +164,17 @@ function NetworkGraph() {
                 if(d.type=="document"){
                     //window.open("/unicorn/pdf/"+d.id)
                     $('.modal-title').html(d.title)
-                    var object = '<object data=\"/unicorn/pdf/'+d.id+"\" type=\"application/pdf\" width=\"500px\" height=\"300px\">";
-                    object += "</object>";
+                    var object = '<center><object data=\"/unicorn/pdf/'+d.id+"\" type=\"application/pdf\" width=\"800px\" height=\"800px\">";
+                    object += "</object></center>";
                     console.log(object)
                    //object = object.replace(/{FileName}/g, "Files/" + fileName);
                     $('.modal-body').html(object)
+                    $('#myModal').on('show', function () {
+
+                    $(this).find('.modal-body').css({width:'auto',
+                                               height:'auto', 
+                                              'max-height':'100%'});
+});
                     $('#myModal').modal('show')
                 }
             });

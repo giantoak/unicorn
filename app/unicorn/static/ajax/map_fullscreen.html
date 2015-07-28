@@ -45,9 +45,10 @@ $(document).ready(function() {
 	$('#content').addClass('map-content');
 	SetMinBlockHeightMap($('.fullscreenmap'));
 	
-	var baseLayer = L.tileLayer('https://{s}.tiles.mapbox.com/v3/cwhong.map-hziyh867/{z}/{x}/{y}.png',{
-		maxZoom: 18
-		});
+	var baseLayer=L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+	maxZoom: 19
+	});
+
 
 	//setup map and add layers
 	var center = [39.2833,-76.6167];
