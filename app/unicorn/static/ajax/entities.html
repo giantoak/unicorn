@@ -1,3 +1,35 @@
+<!-- Modal -->
+<style>
+@media screen and (min-width: 800px) {
+    
+    #myModal .modal-dialog  {width:800px;}
+
+}
+
+#myModal .modal-dialog  {width:50%;}
+</style>
+
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Modal Header</h4>
+      </div>
+      <div class="modal-body">
+        <p>Some text in the modal.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+    </div>
+</div>
+
+
 <div class="row">
     <div id="breadcrumb" class="col-md-12">
         <ol class="breadcrumb">
@@ -6,12 +38,14 @@
         </ol>
     </div>
 </div>
-<div class="well"><a type="button" class="btn btn-default" id="dljs">Export JSON</a><div id="viz-container"></div></div>
+<div class="well"><a type="button" class="btn btn-default" id="dljs">Export JSON</a><div id="viz-container"></div>
+<div id="sidebar" style="display: none;"><div class="item-group"><label class="item-label">Filter</label><div id="filterContainer" class="filterContainer checkbox-interaction-group"></div></div></div><div id="graphContainer" class="graphContainer"></div>
+</div>
 
 <script type="text/javascript">
  $(document).ready(function() {
      "use strict";
-  
+     
      var width = $("#viz-container").parent().width(),
          height = 960,
          svg = d3.select("#viz-container").append("svg")
@@ -23,9 +57,12 @@
                  .type("entity"),
          graph_export_data;
 
+
      $.get('viz_latest', function(data) {
-     
+             
+      
              var graph_data = JSON.parse(data);
+             console.log(graph_data);
              svg.datum(graph_data)
                      .call(graph);
              graph_export_data = graph.getExport();

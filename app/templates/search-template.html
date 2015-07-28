@@ -1,145 +1,308 @@
+<script src={{url_for('static', filename='js/timeline.js')}}></script>
+<style>
+#foamtree, #circles {
+color: #888;
+height: 400px;
+}
+span.step {
+display: inline-block;
+margin: 10px;
+padding: 10px 20px;
+border-radius: 10px;
+background-color: rgba(0,0,0,.2);
+color: white;
+font-size: 20px;
+}
+.dropped {
+margin-top: 15px;
+}
+#noes {
+display: none;
+}
+body {
+font-family: sans-serif;
+color: #000;
+text-rendering: optimizeLegibility;
+}
+.barchart {
+z-index: 30;
+display: block;
+visibility: visible;
+position: relative;
+padding-top: 15px;
+margin-top: 15px;
+}
+.axis {
+font: 10px sans-serif;
+}
+.axis path,
+.axis line {
+fill: none;
+stroke: #f0f0f0;
+shape-rendering: crispEdges;
+}
+.resize path {
+fill: #666;
+fill-opacity: .8;
+stroke: #000;
+stroke-width: 1.5px;
+}
+.brush .extent {
+stroke: #fff;
+stroke-opacity: .6;
+stroke-width: 2px;
+fill-opacity: .1;
+shape-rendering: crispEdges;
+}
+#foamtree path.slice{
+stroke-width:2px;
+}
+#foamtree svg {
+width: 100%;
+height: 100%;
+}
+#foamtree polyline{
+opacity: .3;
+stroke: black;
+stroke-width: 2px;
+fill: none;
+}
+.arc {
+cursor: pointer;
+&:hover {
+opacity: .85;
+}
+</style>
 <div class="row">
-  <div id="breadcrumb" class="col-md-12">
-    <ol class="breadcrumb">
-      <li><a href="{{url_for('.root')}}">Home</a></li>
-      <li class="disabled"><a href="#">Search results</a></li>
-    </ol>
-  </div>
+<div id="breadcrumb" class="col-md-12">
+<ol class="breadcrumb">
+<li><a href="{{url_for('.root')}}">Home</a></li>
+<li class="disabled"><a href="#">Search results</a></li>
+</ol>
+</div>
 </div>
 <div class="row">
-  <div class="col-xs-2">
-    <div class="box">
-      <div class="box-header">
-        <div class="box-name">
-          <i class="fa fa-calendar-o"></i>
-          <span>History</span>
-        </div>
-        <div class="box-icons pull-right">
-          <a class="collapse-link">
-            <i class="fa fa-chevron-up"></i>
-          </a>
-          <a class="expand-link">
-            <i class="fa fa-expand"></i>
-          </a>
-          <a class="close-link">
-            <i class="fa fa-times"></i>
-          </a>
-        </div>
-      </div>
-      <div class="box-content" id="previous-searches">
-          {% include 'historical-searches-box.html' %}
-      </div>
-    </div>
-  </div>
-  <div class="col-xs-4">
-    <div class="box">
-      <div class="box-header">
-        <div class="box-name">
-          <i class="fa fa-calendar-o"></i>
-          <span>Search results</span>
-        </div>
-        <div class="box-icons pull-right">
-          <a class="collapse-link">
-            <i class="fa fa-chevron-up"></i>
-          </a>
-          <a class="expand-link">
-            <i class="fa fa-expand"></i>
-          </a>
-          <a class="close-link">
-            <i class="fa fa-times"></i>
-          </a>
-        </div>
-      </div>
-      <div class="box-content" id="search-results-box">
-        {% include 'search-results-box.html' %}
-      </div>
-    </div>
-  </div>
-  <div class="col-xs-6">
-    <div class="box">
-      <div class="box-header">
-        <div class="box-name">
-          <i class="fa fa-calendar-o"></i>
-          <span>Document viewer</span>
-        </div>
-        <div class="box-icons pull-right">
-          <a class="collapse-link">
-            <i class="fa fa-chevron-up"></i>
-          </a>
-          <a class="expand-link">
-            <i class="fa fa-expand"></i>
-          </a>
-          <a class="close-link">
-            <i class="fa fa-times"></i>
-          </a>
-        </div>
-      </div>
-      <div class="box-content">
-              <ul class="nav nav-tabs" role="tablist" id="doc-viewer-tabs">
-              </ul>
-              <div class="tab-content" id="doc-viewer-content">
-              </div>
-      </div>
-    </div>
-  </div>
+<div class="col-xs-12">
+<div class="box">
+<div class="box-header">
+<div class="box-name">
+<i class="fa fa-calendar-o"></i>
+<span>Timeline</span>
 </div>
+<div class="box-icons pull-right">
+<a class="collapse-link">
+<i class="fa fa-chevron-up"></i>
+</a>
+<a class="expand-link">
+<i class="fa fa-expand"></i>
+</a>
+<a class="close-link">
+<i class="fa fa-times"></i>
+</a>
+</div>
+<div class="no-move"></div>
+</div>
+<div class="box-content" id="timeline">
+</div>
+</div>
+</div>
+<div class="col-xs-6">
+<div class="box">
+<div class="box-header">
+<div class="box-name">
+<i class="fa fa-calendar-o"></i>
+<span>Search results</span>
+</div>
+<div class="box-icons pull-right">
+<a class="collapse-link">
+<i class="fa fa-chevron-up"></i>
+</a>
+<a class="expand-link">
+<i class="fa fa-expand"></i>
+</a>
+<a class="close-link">
+<i class="fa fa-times"></i>
+</a>
+</div>
+<div class="no-move"></div>
+</div>
+<div class="box-content" id="search-results-box">
+{% include 'search-results-box.html' %}
+</div>
+</div>
+</div>
+<div class="col-xs-6">
+<div class="box">
+<div class="box-header">
+<div class="box-name">
+<i class="fa fa-calendar-o"></i>
+<span>Clusters</span>
+</div>
+<div class="box-icons pull-right">
+<a class="collapse-link">
+<i class="fa fa-chevron-up"></i>
+</a>
+<a class="expand-link">
+<i class="fa fa-expand"></i>
+</a>
+<a class="close-link">
+<i class="fa fa-times"></i>
+</a>
+</div>
+<div class="no-move"></div>
+</div>
+<div class="box-content" id="clusters">
 <div class="row">
-  <div class="col-xs-6">
-    <div class="box">
-      <div class="box-header">
-        <div class="box-name">
-          <i class="fa fa-calendar-o"></i>
-          <span>Entity Graph</span>
-        </div>
-        <div class="box-icons pull-right">
-          <a class="collapse-link">
-            <i class="fa fa-chevron-up"></i>
-          </a>
-          <a class="expand-link">
-            <i class="fa fa-expand"></i>
-          </a>
-          <a class="close-link">
-            <i class="fa fa-times"></i>
-          </a>
-        </div>
-      </div>
-      <div class="box-content" id="entity-graph-box">
-          {% include 'entities.html' %}
-      </div>
-    </div>
-  </div>
-  <div class="col-xs-6">
-    <div class="box">
-      <div class="box-header">
-        <div class="box-name">
-          <i class="fa fa-calendar-o"></i>
-          <span>Node Information</span>
-        </div>
-        <div class="box-icons pull-right">
-          <a class="collapse-link">
-            <i class="fa fa-chevron-up"></i>
-          </a>
-          <a class="expand-link">
-            <i class="fa fa-expand"></i>
-          </a>
-          <a class="close-link">
-            <i class="fa fa-times"></i>
-          </a>
-        </div>
-      </div>
-      <div class="box-content" id="node-info-box">
-          <div id="node-info">
-              <div id="node-name"></div>
-              <div id="node-type"></div>
-              <div id="node-category"></div>
-              <div id="node-neighbors"></div>
-              <div id="node-cousins"></div>
-              <hr>
-              <div id="node-current-name">No node selected</div>
-              <div id="node-current-type"></div>
-              <div id="node-current-category"></div>
-          </div>
-      </div>
-    </div>
-  </div>
+<div id="foamtree" class="span6">
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-xs-6">
+<div class="box">
+<div class="box-header">
+<div class="box-name">
+<i class="fa fa-calendar-o"></i>
+<span>Document viewer</span>
+</div>
+<div class="box-icons pull-right">
+<a class="collapse-link">
+<i class="fa fa-chevron-up"></i>
+</a>
+<a class="expand-link">
+<i class="fa fa-expand"></i>
+</a>
+<a class="close-link">
+<i class="fa fa-times"></i>
+</a>
+</div>
+<div class="no-move"></div>
+</div>
+<div class="box-content">
+<ul class="nav nav-search">
+<ul class="nav nav-tabs" role="tablist" id="doc-viewer-tabs">
+</ul>
+<div class="tab-content" id="doc-viewer-content"></div>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+$(document).ready(function () {
+style="width: 800px; height: 600px"
+function doVisualize(data){
+var svg = d3.select("#foamtree")
+.append("svg")
+.append("g")
+svg.append("g")
+.attr("class", "slices");
+svg.append("g")
+.attr("class", "labels");
+svg.append("g")
+.attr("class", "lines");
+var width = 600,
+height = 400,
+radius = Math.min(width, height) / 2;
+var pie = d3.layout.pie()
+.sort(null)
+.value(function(d) {
+return d.value;
+});
+var arc = d3.svg.arc()
+.outerRadius(radius * 0.8)
+.innerRadius(radius * 0.4);
+var outerArc = d3.svg.arc()
+.innerRadius(radius * 0.9)
+.outerRadius(radius * 0.9);
+svg.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+var key = function(d){ return d.data.label; };
+var color = d3.scale.ordinal()
+.domain(["Lorem ipsum", "dolor sit", "amet", "consectetur", "adipisicing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt"])
+.range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+var g = svg.selectAll(".arc")
+.data(pie(data))
+.enter().append("g")
+.attr("class", "arc")
+.on("click", function(d, i) {
+console.log(JSON.stringify({'documents':d.data.documents}))
+$.ajax({
+type: "POST",
+url: "serve_clusters",
+data: JSON.stringify({'documents':d.data.documents}),
+contentType: "application/json",
+success: function (response) {
+var myDiv = $('#search-results-box'); // The place where you want to insert the template
+myDiv.html(response);
+}})
+});
+g.append("path")
+.attr("d", arc)
+.attr("fill", function(d, i) {
+return color(i);
+});
+svg.append("circle")
+.attr("cx", 0)
+.attr("cy", 0)
+.attr("r", 100)
+.attr("fill", "#fff") ; // If you want to change the colour of the inner circle, change it here.
+var text = svg.select(".labels").selectAll("text")
+.data(pie(data), key);
+text.enter()
+.append("text")
+.attr("dy", ".35em")
+.text(function(d) {
+return d.data.label;
+});
+function midAngle(d){
+return d.startAngle + (d.endAngle - d.startAngle)/2;
+}
+text.transition().duration(1000)
+.attrTween("transform", function(d) {
+this._current = this._current || d;
+var interpolate = d3.interpolate(this._current, d);
+this._current = interpolate(0);
+return function(t) {
+var d2 = interpolate(t);
+var pos = outerArc.centroid(d2);
+pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+return "translate("+ pos +")";
+};
+})
+.styleTween("text-anchor", function(d){
+this._current = this._current || d;
+var interpolate = d3.interpolate(this._current, d);
+this._current = interpolate(0);
+return function(t) {
+var d2 = interpolate(t);
+return midAngle(d2) < Math.PI ? "start":"end";
+};
+});
+var polyline = svg.select(".lines").selectAll("polyline")
+.data(pie(data), key);
+polyline.enter()
+.append("polyline");
+polyline.transition().duration(1000)
+.attrTween("points", function(d){
+this._current = this._current || d;
+var interpolate = d3.interpolate(this._current, d);
+this._current = interpolate(0);
+return function(t) {
+var d2 = interpolate(t);
+var pos = outerArc.centroid(d2);
+pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+return [arc.centroid(d2), outerArc.centroid(d2), pos];
+};
+});
+}
+$.get("/unicorn/clusters",function(result) {
+result=JSON.parse(result)
+console.log(result)
+var docs=result.hits.total;
+var data=_.map(result.clusters, function(x){ return {'documents':x.documents,'label':x['label'],'value': x['documents'].length/docs}});
+doVisualize(data);
+});
+});
+</script> 

@@ -15,6 +15,8 @@ from flask.ext.login import (current_user, login_required, login_user,
         logout_user, confirm_login, fresh_login_required)
 from flask import Blueprint
 
+import pandas as pd
+
 from werkzeug import secure_filename
 import flask
 import tempfile
@@ -27,15 +29,28 @@ import requests
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
-import os
+import os,sys
 import subprocess
 
 from bulk import bulk_download, bulk_search
 from config import tmp_dir
 from util.network import make_graph, document_graph
-from util.historical import (amend_history, update_history,
-                             active_history_terms)
+from util.roundTime import round_month_up, round_month_down, week_delta
 import time
+import datetime
+from datetime import date, timedelta
+
+import sklearn
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn import decomposition
+import corex as ce
+import numpy as np
+import phonenumbers
+from phonenumbers import geocoder
+
+parent = os.path.dirname(os.path.realpath(__file__))
+
+#import geodict_lib
 
 DEFAULT_INDEX = 'dossiers'
 uni = Blueprint('unicorn', __name__, url_prefix='/unicorn')
@@ -101,7 +116,12 @@ def get_file(doc_id):
 def get_entities(doc_id):
     response = request_doc(doc_id)
     try:
-        entities = response['hits']['hits'][0]['_source']['entities']
+        entities = json.loads(response['hits']['hits'][0]['_source']['entities'])
+        entities = [ent for ent in entities if ent['category'] != 'locations']
+
+        print entities
+        print type(entities)
+
     except KeyError, IndexError:
         return jsonify([])
 
@@ -154,6 +174,116 @@ def pdf_endpoint(doc_id):
         os.remove(out_fname)
 
         return out
+
+@uni.route('/topics/<doc_id>')
+def get_topics(doc_id):
+    topics=json.loads(open('topics.json').read())
+    return json.dumps(topics['documents'][doc_id])
+
+
+@uni.route('/topics_latest')
+@login_required
+def topics_latest():
+    return alltopics(session['last_query']['query'])
+
+
+
+@uni.route('/all_topics')
+def alltopics(query):
+
+    q = {
+        "_source": False,
+        "query" : {
+            "match" : {
+                "file" : query
+                }
+            },
+        "size": 10000000
+        }
+
+    #r=requests.post(url,data=json.dumps(q))
+    r=es.search(body=q,index=DEFAULT_INDEX)
+
+    # return doc ids specific to session query
+    uids = []
+    for hit in r['hits']['hits']:
+        uids.append(str(hit['_id']))
+
+    topics=json.loads(open('topics.json').read())
+
+    #filter by uids
+    documents = { key: topics['documents'][key] for key in uids }
+
+    #pick random document to get number of topics
+    num_topics = len(documents[uids[0]])
+
+    docs=len(documents)
+
+    dist={}
+    count = 0
+
+    # use argmax to return the highest rated topic per document, then enumerate bins across all documents 
+    # returns proportion of results per document where each document can only be its maximum scored topic
+    for idx,x in enumerate(np.bincount([np.argmax(item[1]) for item in documents.items()],  minlength=num_topics)):
+        dist['topic'+str(count)]=float(x)/docs
+        count += 1
+    topics['dist']=dist
+
+        
+    # initialize a blank dict    
+    date_ids = {}
+
+    # enumerate topic + i as keys to blank lists
+    for i in range(num_topics):
+        date_ids['topic' + str(i)] = []
+
+    # iterate over returned documents and pick best topic
+    # add doc id to date_ids list for best topic
+    for doc in documents:
+        doc_topic = np.argmax(documents[doc])
+        _id = doc
+        id_list = date_ids['topic' + str(doc_topic)]
+        id_list.append(_id)
+        date_ids['topic' + str(doc_topic)] = id_list
+        
+        
+    topic_dates = {}
+
+    for topic in date_ids:
+
+        q = {   
+                "query":{ 
+                    "ids":{ 
+                        "values": date_ids[topic] # should return list of ids for the given topic
+                        }
+                    },
+
+                "aggs" : {
+                        "articles_over_time" : {
+                            "date_histogram" : {
+                                "field" : "date",
+                                "interval" : "week"
+                            }
+                        }
+                    }
+                }
+
+
+        response = es.search(body=q, index=DEFAULT_INDEX)
+
+        df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
+        df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
+        df.columns = ['Count','key','key_as_string','Date']
+        df = df.drop(['key','key_as_string'], axis=1)
+        date_count_json = df.to_json(orient='records')
+
+        topic_dates[topic] = date_count_json
+
+
+    topics['date_agg'] = topic_dates  
+
+    return json.dumps(topics)
+
 
 @uni.route('/download/<doc_id>')
 @login_required
@@ -232,7 +362,7 @@ def search_endpoint(query=None, page=None, box_only=False):
         start *= 10
 
     q = {
-            "fields": ["title", "highlight", "entities", "owner"],
+            "fields": ["title", "highlight", "entities", "owner", "date"],
             "from": start,
             "query" : {
                 "match" : {
@@ -243,15 +373,27 @@ def search_endpoint(query=None, page=None, box_only=False):
             "highlight": { "fields": { "file": { } },
                 "pre_tags" : ["<span class='highlight'>"],
                 "post_tags" : ["</span>"]
+                },
+             
+        "aggs" : {
+                "articles_over_time" : {
+                    "date_histogram" : {
+                        "field" : "date",
+                        "interval" : "week"
+                    }
                 }
             }
+        }
+
     raw_response = es.search(body=q, index=DEFAULT_INDEX,
             df="file",
             size=10)
 
+
     hits = []
 
     for resp in raw_response['hits']['hits']:
+
         # Store returned ids
         session['last_query']['ids'].append(resp['_id'])
 
@@ -269,6 +411,7 @@ def search_endpoint(query=None, page=None, box_only=False):
                 })
 
 
+
     results = {
             'hits': hits,
             'took': float(raw_response['took'])/1000,
@@ -283,6 +426,120 @@ def search_endpoint(query=None, page=None, box_only=False):
 
     return render_template('search-template.html', results=results,
                            history=session['history'])
+
+
+
+
+
+@uni.route('/timeline')
+@uni.route('/timeline/<query>')
+@uni.route('/timeline/<query>/<page>')
+@login_required
+def timeline_new(query=None, page=None, box_only=False):
+    if not query and not page:
+        last_query = session.get('last_query', None)
+        if last_query:
+            query, page = last_query['query'], last_query['page']
+        else:
+            # better error
+            return abort(404)
+
+    if not page:
+        page = 1
+
+    session['last_query'] = {'query': query, 'page': page, 'ids': []}
+    # convert pages to records for ES
+    start = int(page)
+    if start > 1:
+        start *= 10
+
+
+
+    q_daterange = {
+             
+        "aggs" : {
+
+                "max_date" : { "max" : { "field" : "date" } },
+                "min_date" : { "min" : { "field" : "date" } }
+            }
+        }
+
+    response = es.search(body=q_daterange, index=DEFAULT_INDEX)
+
+    print response['aggregations']['min_date']
+    print response['aggregations']['max_date']
+
+    print
+    min_date_datetime = round_month_down(datetime.datetime.strptime(response['aggregations']['min_date']['value_as_string'], "%Y-%m-%dT%H:%M:%S.%fZ"))
+    max_date_datetime = round_month_up(datetime.datetime.strptime(response['aggregations']['max_date']['value_as_string'], "%Y-%m-%dT%H:%M:%S.%fZ"))
+    min_date = min_date_datetime.strftime(format="%Y-%m-%d")
+    max_date = max_date_datetime.strftime(format="%Y-%m-%d")
+    time_delta = week_delta(min_date_datetime,max_date_datetime)
+    rng = pd.date_range(min_date, periods=time_delta, freq='w')
+    rng = rng.tolist()
+    rng = [date + datetime.timedelta(days=1) for date in rng]
+    rng = [date.strftime("%Y-%m-%d") for date in rng]
+    rngframe = pd.DataFrame(index=rng)
+
+    timeline_minimum = min_date_datetime - datetime.timedelta(days=7)
+    timeline_minimum = timeline_minimum.strftime(format="%Y-%m-%d")
+
+    print min_date
+    print max_date
+
+
+    q = {
+            "fields": ["title", "highlight", "entities", "owner", "date"],
+            "from": start,
+            "query" : {
+                "match" : {
+                    "file" : query
+                    }
+                },
+
+            "highlight": { "fields": { "file": { } },
+                "pre_tags" : ["<span class='highlight'>"],
+                "post_tags" : ["</span>"]
+                },
+             
+        "aggs" : {
+                "articles_over_time" : {
+                    "date_histogram" : {
+                        "field" : "date",
+                        "interval" : "week"
+                    }},
+                "max_date" : { "max" : { "field" : "date" } },
+                "min_date" : { "min" : { "field" : "date" } }
+            }
+        }
+
+
+    response = es.search(body=q, index=DEFAULT_INDEX)
+
+    print response['aggregations']['articles_over_time']['buckets']
+
+    df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
+    df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
+    df.columns = ['Count','key','key_as_string','Date']
+    df = df.drop(['key','key_as_string'], axis=1)
+    df = df.set_index('Date')
+
+    output = rngframe.join(df, how="left")
+    output = output.fillna(0)
+    output = output.reset_index()
+    output.columns = ['Date','Count']
+
+
+    date_count_json = output.to_json(orient='records')
+
+    out = {'date_data': date_count_json, 'time_min': timeline_minimum}
+
+    print json.dumps(out)
+
+    return json.dumps(out)
+
+
+
 
 @uni.route('/')
 @login_required
@@ -338,6 +595,439 @@ def viz_all():
 
     return json.dumps(graph)
 
+
+@uni.route('/clusters')
+@login_required
+def get_clusters():
+    query=session['last_query']['query']
+    #print 'Query: ' + query
+    url='http://localhost:9200/dossiers/attachment/_search_with_clusters'
+    request = {
+	"search_request": {
+	"query": {"match" : { "_all": query }},
+	"size": 100
+	},
+        "algorithm":"lingo",  
+	"max_hits": 0,
+	"query_hint": query,
+	"field_mapping": {
+	"title": ["_source.title"],
+	"content": ["_source.content"]
+	}
+      }
+    r=requests.post(url,data=json.dumps(request))
+    return json.dumps(r.json())
+
+
+
+@uni.route('/geo')
+@login_required
+def geo_endpoint():
+    query=session['last_query']['query']
+    #print 'Query: ' + query
+    url='http://localhost:9200/dossiers/_search'
+
+    loc_q = {
+        "size" : 30000,
+        "filter" : {
+            "exists" : { "field" : "locations" }
+        }
+    }
+
+    q = {
+        "size" : 100000,
+        "fields" : ["entities","title","file","entities"],
+        "query" : {
+            "query_string" : { "query" : query }
+            }
+          }
+    #r=requests.post(url,data=json.dumps(q))
+    r=es.search(body=q,index=DEFAULT_INDEX)
+    data=r
+    locations=[]
+ #   for hit in data['hits']['hits']:
+ #       print hit['fields']['file'][0]
+ #       print
+ #       for location in geodict_lib.find_locations_in_text(re.sub('\s', ' ', hit['_source']['file'])):
+ #           for token in location['found_tokens']:
+ #               locations.append({'lat':token['lat'],'lon':token['lon'],'name':token['matched_string']})
+    
+    #geo=map(lambda x: x['found_tokens'])
+#    return json.dumps(locations)
+    #print 'Number of Hits: ' + str(len(data['hits']['hits']))
+
+    for hit in data['hits']['hits']:
+        entity_locations = []
+
+        entities = json.loads(hit['fields']['entities'][0])
+
+        try:
+            for ent in entities:
+                if ent['category'] == 'locations':
+                    entity_locations.append(ent)
+        except:
+            locs = []
+
+        try:
+            doc_file = str(hit['fields']['file'][0].replace('\n','<br>'))
+        
+        except:
+            continue
+
+        try:
+            for location in entity_locations:
+                locations.append({'lat':location['entity']['lat'],'lon':location['entity']['lon'],
+                    'name':location['entity']['placename'], 'title': hit['fields']['title'],
+                    'file': doc_file})
+        except: 
+            continue
+            # print 'no locations'
+    
+    #geo=map(lambda x: x['found_tokens'])
+    return json.dumps(locations)
+
+
+
+
+
+@uni.route('/serve_geo_new', methods=['POST'])
+@uni.route('/serve_geo_new/<query>', methods=['POST'])
+@uni.route('/serve_geo_new/<query>/<page>', methods=['POST'])
+@login_required
+def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
+
+
+    if request.method == "POST":
+        json_dict = request.get_json()
+        print json_dict
+        print type(json_dict)
+        try: 
+            bounds = json_dict['bounds']['bounds']
+            southwest_lat = bounds['southwest_lat']
+            southwest_lon = bounds['southwest_lon']
+            northeast_lat = bounds['northeast_lat']
+            northeast_lon = bounds['northeast_lon']
+        
+        except:
+            southwest_lat = -84
+            southwest_lon = -170 
+            northeast_lat = 85 
+            northeast_lon =189
+
+    print json_dict
+    print 'running a new query...'
+
+    if not query and not page:
+        last_query = session.get('last_query', None)
+        if last_query:
+            query, page = last_query['query'], last_query['page']
+        else:
+            # better error
+            return abort(404)
+
+    if not page:
+        page = 1
+
+    session['last_query'] = {'query': query, 'page': page, 'ids': []}
+    # convert pages to records for ES
+    start = int(page)
+    if start > 1:
+        start *= 10
+
+    q = { 
+       "fields": ["title", "highlight", "entities", "owner", "body"], 
+       "from": start,
+       "query":{  
+          "filtered":{  
+             "query":{  
+                "match":{  
+                   "file": query
+                }
+             },
+             "filter":{  
+                "geo_bounding_box":{  
+                   "locs":{  
+                      "top_left":{  
+                         "lat": northeast_lat, # top_lat,
+                         "lon": southwest_lon, #top_lon
+                      },
+                      "bottom_right":{  
+                         "lat": southwest_lat, #bottom_lat,
+                         "lon": northeast_lon, #bottom_lon
+                      }
+                   }
+                }
+             }
+          }
+       },
+       "highlight":{  
+          "fields":{  
+             "file":{  
+
+             }
+          },
+          "pre_tags":[  
+             "<span class='highlight'>"
+          ],
+          "post_tags":[  
+             "</span>"
+          ]
+       }
+    }
+
+
+    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+            df="file",
+            size=10)
+
+    hits = []
+
+    for resp in raw_response['hits']['hits']:
+        # Store returned ids
+        session['last_query']['ids'].append(resp['_id'])
+
+        text = resp['fields']['body'][0]
+        text = re.sub('\\n\\n', '\\n', text)
+        text = re.sub('\\n', '<br>', text)
+
+        if is_owner(resp['fields']['owner'][0]):
+            # Flatten structure for individual hits
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'highlight': resp['highlight']['file'][0],
+                'permissions': True,
+                'body': text
+                })
+        else:
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'permissions': False
+                })
+
+
+    results = {
+            'hits': hits,
+            'took': float(raw_response['took'])/1000,
+            'total': "{:,}".format(raw_response['hits']['total']),
+            'total_int': int(raw_response['hits']['total']),
+            'query': query,
+            'from': int(page)
+            }
+
+    if box_only:
+        return render_template('search-results-map.html', results=results)
+
+    return render_template('search-template.html', results=results)
+
+
+@uni.route('/serve_clusters', methods=['POST'])
+@uni.route('/serve_clusters/<query>', methods=['POST'])
+@uni.route('/serve_clusters/<query>/<page>', methods=['POST'])
+#@login_required
+def serve_clusters(query=None,page=None, box_only=True, dates={},documents={}):
+    if request.method == "POST":
+        json_dict = request.get_json()
+    
+    if not query and not page:
+        last_query = session.get('last_query', None)
+    if last_query:
+        query, page = last_query['query'], last_query['page']
+    else:
+        # better error
+        return abort(404)
+
+    q={   
+          "query": {
+
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    "file": query
+                  }
+                },
+                {
+                  "terms": {
+                    "_id":json_dict['documents']
+                  }
+                }
+              ]
+            }
+          },
+          "fields": ["title", "highlight", "entities", "owner", "date"],
+          "highlight": {
+            "fields": {
+              "file": {
+                "number_of_fragments": 1,
+                "pre_tags" : ["<span class='highlight'>"],
+                "post_tags" : ["</span>"]
+              }
+            }
+          }
+        }
+
+    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+            df="file",
+            size=10)
+
+    hits = []
+
+    for resp in raw_response['hits']['hits']:
+
+        # Store returned ids
+        session['last_query']['ids'].append(resp['_id'])
+
+        if is_owner(resp['fields']['owner'][0]):
+            # Flatten structure for individual hits
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'highlight': resp['highlight']['file'][0],
+                'permissions': True
+                })
+        else:
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'permissions': False
+                })
+
+
+    results = {
+            'hits': hits,
+            'took': float(raw_response['took'])/1000,
+            'total': "{:,}".format(raw_response['hits']['total']),
+            'total_int': int(raw_response['hits']['total']),
+            'query': query,
+            'from': int(page)
+            }
+
+    if box_only:
+        return render_template('search-results-box.html', results=results)
+
+    return render_template('search-template.html', results=results)
+
+
+
+@uni.route('/serve_timeline', methods=['POST'])
+@uni.route('/serve_timeline/<query>', methods=['POST'])
+@uni.route('/serve_timeline/<query>/<page>', methods=['POST'])
+@login_required
+def serve_timeline(query=None, page=None, box_only=True, dates={}):
+
+
+    if request.method == "POST":
+        json_dict = request.get_json()
+        #print json_dict
+        #print type(json_dict)
+
+
+    dates = json_dict['dates']
+    startdate = dates[0][0:10]
+    enddate = dates[1][0:10]
+
+    if startdate == enddate:
+        startdate = "1973-01-01"
+        enddate = "1974-01-01"
+    #print startdate, enddate
+
+    #print 'running a new query...'
+
+    if not query and not page:
+        last_query = session.get('last_query', None)
+        if last_query:
+            query, page = last_query['query'], last_query['page']
+        else:
+            # better error
+            return abort(404)
+
+    if not page:
+        page = 1
+
+    session['last_query'] = {'query': query, 'page': page, 'ids': []}
+    # convert pages to records for ES
+    start = int(page)
+    if start > 1:
+        start *= 10
+
+    q = {
+            "fields": ["title", "highlight", "entities", "owner", "date"],
+            "from": start,
+            "query" : {
+                "match" : {
+                    "file" : query
+                    }
+                },
+                "filter":{
+                "range" : {
+                    "date" : {
+                        "gte": startdate,
+                        "lte": enddate,
+                        "format": "yyyy-MM-dd"
+                }
+            }
+            },
+            "highlight": { "fields": { "file": { } },
+                "pre_tags" : ["<span class='highlight'>"],
+                "post_tags" : ["</span>"]
+                }
+            }
+
+    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+            df="file",
+            size=10)
+
+    #print q
+    #print raw_response
+
+    hits = []
+
+    for resp in raw_response['hits']['hits']:
+
+        # Store returned ids
+        session['last_query']['ids'].append(resp['_id'])
+
+        if is_owner(resp['fields']['owner'][0]):
+            # Flatten structure for individual hits
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'highlight': resp['highlight']['file'][0],
+                'permissions': True
+                })
+        else:
+            hits.append({'id': resp['_id'],
+                'title': resp['fields']['title'][0],
+                'permissions': False
+                })
+
+
+
+    results = {
+            'hits': hits,
+            'took': float(raw_response['took'])/1000,
+            'total': "{:,}".format(raw_response['hits']['total']),
+            'total_int': int(raw_response['hits']['total']),
+            'query': query,
+            'from': int(page)
+            }
+
+    if box_only:
+        return render_template('search-results-box.html', results=results)
+
+    return render_template('search-template.html', results=results)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @uni.route('/viz/<query>')
 @login_required
 def viz_endpoint(query):
@@ -346,10 +1036,13 @@ def viz_endpoint(query):
         "_source": ["entity"],
         "fields" : ["entities","title"],
         "query" : {
-            "term" : { "file" : query }
+            "match" : {
+                "file" : query
+                }
             },
-        "size": 100
+        "size": 150
         }
+
     #r=requests.post(url,data=json.dumps(q))
     r=es.search(body=q,index=DEFAULT_INDEX)
     data=r
@@ -368,9 +1061,13 @@ def viz_latest():
 def wc_latest():
     return wc(session['last_query']['query'])
 
-@uni.route('/wordcloud/<query>')
+@uni.route('/url_list')
+@uni.route('/url_list/<query>')
 @login_required
-def wc(query):
+def url_fetch(query=""):
+    #query="http"
+    if not query:
+        query=session['last_query']['query']
     stopset=set(stopwords.words('english'))
     url='http://localhost:9200/dossiers/_search'
     q = {
@@ -379,19 +1076,78 @@ def wc(query):
             "term" : { "file" : query }
             }
         }
-    #r=requests.post(url,data=json.dumps(q))
+    #r=requests.post(url,data=json.dumps(q))    
     r=es.search(body=q,index=DEFAULT_INDEX)
-    data=r['hits']['hits'][0]['fields']['file'][0]
+    data=r['hits']['hits']
+    urls=[]
+    pn=[]
+    for doc in data:
+        urls.append(re.findall(r'(https?://[^\s]+)', doc['fields']['file'][0]))
+        try:
+            for match in phonenumbers.PhoneNumberMatcher(doc['fields']['file'][0], region=None):
+                    pn.append({'number':phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164),'location':geocoder.description_for_number(match.number,"en")})     
+        except KeyError:
+            pass
+    urls=filter(lambda x: x!=[],urls)
+    #urls_flat=reduce(lambda x,y: x.extend(y),urls)
+    urls_flat=[item for sublist in urls for item in sublist]
+    return json.dumps({'urls':dict(Counter(urls_flat)), 'pn':pn})
 
-    nowhite=re.sub('\s', ' ', data)
-    nowhite=re.sub(r'[^\w\s]', '', data)
-    wt=word_tokenize(nowhite)
-    wc=dict(Counter(wt))
-    frequency=[]
-    for k,v in wc.iteritems():
-        frequency.append(dict({"text":k,"size":v*3}))
-    frequency=filter(lambda x:x['size']>3 and x['text'].lower() not in stopset,frequency)
-    return json.dumps(frequency)
+@uni.route('/wordcloud/<query>')
+@login_required
+def wc(query):
+        stop_words=set(stopwords.words('english'))
+        # generating a corpus specific stopword list
+        stopset_state_specific = set(['review','na','declassifiedreleased','review','unclassified','confidential','secret','disposition','released','approved','document','classification','restrictions','state','department','date','eo','handling'])
+        stopset = stop_words.union(stopset_state_specific)
+        url='http://localhost:9200/dossiers/_search'
+        q = {
+        "fields" : ["file", "body"], #added body to query
+        "query" : {
+        "match" : {
+        "file" : query
+        }
+        }
+        }
+        #r=requests.post(url,data=json.dumps(q))
+        r=es.search(body=q,index=DEFAULT_INDEX)
+        # swithced to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the uploader
+        # to include the most relevant information (e.g. excluding headers)
+        data=r['hits']['hits'][0]['fields']['body'][0]
+        nowhite=re.sub('\s', ' ', data)
+        #updated to disallow numbers from the wordcloud
+        nowhite=re.sub(r'[^A-Za-z\s]', '', data)
+        wt=word_tokenize(nowhite)
+        wc=dict(Counter(wt))
+        frequency=[]
+        for k,v in wc.iteritems():
+            frequency.append(dict({"text":k,"size":v*3}))
+        frequency=filter(lambda x:x['size']>3 and x['text'].lower() not in stopset,frequency)
+        return json.dumps(frequency)
+
+@uni.route('/topicmodel')
+@uni.route('/topicmodel/<query>')
+@login_required
+def tm(query):
+    #count_vectorizer.fit_transform(train_set)
+    #print "Vocabulary:", count_vectorizer.vocabulary
+    # Vocabulary: {'blue': 0, 'sun': 1, 'bright': 2, 'sky': 3}
+    #freq_term_matrix = count_vectorizer.transform(test_set)
+    #print freq_term_matrix.todense()
+    stopset=set(stopwords.words('english'))
+
+
+    url='http://localhost:9200/dossiers/_search'
+    q = {
+        "fields" : ["file"],
+        "query" : {
+            "term" : { "file" : query }
+            }
+        }
+    
+  
+    return json.dumps(topic_words[0])
+
 
 @uni.route('/<doc_id>/related')
 @login_required
@@ -451,6 +1207,8 @@ def handle_registration():
     db.session.commit()
 
     return redirect(url_for('.root'))
+
+    
 
 ######################################
 # Registration blueprint:

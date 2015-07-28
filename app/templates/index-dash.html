@@ -15,6 +15,12 @@
 <link href="{{url_for('static', filename='plugins/select2/select2.css')}}" rel="stylesheet">
 <link href="{{url_for('static', filename='css/style.css')}}" rel="stylesheet">
 <link href="{{url_for('static', filename='css/custom.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename='css/jquery.dataTables.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename='css/jstreecustom.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename='js/leaflet.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename='js/leaflet-locationfilter/src/locationfilter.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename='js/Leaflet.markercluster/dist/MarkerCluster.css')}}" rel="stylesheet">
+<link href="{{url_for('static', filename='js/Leaflet.markercluster/dist/MarkerCluster.Default.css')}}" rel="stylesheet">
 <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
 <!--[if lt IE 9]>
                                 <script src="http://getbootstrap.com/docs-assets/js/html5shiv.js"></script>
@@ -132,6 +138,25 @@
         </a>
         </li>
         <li>
+          <li class="dropdown">
+        <a class="ajax-link" href="static/ajax/typography.html" class="dropdown-toggle">
+          <i class="fa fa-book"></i>
+          <span class="hidden-xs">Topics</span>
+        </a>
+        </li>
+         <li>
+        <a class="ajax-link" href="static/ajax/urls.html">
+          <i class="fa fa-desktop"></i>
+          <span class="hidden-xs">Extracted content</span>
+        </a>
+        </li>
+          <li>
+        <a class="ajax-link" href="static/ajax/map_fullscreen.html">
+          <i class="fa fa-globe"></i>
+          <span class="hidden-xs">Map</span>
+        </a>
+        </li>
+       <li>
         <a href="static/ajax/bulksearch.html" class="ajax-link">
           <i class="fa fa-arrows-alt"></i>
           <span class="hidden-xs">Bulk Search</span>
@@ -158,6 +183,7 @@
 <!--End Container-->
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 <!--<script src="http://code.jquery.com/jquery.js"></script>-->
+<script src="{{url_for('static', filename='js/underscore-min.js')}}"></script>
 <script src="{{url_for('static', filename='plugins/jquery/jquery-2.1.0.min.js')}}"></script>
 <script src="{{url_for('static', filename='plugins/jquery-ui/jquery-ui.min.js')}}"></script>
 <!-- Include all compiled plugins (below), or include individual files as needed -->
@@ -169,7 +195,13 @@
 <script src="{{url_for('static', filename='js/dash.js')}}"></script>
 <script src={{url_for('static', filename='js/d3.js')}}></script> 
 <script src={{url_for('static', filename='js/d3.layout.cloud.js')}}></script>
+<script src={{url_for('static', filename='js/jquery.dataTables.js')}}></script>
 <script src='{{url_for('static', filename='js/force-graph.js')}}'></script>
-
+<script src={{url_for('static', filename='js/leaflet.js')}}></script>
+<script src={{url_for('static', filename='js/leaflet-locationfilter/src/locationfilter.js')}}></script>
+<script src={{url_for('static', filename='js/Leaflet.markercluster/dist/leaflet.markercluster-src.js')}}></script>
+<script src={{url_for('static', filename='js/jstree.js')}}></script>
+<script src={{url_for('static', filename='js/jstree.js')}}></script>
+<script src={{url_for('static', filename='js/carrotsearch.foamtree.js')}}></script>
 </body>
 </html>

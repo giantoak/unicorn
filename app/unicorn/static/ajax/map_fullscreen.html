@@ -1,22 +1,177 @@
+
 <div class="row">
 	<div class="col-xs-12">
+
+
+
+
+
 		<div class="box">
 			<div id="full-map" class="box-content fullscreenmap">
 			</div>
 		</div>
 	</div>
 </div>
+
+<div id="document" style="background-color:white; padding:15px 10px 10px 15px">
+<div id="map_documents">
+</div>
+</div>
+
+
+
+
 <script type="text/javascript">
 // Load OpenLayers library and create map
-function OpenLayersFS(){
-	LoadOpenLayersScript(FullScreenMap);
-}
+	
+	var map_data = new Array();
+	
+	var in_bounds = {bounds: {'southwest_lat': -85, 
+				'southwest_lon': -300, 
+				'northeast_lat': 85, 
+				'northeast_lon': 300}};
+
+
+	var get_results = $.post("serve_geo_new", function(response) {
+	        var myDiv = $('#map_documents'); // The place where you want to insert the template
+	        myDiv.html(response);
+	    });
+
+
+
+	
+
 $(document).ready(function() {
-	// Add class for fullscreen view
-	$('#content').addClass('full-content');
-	// Set height of block
-	SetMinBlockHeight($('.fullscreenmap'));
-	// Load Google Map API and after this load OpenLayers
-	$.getScript('http://maps.google.com/maps/api/js?sensor=false&callback=OpenLayersFS');
+	$('#content').addClass('map-content');
+	SetMinBlockHeightMap($('.fullscreenmap'));
+	
+	var baseLayer=L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+	maxZoom: 19
+	});
+
+
+	//setup map and add layers
+	var center = [39.2833,-76.6167];
+	var map = new L.Map('full-map', {
+	center: new L.LatLng(39.2833, -76.6167),
+	zoom: 4,
+	layers: [baseLayer]
+	});
+
+	var locationFilter = new L.LocationFilter().addTo(map);
+
+	// get_results;
+
+
+
+
+	//get_results(bounds);
+	map.invalidateSize(false);
+
+	 $.get('geo', function(data) {
+
+	 	var data=JSON.parse(data)
+	 	
+
+	 	// define min and max lat/lons
+
+        southwest_lat = -55
+        southwest_lon = -165 
+        northeast_lat = 75
+        northeast_lon = 185
+
+		maxlat = Math.max.apply(Math,data.map(function(o){return o.lat;})) + 2.5 
+        maxlon = Math.max.apply(Math,data.map(function(o){return o.lon;})) + 2.5
+        minlat = Math.min.apply(Math,data.map(function(o){return o.lat;})) - 2.5
+        minlon = Math.min.apply(Math,data.map(function(o){return o.lon;})) - 2.5
+
+        maxlat = maxlat > northeast_lat ? northeast_lat : maxlat
+        maxlon = maxlon > northeast_lon ? northeast_lon : maxlon
+        minlat = minlat < southwest_lat ? southwest_lat : minlat
+        minlon = minlon < southwest_lon ? southwest_lon : minlon
+
+        console.log(maxlat, maxlon);
+        console.log(minlat, minlon);
+
+        // fit the map to the min/max lat lons
+        map.fitBounds([
+            [minlat, minlon],
+            [maxlat, maxlon]
+            ]);
+ 
+ 		// create new cluster group
+        var markers = new L.MarkerClusterGroup();
+
+        // loop through data and place markers on the map
+        for(var i=0; i<data.length;i++){
+        	
+        	map_data.push(data[i])
+        	var placename = data[i]['name']
+        	var subject = data[i]['title']
+        	var file = JSON.stringify(data[i]['file'])
+		    var file = JSON.parse(file);
+        	var marker = L.marker(new L.LatLng(data[i]['lat'], data[i]['lon']), { title: placename, text: file, subject: subject });
+			marker.bindPopup('<strong>Location:</strong> ' + placename + '<br><strong>Document: </strong><i>' + subject + '<i>')
+				
+			markers.addLayer(marker);
+
+        	//markers.addLayer(new L.Marker([data[i]['lat'], data[i]['lon']]))
+			//map.addLayer(markers);
+		 	//L.marker([data[i]['lat'], data[i]['lon']]).addTo(map)
+		 	//map.bindPopup(data[i]['name'])
+		    //map.openPopup();
+			};
+			map.addLayer(markers);
+	})
+
+		/* function onClick(e) {
+			    $("#document").html('<b>Hover over a point to return a document</b>');
+			    $("#document").html('<b>' + this.options.subject + ': </b></br>' + "<font face='courier new'>" + this.options.text + "</font>");
+			} */
+
+
+		locationFilter.on("change", function (e, get_results) {
+	 	var bounds = e.bounds;
+	 	//console.log(e)
+
+		var out_bounds = {bounds: {'southwest_lat': bounds['_southWest']['lat'], 
+						'southwest_lon': bounds['_southWest']['lng'], 
+						'northeast_lat': bounds['_northEast']['lat'], 
+						'northeast_lon': bounds['_northEast']['lng']}};
+
+	    $.ajax({
+            type: "POST",
+            url: "serve_geo_new",
+            data: JSON.stringify({bounds: out_bounds}),
+            contentType: "application/json",
+            success: function (response) {
+            var myDiv = $('#map_documents'); // The place where you want to insert the template
+	        myDiv.html(response);
+	    	}
+	    })
+	    });
+
+
+// unfilter on removal of selection
+ locationFilter.on("disabled", function () {
+	$.post("serve_geo_new", function(response) {
+	        var myDiv = $('#map_documents'); 
+	        myDiv.html(response);
+	    });
+	console.log('removed!')
+}); 
+
+
+
+
+// $.get('mapsearch', function(data) {
+// 	results=JSON.parse(data)
+//	console.log(results);
+
 });
+
+
+
+
+
 </script>

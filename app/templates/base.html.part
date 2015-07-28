@@ -16,8 +16,10 @@
         <script src={{url_for('static', filename='js/lib/jquery-ui-1.9.1.js')}}></script>
         <script src={{url_for('static', filename='js/d3.js')}}></script> 
         <script src={{url_for('static', filename='js/d3.layout.cloud.js')}}></script>
+        <script src={{url_for('static', filename='js/jquery.dataTables.js')}}></script>
         <!-- Styling for UI elements -->
         <link href={{url_for('static', filename='css/jquery-ui.min.css')}} rel=stylesheet type=text/css>
+        <link rel="stylesheet" href={{url_for('static', filename="css/jquery.dataTables.css")}}>   
 
         {% endblock %}
 
@@ -40,6 +42,18 @@ color:rgb(50,88,50);
 .nav active a {
 color:"blue";
 }
+
+
+.chart rect {
+  fill: steelblue;
+}
+
+.chart text {
+  fill: white;
+  font: 10px sans-serif;
+  text-anchor: end;
+}
+
 
 {% endblock %}
 </style>

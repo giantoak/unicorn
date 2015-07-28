@@ -1,0 +1,72 @@
+<div class="row">
+	<div id="breadcrumb" class="col-md-12">
+		<ol class="breadcrumb">
+			<li><a href="index.html">Dashboard</a></li>
+			<li><a href="#">Extractions</a></li>
+		</ol>
+	</div>
+</div>
+
+
+<h4 class="page-header">Extractions</h4>
+<div class="row">
+	<div class="col-xs-12">
+		<div class="row">
+		
+				<div class="row">
+					<div class="col-xs-6">
+						<div class="box">
+							<div class="box-content" id="url_results">
+								<p class="page-header">Urls</p>
+				
+							</div>
+						</div>
+					</div>
+						<div class="col-xs-6">
+						<div class="box">
+							<div class="box-content" id="pn_results">
+								<p class="page-header">Phone Numbers</p>
+				
+							</div>
+						</div>
+					</div>
+
+			
+			</div>
+		</div>
+	</div>		
+</div>
+<script>
+$(document).ready(function() {
+	$.get('/unicorn/url_list', function(data){
+		 tbl_row="";
+		 tbl_body="";
+		 console.log(data)
+         urls=JSON.parse(data)['urls']
+         phones=JSON.parse(data)['pn']
+         var i=1;
+		 for (var key in urls) {
+		 	tbl_row+='<tr><td><a href="'+key+'" target=_blank>'+key+'</a></td><td>'+urls[key]+'</td></tr>';
+          //$('#topics_words').append(data['topics'][key].toString()+'\n');
+          i++;
+        }
+         tbl_body+='<table id="url_table" class="display"><thead><tr><th>URL</th><th>Count</th></thead><tbody>'+tbl_row+"</tbody></table>"
+         $("#url_results").html(tbl_body)
+         $("#url_table").dataTable({
+ 			"sDom": '<"top">rt<"bottom"lp><"clear">'
+         	});
+        
+         tbl_row="";
+		 tbl_body="";
+		 for (var i=0; i<phones.length;i++) {
+		 	console.log(phones[i])
+		 	tbl_row+="<tr><td>"+phones[i]['number']+'</td><td>'+phones[i]['location']+'</td></tr>';
+        }
+         tbl_body+='<table id="pn_table" class="display"><thead><tr><th>Phone Number</th><th>Location</th></thead><tbody>'+tbl_row+"</tbody></table>"
+         $("#pn_results").html(tbl_body)
+         $("#pn_table").dataTable({
+ 			"sDom": '<"top">rt<"bottom"lp><"clear">'
+         	});
+	});
+});
+</script>
