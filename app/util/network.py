@@ -1,6 +1,7 @@
 import networkx as nx
 from networkx.readwrite import json_graph
 from itertools import combinations
+import community
 
 def document_graph(hits):
     '''
@@ -50,7 +51,8 @@ def document_graph(hits):
 
             # Link entity node with current doc node
             g.add_edge(_id, ent)
-    
+    partition=community.best_partition(g)
+    nx.set_node_attributes(g, 'community', partition)
     js = json_graph.node_link_data(g)
     js['adj'] = g.adj
     return js

@@ -36,6 +36,9 @@ from bulk import bulk_download, bulk_search
 from config import tmp_dir
 from util.network import make_graph, document_graph
 from util.roundTime import round_month_up, round_month_down, week_delta
+from util.network import make_graph, document_graph
+from util.historical import (amend_history, update_history,
+                             active_history_terms)
 import time
 import datetime
 from datetime import date, timedelta
@@ -43,6 +46,7 @@ from datetime import date, timedelta
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn import decomposition
+import community
 import corex as ce
 import numpy as np
 import phonenumbers
