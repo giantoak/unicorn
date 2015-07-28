@@ -36,6 +36,9 @@ sudo apt-get install -y unoconv
 # Install packages for SSL
 sudo apt-get install -y libssl-dev libffi-dev
 
+# Install psycopg dependencies
+apt-get install libpq-dev
+
 # Install Python dependencies
 sudo pip install -r requirements.txt
 

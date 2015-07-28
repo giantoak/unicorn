@@ -296,7 +296,117 @@ function LoadUserSettings() {
       user_url = user_hash;
   LoadPageWithPreloader(user_hash, user_url);
 }
+function DeleteHistory() {
+  var hist_url = 'hist/delete';
+  console.log('Delete history: ' + hist_url);
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: hist_url,
+		type: 'GET',
+		success: function(data) {
+            console.log('Delete successful');
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			$('#ajax-content').text(errorThrown);
+		},
+		dataType: "html",
+		async: false
+  }) 
+}
+function EmitHandler(event, node, relatives) {
+    var type = node.type,
+        cat,
+        name,
+        name_html,
+        neighbors = [],
+        cousins = [];
+    
+    // TODO: stop this madness
+    for (var elem in relatives) {
+        if (relatives[elem] == 1) {
+            neighbors.push(elem);
+        }
+        else {
+            cousins.push(elem);
+        }
+    }
+    
+    if (type == 'document') {
+        name = node.title;
+        name_html = "<a href=# class=doc-link data-doc='" + node.id +"'>" +
+                        name + "</div>";
+        
+        cat = "";
+    }
+    else if (type == 'entity') {
+        name = node.id;
+        name_html = "<a href=# class=search-link data-query='" + 
+                        name + "'>" + name + "</div>";
 
+        cat = node.category;
+    } 
+    switch (event) {
+        case 'mouseout':
+            $("#node-current-name").text('No node selected');
+            $("#node-current-type").text('');
+            $("#node-current-category").text('');
+            break;
+        case 'mouseover':
+            $("#node-current-name").html(name_html);
+            $("#node-current-type").text(type);
+            $("#node-current-category").text(cat);
+            break
+        case 'mouseup':
+            $("#node-name").html(name_html);
+            $("#node-type").text(type);
+            $("#node-category").text(cat);
+            //$("#node-neighbors").text(neighbors);
+            //$("#node-cousins").text(cousins);
+            break
+    }
+    return;
+}
+function DrawEntityGraph() {
+    $("#viz-container").html('');
+    var width = $("#viz-container").parent().width(),
+         height = 960,
+         svg = d3.select("#viz-container").append("svg")
+                 .attr("width", width)
+                 .attr("height", height),
+         graph = NetworkGraph()
+                 .width(width)
+                 .height(height)
+                 .type("entity")
+                 .nodeCallback(EmitHandler),
+         graph_export_data;
+
+     $.get('hist/and', function(data) {
+             var graph_data = JSON.parse(data);
+             svg.datum(graph_data)
+                     .call(graph);
+             graph_export_data = graph.getExport();
+     });
+    
+    $("#dljs").attr("href", "data:" + graph_export_data);
+    $("#dljs").attr("download", "data.json");
+}
+function UpdateHistory(query, active) {
+  var hist_url = 'hist/update/' + escape(query) + '/' + (active?1:0);
+  console.log('Update history: ' + hist_url);
+  $.ajax({
+		mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+		url: hist_url,
+		type: 'GET',
+		success: function(data) {
+            DrawEntityGraph();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			$('#ajax-content').text(errorThrown);
+		},
+		dataType: "html",
+		async: false
+  }) 
+}
 function LoadDocumentTab(doc, text) {
   var doc_hash = 'view/' + doc,
       doc_url = doc_hash;
@@ -2524,13 +2634,13 @@ $(document).ready(function () {
          ***********/
 
         /* Enter key is pressed in search bar */
-	$('#search').on('keydown', function(e){
-		if (e.keyCode == 13){
-			e.preventDefault();
-                        var query = $('#search > input').val();
-                        LoadSearchContent(query, 1);
-		}
-	});
+        $('#search').on('keydown', function(e){
+            if (e.keyCode == 13){
+                e.preventDefault();
+                            var query = $('#search > input').val();
+                            LoadSearchContent(query, 1);
+            }
+        });
         /* Search is clicked in breadcrumbs */
         $(document).on('click', '.search-breadcrumb-link', function(e) {
           console.log('search breadcrumb link');
@@ -2554,6 +2664,26 @@ $(document).ready(function () {
         /* User settings are clicked */
         $(document).on('click', '#user-settings-link', function(e) {
           LoadUserSettings();
+        });
+
+        /* History checkboxes are clicked */
+        $(document).on('change', '.historical-checkbox', function(e) {
+          var cbox = $(e.target);
+          UpdateHistory(cbox.data('query'), cbox.is(":checked"));
+        });
+        
+        /* History checkboxes are deleted */
+        $(document).on('click', '#clear-all-history', function(e) {
+          DeleteHistory();
+          $('.historical-searches').html('');
+        });
+
+        /* Links are clicked */
+        $(document).on('click', '.search-link', function(e) {
+            var name = $(e.target).data('query');
+            LoadSearchContent(name, 1);
+            console.log('entity: ', name);
+
         });
 });
 
