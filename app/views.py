@@ -1,6 +1,7 @@
 from app import app, es, db, flask_bcrypt, login_manager
 from app import User, Organization
 from flask import jsonify
+from flask import make_response
 from flask import render_template
 from flask import url_for
 from flask import redirect
@@ -35,6 +36,9 @@ from bulk import bulk_download, bulk_search
 from config import tmp_dir
 from util.network import make_graph, document_graph
 from util.roundTime import round_month_up, round_month_down, week_delta
+from util.network import make_graph, document_graph
+from util.historical import (amend_history, update_history,
+                             active_history_terms)
 import time
 import datetime
 from datetime import date, timedelta
@@ -42,6 +46,7 @@ from datetime import date, timedelta
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn import decomposition
+import community
 import corex as ce
 import numpy as np
 import phonenumbers
@@ -299,6 +304,42 @@ def download_endpoint(doc_id):
 def search_preserve(query, page):
     return search_endpoint(query, page, box_only=True)
 
+@uni.route('/hist/update/<query>/<active>')
+@login_required
+def update_history_route(query, active):
+    session['history'] = update_history(session['history'], query, active)
+    return make_response(json.dumps(session['history']))
+
+@uni.route('/hist/delete')
+@login_required
+def delete_history():
+    session['history'] = []
+    return make_response(json.dumps(session['history']))
+
+@uni.route('/hist/and')
+@login_required
+def history_query():
+    ''' AND query over all active history terms '''
+    terms = active_history_terms(session['history'])
+    body =  {
+            "_source": ["entity"],
+            "fields": ["entities", "title"],
+            "query": {
+                "constant_score" : {
+                    "filter" : {
+                        "terms" : {
+                            "file" : terms,
+                            "execution": "and"
+                            }
+                        }
+                    }
+                }
+            }
+    r = es.search(body=body, index=DEFAULT_INDEX, size=100)
+    graph = make_response(json.dumps(document_graph(r['hits']['hits'])))
+
+    return graph
+
 @uni.route('/search')
 @uni.route('/search/<query>')
 @uni.route('/search/<query>/<page>')
@@ -316,6 +357,9 @@ def search_endpoint(query=None, page=None, box_only=False):
         page = 1
 
     session['last_query'] = {'query': query, 'page': page, 'ids': []}
+    session['history'] = amend_history(session.get('history', list()),
+                                       session['last_query'])
+
     # convert pages to records for ES
     start = int(page)
     if start > 1:
@@ -384,7 +428,8 @@ def search_endpoint(query=None, page=None, box_only=False):
     if box_only:
         return render_template('search-results-box.html', results=results)
 
-    return render_template('search-template.html', results=results)
+    return render_template('search-template.html', results=results,
+                           history=session['history'])
 
 
 

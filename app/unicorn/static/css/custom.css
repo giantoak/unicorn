@@ -18,6 +18,15 @@
   fill: #333;
 }
 
+.node.fixed {
+  stroke-width: 5px;
+  stroke: #CD2626;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 5px;
+}
 text {
   font: 10px sans-serif;
   pointer-events: none;

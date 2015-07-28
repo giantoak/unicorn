@@ -56,16 +56,36 @@
                  .height(height)
                  .type("entity"),
          graph_export_data;
+         var ent_colors = d3.scale.category20();
 
 
      $.get('viz_latest', function(data) {
              
-      
+           
              var graph_data = JSON.parse(data);
+             console.log(graph_data)
              console.log(graph_data);
              svg.datum(graph_data)
                      .call(graph);
              graph_export_data = graph.getExport();
+             $('#chk_Communities').change(function(){
+                if(this.checked){
+                   d3.selectAll('circle.node.entity')
+                                    .transition()
+                                    .duration(500)
+                                    .style("fill", function(i){return ent_colors(i.community);});
+                                }
+                 if(!this.checked){
+                    console.log( d3.selectAll('circle.node.entity'))
+                   d3.selectAll('circle.node.entity')
+                                    .transition()
+                                    .duration(500)
+                                    .style("fill", function(i){return ent_colors(i.label);});
+                                }
+
+
+
+            });
      });
     
     $("#dljs").attr("href", "data:" + graph_export_data);

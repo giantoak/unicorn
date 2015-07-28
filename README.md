@@ -10,6 +10,7 @@ db_conn_str = 'postgresql://unicorn:unicorn@127.0.0.1:5432/'
 
 Now, in the main directory, execute:
 
+
 ```$bash install.sh```
 
 Since the **Vagrantfile** is forwarding your port 5000 to your host, you should be able to navigate to http://localhost:5000/unicorn to access the application.
@@ -36,3 +37,7 @@ unicorn uses Postgres for user authentification. If you would like to alter the 
 
 # PDF Viewer
 unicorn requires a browser plug-in to render PDFs called PDF Viewer. It is available [here for Google Chrome](https://chrome.google.com/webstore/detail/pdf-viewer/oemmndcbldboiebfnladdacbdfmadadm) and [here for Firefox](https://addons.mozilla.org/en-US/firefox/addon/pdfjs/). unicorn should work natively with Safari.
+=======
+# License
+Unicorn is under ongoing development and is freely available for download under The MIT License (MIT) open source licensing. Unlike GNU General Public License (GPL), MIT freely permits distribution of derivative work under proprietary license, without requiring the release of source code.
+
