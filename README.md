@@ -1,5 +1,5 @@
 # unicorn
-enriched document search
+Unicorn is a python-based web framework used for exploratory analysis of text corpora.  Unicorn leverages many existing open source software projects to ingest documents, extract information, provide full-text search, and visually display relevant content.
 
 # Quick Start Installation
 You can get up and running with unicorn very quickly using Vagrant and the **VagrantFile** that comes with the repository by running $vagrant up. This provisions an Ubuntu/trusty virtualbox image. You should move the **Vagrantfile** into the same directory in which you've cloned the unicorn repository.
