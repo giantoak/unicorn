@@ -1,7 +1,7 @@
 import networkx as nx
 from networkx.readwrite import json_graph
 from itertools import combinations
-import community
+from networkx import community
 
 def document_graph(hits):
     '''

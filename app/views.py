@@ -46,7 +46,7 @@ from datetime import date, timedelta
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn import decomposition
-import community
+from networkx import community
 import corex as ce
 import numpy as np
 import phonenumbers
