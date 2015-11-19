@@ -3,6 +3,7 @@
 # Install nodejs, npm, and elasticdump
 sudo apt-get -y update
 sudo apt-get -y install nodejs
+sudo apt-get -y install node
 sudo apt-get -y install npm
 sudo npm install elasticdump -g
 
@@ -58,8 +59,9 @@ sudo service elasticsearch stop
 sudo /usr/share/elasticsearch/bin/plugin --install elasticsearch/elasticsearch-mapper-attachments/2.5.0
 
 # install the elasticsearch carrot2 plugin
-sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.9.0
-
+# sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.9.0
+# According to github.com/carrot2/elasticsearch-carrot2, for ES 1.5.2 we should be using v. 1.8.0 of the carrot 2 plugin
+sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.8.0
 
 
 # Reboot elasticsearch as a service
@@ -91,8 +93,7 @@ sudo elasticdump \
   --type=data
 
 bash db_setup.sh
-
-python createdb.py
+# python createdb.py
 
 python run.py
 
