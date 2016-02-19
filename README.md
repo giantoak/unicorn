@@ -2,7 +2,7 @@
 Unicorn is a python-based web framework used for exploratory analysis of text corpora.  Unicorn leverages many existing open source software projects to ingest documents, extract information, provide full-text search, and visually display relevant content.
 
 # Quick Start Installation
-You can get up and running with unicorn very quickly using Vagrant and the **VagrantFile** that comes with the repository by running $vagrant up. This provisions an Ubuntu/trusty virtualbox image. You should move the **Vagrantfile** into the same directory in which you've cloned the unicorn repository.
+You can get up and running with unicorn very quickly using Vagrant and the **VagrantFile** that comes with the repository by running $vagrant up. This provisions an Ubuntu/trusty virtualbox image. You should move the **Vagrantfile** into the same directory in which you've cloned the unicorn repository. All of the repositiory files will be in the `/vagrant` directory on the virtual machine.
 
 Next, remove ".template" from runconfig.py and app/config.py. Within app/config.py make sure you set the *admin_username* and *admin_password*. You will use these for your first login. Also within app/config.py change the database connection string (*db_conn_str*). If you want to use our defaults embedded in **db_setup.sh** and **install.sh** you should set the *db_conn_str* to:
 
