@@ -6,7 +6,7 @@ You can get up and running with unicorn very quickly using Vagrant and the **Vag
 
 Next, remove ".template" from runconfig.py and app/config.py. Within app/config.py make sure you set the *admin_username* and *admin_password*. You will use these for your first login. Also within app/config.py change the database connection string (*db_conn_str*). If you want to use our defaults embedded in **db_setup.sh** and **install.sh** you should set the *db_conn_str* to:
 
-db_conn_str = 'postgresql://unicorn:unicorn@127.0.0.1:5432/'
+```db_conn_str = 'postgresql://unicorn:unicorn@127.0.0.1:5432/'```
 
 Now, in the main directory, execute:
 
