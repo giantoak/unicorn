@@ -35,10 +35,11 @@ unicorn uses Postgres for user authentification. If you would like to alter the 
 ```$sudo -u postgres psql -c "CREATE USER unicorn WITH SUPERUSER CREATEROLE CREATEDB PASSWORD 'unicorn';"``` 
 (change both instances of 'unicorn' to create a different default user). Note you then need to update the **db_conn_str**.
 
+
 # PDF Viewer
 Unicorn requires a browser plug-in to render PDFs called PDF Viewer. It is available [here for Google Chrome](https://chrome.google.com/webstore/detail/pdf-viewer/oemmndcbldboiebfnladdacbdfmadadm) and [here for Firefox](https://addons.mozilla.org/en-US/firefox/addon/pdfjs/). unicorn should work natively with Safari.
 
-=======
+
 # License
 Unicorn is under ongoing development and is freely available for download under The MIT License (MIT) open source licensing. Unlike GNU General Public License (GPL), MIT freely permits distribution of derivative work under proprietary license, without requiring the release of source code.
 
