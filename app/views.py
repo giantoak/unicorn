@@ -29,11 +29,12 @@ import requests
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
-import os,sys
+import os, sys
 import subprocess
 
 from bulk import bulk_download, bulk_search
 from config import tmp_dir
+from util.historical import amend_history
 from util.network import make_graph, document_graph
 from util.roundTime import round_month_up, round_month_down, week_delta
 import time
@@ -222,15 +223,15 @@ def alltopics(query):
     dist={}
     count = 0
 
-    # use argmax to return the highest rated topic per document, then enumerate bins across all documents 
+    # use argmax to return the highest rated topic per document, then enumerate bins across all documents
     # returns proportion of results per document where each document can only be its maximum scored topic
     for idx,x in enumerate(np.bincount([np.argmax(item[1]) for item in documents.items()],  minlength=num_topics)):
         dist['topic'+str(count)]=float(x)/docs
         count += 1
     topics['dist']=dist
 
-        
-    # initialize a blank dict    
+
+    # initialize a blank dict
     date_ids = {}
 
     # enumerate topic + i as keys to blank lists
@@ -245,15 +246,15 @@ def alltopics(query):
         id_list = date_ids['topic' + str(doc_topic)]
         id_list.append(_id)
         date_ids['topic' + str(doc_topic)] = id_list
-        
-        
+
+
     topic_dates = {}
 
     for topic in date_ids:
 
-        q = {   
-                "query":{ 
-                    "ids":{ 
+        q = {
+                "query":{
+                    "ids":{
                         "values": date_ids[topic] # should return list of ids for the given topic
                         }
                     },
@@ -280,7 +281,7 @@ def alltopics(query):
         topic_dates[topic] = date_count_json
 
 
-    topics['date_agg'] = topic_dates  
+    topics['date_agg'] = topic_dates
 
     return json.dumps(topics)
 
@@ -374,7 +375,7 @@ def search_endpoint(query=None, page=None, box_only=False):
                 "pre_tags" : ["<span class='highlight'>"],
                 "post_tags" : ["</span>"]
                 },
-             
+
         "aggs" : {
                 "articles_over_time" : {
                     "date_histogram" : {
@@ -456,7 +457,7 @@ def timeline_new(query=None, page=None, box_only=False):
 
 
     q_daterange = {
-             
+
         "aggs" : {
 
                 "max_date" : { "max" : { "field" : "date" } },
@@ -501,7 +502,7 @@ def timeline_new(query=None, page=None, box_only=False):
                 "pre_tags" : ["<span class='highlight'>"],
                 "post_tags" : ["</span>"]
                 },
-             
+
         "aggs" : {
                 "articles_over_time" : {
                     "date_histogram" : {
@@ -607,7 +608,7 @@ def get_clusters():
 	"query": {"match" : { "_all": query }},
 	"size": 100
 	},
-        "algorithm":"lingo",  
+        "algorithm":"lingo",
 	"max_hits": 0,
 	"query_hint": query,
 	"field_mapping": {
@@ -651,7 +652,7 @@ def geo_endpoint():
  #       for location in geodict_lib.find_locations_in_text(re.sub('\s', ' ', hit['_source']['file'])):
  #           for token in location['found_tokens']:
  #               locations.append({'lat':token['lat'],'lon':token['lon'],'name':token['matched_string']})
-    
+
     #geo=map(lambda x: x['found_tokens'])
 #    return json.dumps(locations)
     #print 'Number of Hits: ' + str(len(data['hits']['hits']))
@@ -670,7 +671,7 @@ def geo_endpoint():
 
         try:
             doc_file = str(hit['fields']['file'][0].replace('\n','<br>'))
-        
+
         except:
             continue
 
@@ -679,10 +680,10 @@ def geo_endpoint():
                 locations.append({'lat':location['entity']['lat'],'lon':location['entity']['lon'],
                     'name':location['entity']['placename'], 'title': hit['fields']['title'],
                     'file': doc_file})
-        except: 
+        except:
             continue
             # print 'no locations'
-    
+
     #geo=map(lambda x: x['found_tokens'])
     return json.dumps(locations)
 
@@ -701,17 +702,17 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
         json_dict = request.get_json()
         print json_dict
         print type(json_dict)
-        try: 
+        try:
             bounds = json_dict['bounds']['bounds']
             southwest_lat = bounds['southwest_lat']
             southwest_lon = bounds['southwest_lon']
             northeast_lat = bounds['northeast_lat']
             northeast_lon = bounds['northeast_lon']
-        
+
         except:
             southwest_lat = -84
-            southwest_lon = -170 
-            northeast_lat = 85 
+            southwest_lon = -170
+            northeast_lat = 85
             northeast_lon =189
 
     print json_dict
@@ -734,24 +735,24 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
     if start > 1:
         start *= 10
 
-    q = { 
-       "fields": ["title", "highlight", "entities", "owner", "body"], 
+    q = {
+       "fields": ["title", "highlight", "entities", "owner", "body"],
        "from": start,
-       "query":{  
-          "filtered":{  
-             "query":{  
-                "match":{  
+       "query":{
+          "filtered":{
+             "query":{
+                "match":{
                    "file": query
                 }
              },
-             "filter":{  
-                "geo_bounding_box":{  
-                   "locs":{  
-                      "top_left":{  
+             "filter":{
+                "geo_bounding_box":{
+                   "locs":{
+                      "top_left":{
                          "lat": northeast_lat, # top_lat,
                          "lon": southwest_lon, #top_lon
                       },
-                      "bottom_right":{  
+                      "bottom_right":{
                          "lat": southwest_lat, #bottom_lat,
                          "lon": northeast_lon, #bottom_lon
                       }
@@ -760,16 +761,16 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
              }
           }
        },
-       "highlight":{  
-          "fields":{  
-             "file":{  
+       "highlight":{
+          "fields":{
+             "file":{
 
              }
           },
-          "pre_tags":[  
+          "pre_tags":[
              "<span class='highlight'>"
           ],
-          "post_tags":[  
+          "post_tags":[
              "</span>"
           ]
        }
@@ -827,7 +828,7 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
 def serve_clusters(query=None,page=None, box_only=True, dates={},documents={}):
     if request.method == "POST":
         json_dict = request.get_json()
-    
+
     if not query and not page:
         last_query = session.get('last_query', None)
     if last_query:
@@ -836,7 +837,7 @@ def serve_clusters(query=None,page=None, box_only=True, dates={},documents={}):
         # better error
         return abort(404)
 
-    q={   
+    q={
           "query": {
 
             "bool": {
@@ -1076,7 +1077,7 @@ def url_fetch(query=""):
             "term" : { "file" : query }
             }
         }
-    #r=requests.post(url,data=json.dumps(q))    
+    #r=requests.post(url,data=json.dumps(q))
     r=es.search(body=q,index=DEFAULT_INDEX)
     data=r['hits']['hits']
     urls=[]
@@ -1085,7 +1086,7 @@ def url_fetch(query=""):
         urls.append(re.findall(r'(https?://[^\s]+)', doc['fields']['file'][0]))
         try:
             for match in phonenumbers.PhoneNumberMatcher(doc['fields']['file'][0], region=None):
-                    pn.append({'number':phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164),'location':geocoder.description_for_number(match.number,"en")})     
+                    pn.append({'number':phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164),'location':geocoder.description_for_number(match.number,"en")})
         except KeyError:
             pass
     urls=filter(lambda x: x!=[],urls)
@@ -1144,8 +1145,8 @@ def tm(query):
             "term" : { "file" : query }
             }
         }
-    
-  
+
+
     return json.dumps(topic_words[0])
 
 
@@ -1208,7 +1209,7 @@ def handle_registration():
 
     return redirect(url_for('.root'))
 
-    
+
 
 ######################################
 # Registration blueprint:
