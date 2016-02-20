@@ -22,7 +22,7 @@ from elasticsearch_dsl import Search, Q
 import io
 import re
 import magic
-import requests
+# import requests
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
@@ -35,10 +35,10 @@ from config import tmp_dir
 from util.network import make_graph, document_graph
 import time
 
-import sklearn
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn import decomposition
-import corex as ce
+# import sklearn
+# from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn import decomposition
+# import corex as ce
 import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
@@ -351,7 +351,7 @@ def geo_endpoint():
             "term": {"file": query}
         }
     }
-    # r=requests.post(url,data=json.dumps(q))
+    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
     data = r
     locations = []
@@ -413,7 +413,7 @@ def url_fetch(query=""):
             "term": {"file": query}
         }
     }
-    # r=requests.post(url,data=json.dumps(q))
+    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
     data = r['hits']['hits']
     urls = []
@@ -446,9 +446,9 @@ def wc(query):
             "term": {"file": query}
         }
     }
-    # r=requests.post(url,data=json.dumps(q))
+    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
-    # r=requests.post(url,data=json.dumps(q))
+    # r = requests.post(url,data=json.dumps(q))
     data = r
     frequency = []
     documents = []
