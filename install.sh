@@ -11,9 +11,9 @@ sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 # Install pip, virtualenv, setup python environment
 sudo apt-get -y install python-pip
-#sudo pip install virtualenv
-#virtualenv env
-#source env/bin/activate
+# sudo pip install virtualenv
+# virtualenv env
+# source env/bin/activate
 
 # Install sci-kit learn dependencies
 sudo apt-get -y install build-essential python-dev python-setuptools \
@@ -23,12 +23,10 @@ sudo apt-get -y install build-essential python-dev python-setuptools \
 # Install sci-kit learn
 sudo pip install scikit-learn
 
-
 # Install postgresql and psycopg2
 sudo apt-get -y install postgresql postgresql-contrib
 sudo apt-get -y install python-psycopg2
 sudo apt-get -y install libpq-dev
-
 
 # Install unoconv
 sudo apt-get install -y unoconv
@@ -60,8 +58,6 @@ sudo /usr/share/elasticsearch/bin/plugin --install elasticsearch/elasticsearch-m
 # install the elasticsearch carrot2 plugin
 sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.9.0
 
-
-
 # Reboot elasticsearch as a service
 sudo service elasticsearch start
 
@@ -91,8 +87,7 @@ sudo elasticdump \
   --type=data
 
 bash db_setup.sh
-
-python createdb.py
+# python createdb.py
 
 python run.py
 
