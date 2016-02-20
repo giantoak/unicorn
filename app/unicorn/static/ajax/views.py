@@ -44,7 +44,7 @@ import phonenumbers
 from phonenumbers import geocoder
 
 parent = os.path.dirname(os.path.realpath(__file__))
-sys.path.append('/home/gmueller/geodict')  # change path to MITIE top level
+# sys.path.append('/home/gmueller/geodict')  # change path to MITIE top level
 
 import geodict_lib
 
@@ -175,13 +175,13 @@ def pdf_endpoint(doc_id):
 
 @uni.route('/topics/<doc_id>')
 def get_topics(doc_id):
-    topics = json.loads(open('/home/gmueller/unicorn/topics.json').read())
+    topics = json.loads(open('../topics.json').read())
     return json.dumps(topics['documents'][doc_id])
 
 
 @uni.route('/all_topics')
 def alltopics():
-    topics = json.loads(open('/home/gmueller/unicorn/topics.json').read())
+    topics = json.loads(open('../topics.json').read())
     docs = len(topics['documents'])
     dist = {}
     for idx, x in enumerate(
