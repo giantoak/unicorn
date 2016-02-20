@@ -11,7 +11,7 @@ from flask import abort
 from flask import flash
 from flask import send_file
 from flask.ext.login import (current_user, login_required, login_user,
-        logout_user, confirm_login, fresh_login_required)
+                             logout_user, confirm_login, fresh_login_required)
 from flask import Blueprint
 
 from werkzeug import secure_filename
@@ -26,7 +26,8 @@ import requests
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
-import os,sys
+import os
+import sys
 import subprocess
 
 from bulk import bulk_download, bulk_search
@@ -43,7 +44,7 @@ import phonenumbers
 from phonenumbers import geocoder
 
 parent = os.path.dirname(os.path.realpath(__file__))
-sys.path.append('/home/gmueller/geodict') #change path to MITIE top level
+sys.path.append('/home/gmueller/geodict')  # change path to MITIE top level
 
 import geodict_lib
 
@@ -60,7 +61,7 @@ def bulk_search_route():
 
     data = bulk_search(searches)
     return send_file(io.BytesIO(data.xls), as_attachment=True,
-            attachment_filename='bulk_{}.xls'.format(time.time()))
+                     attachment_filename='bulk_{}.xls'.format(time.time()))
 
     # Bulk search all of these queries
     # Bundle results into excel
@@ -80,31 +81,34 @@ def bulk_download_route():
     data = bulk_download(ids)
 
     return send_file(io.BytesIO(data.xls), as_attachment=True,
-            attachment_filename=query + '.xls')
+                     attachment_filename=query + '.xls')
+
 
 @uni.route('/<doc_id>/debug')
 @login_required
 def request_doc(doc_id):
     q = {
-            "query" : {
-                "match" : {
-                    "_id" : doc_id
-                    }
-                },
+        "query": {
+            "match": {
+                "_id": doc_id
             }
+        },
+    }
     response = es.search(body=q, index=DEFAULT_INDEX)
     return response
 
+
 def get_file(doc_id):
-    ''' Render base64 encoded contents of a given file by its doc_id '''
+    """Render base64 encoded contents of a given file by its doc_id"""
     response = request_doc(doc_id)
     try:
         base64 = response['hits']['hits'][0]['_source']['file']
         fn = response['hits']['hits'][0]['_source']['title']
-    except KeyError, IndexError:
+    except (KeyError, IndexError):
         abort(404)
 
     return base64, fn
+
 
 @uni.route('/<doc_id>/entities')
 @login_required
@@ -112,22 +116,26 @@ def get_entities(doc_id):
     response = request_doc(doc_id)
     try:
         entities = response['hits']['hits'][0]['_source']['entities']
-    except KeyError, IndexError:
+    except (KeyError, IndexError):
         return jsonify([])
 
     return jsonify({'entities': entities})
 
+
 @uni.route('/view/<doc_id>')
 @login_required
 def view_doc(doc_id):
-    ''' In-depth view of a particular document.
+    """
+    In-depth view of a particular document.
     Displays pdf version of document, extracted entities,
-    as well as other analytics. '''
+    as well as other analytics.
+    """
 
     if is_owner_of_doc(doc_id):
         return render_template('doc-view.html', doc_id=doc_id)
     else:
         return abort(403)
+
 
 @uni.route('/pdf/<doc_id>')
 @login_required
@@ -138,7 +146,7 @@ def pdf_endpoint(doc_id):
 
     if mimetype == 'application/pdf':
         return send_file(io.BytesIO(b), as_attachment=True,
-                attachment_filename=fn)
+                         attachment_filename=fn)
 
     else:
         fd, fname = tempfile.mkstemp(prefix=tmp_dir)
@@ -147,54 +155,58 @@ def pdf_endpoint(doc_id):
         out_fname = fname + '.out'
         stream.close()
 
-        os.chmod(fname, 0777)
+        os.chmod(fname, 777)
         try:
             subprocess.check_output(['unoconv', '-o', out_fname, fname],
-                    stderr=subprocess.STDOUT)
+                                    stderr=subprocess.STDOUT)
             with open(out_fname, 'rb') as converted_stream:
                 out = send_file(out_fname, as_attachment=True,
-                        attachment_filename=fn + '.pdf')
+                                attachment_filename=fn + '.pdf')
         except subprocess.CalledProcessError as e:
-            print e.output
+            print(e.output)
             # Return error pdf
             out = "no pdf available"
-
 
         os.remove(fname)
         os.remove(out_fname)
 
         return out
 
+
 @uni.route('/topics/<doc_id>')
 def get_topics(doc_id):
-    topics=json.loads(open('/home/gmueller/unicorn/topics.json').read())
+    topics = json.loads(open('/home/gmueller/unicorn/topics.json').read())
     return json.dumps(topics['documents'][doc_id])
+
 
 @uni.route('/all_topics')
 def alltopics():
-    topics=json.loads(open('/home/gmueller/unicorn/topics.json').read())
-    docs=len(topics['documents'])
-    dist={}
-    for idx,x in enumerate(np.bincount([np.argmax(item[1]) for item in topics['documents'].items()])):
-        dist['topic'+str(idx+1)]=float(x)/docs
-    topics['dist']=dist
+    topics = json.loads(open('/home/gmueller/unicorn/topics.json').read())
+    docs = len(topics['documents'])
+    dist = {}
+    for idx, x in enumerate(
+            np.bincount(
+            [np.argmax(item[1]) for item in topics['documents'].items()])):
+        dist['topic' + str(idx + 1)] = float(x) / docs
+    topics['dist'] = dist
     return json.dumps(topics)
 
 
 @uni.route('/download/<doc_id>')
 @login_required
 def download_endpoint(doc_id):
-
     base64, fn = get_file(doc_id)
     f = io.BytesIO(base64.decode('base64'))
     return send_file(f,
-            as_attachment=True,
-            attachment_filename=fn)
+                     as_attachment=True,
+                     attachment_filename=fn)
+
 
 @uni.route('/search/<query>/<page>/preserve')
 @login_required
 def search_preserve(query, page):
     return search_endpoint(query, page, box_only=True)
+
 
 @uni.route('/search')
 @uni.route('/search/<query>')
@@ -219,22 +231,22 @@ def search_endpoint(query=None, page=None, box_only=False):
         start *= 10
 
     q = {
-            "fields": ["title", "highlight", "entities", "owner"],
-            "from": start,
-            "query" : {
-                "match" : {
-                    "file" : query
-                    }
-                },
-
-            "highlight": { "fields": { "file": { } },
-                "pre_tags" : ["<span class='highlight'>"],
-                "post_tags" : ["</span>"]
-                }
+        "fields": ["title", "highlight", "entities", "owner"],
+        "from": start,
+        "query": {
+            "match": {
+                "file": query
             }
+        },
+
+        "highlight": {"fields": {"file": {}},
+                      "pre_tags": ["<span class='highlight'>"],
+                      "post_tags": ["</span>"]
+                      }
+    }
     raw_response = es.search(body=q, index=DEFAULT_INDEX,
-            df="file",
-            size=10)
+                             df="file",
+                             size=10)
 
     hits = []
 
@@ -245,38 +257,39 @@ def search_endpoint(query=None, page=None, box_only=False):
         if is_owner(resp['fields']['owner'][0]):
             # Flatten structure for individual hits
             hits.append({'id': resp['_id'],
-                'title': resp['fields']['title'][0],
-                'highlight': resp['highlight']['file'][0],
-                'permissions': True
-                })
+                         'title': resp['fields']['title'][0],
+                         'highlight': resp['highlight']['file'][0],
+                         'permissions': True
+                         })
         else:
             hits.append({'id': resp['_id'],
-                'title': resp['fields']['title'][0],
-                'permissions': False
-                })
-
+                         'title': resp['fields']['title'][0],
+                         'permissions': False
+                         })
 
     results = {
-            'hits': hits,
-            'took': float(raw_response['took'])/1000,
-            'total': "{:,}".format(raw_response['hits']['total']),
-            'total_int': int(raw_response['hits']['total']),
-            'query': query,
-            'from': int(page)
-            }
+        'hits': hits,
+        'took': float(raw_response['took']) / 1000,
+        'total': "{:,}".format(raw_response['hits']['total']),
+        'total_int': int(raw_response['hits']['total']),
+        'query': query,
+        'from': int(page)
+    }
 
     if box_only:
         return render_template('search-results-box.html', results=results)
 
     return render_template('search-template.html', results=results)
 
+
 @uni.route('/')
 @login_required
 def root():
     user_struct = {
-            'notifs': 0
-            }
+        'notifs': 0
+    }
     return render_template('index-dash.html', user=user_struct)
+
 
 @uni.route('/user')
 @login_required
@@ -291,6 +304,7 @@ def user_page():
 def upload_form():
     return render_template('upload.html')
 
+
 @uni.route('/_upload-documents', methods=['POST'])
 @login_required
 def upload_endpoint():
@@ -300,25 +314,26 @@ def upload_endpoint():
         sf = secure_filename(f.filename)
 
         es_dict = {
-                'file': f.read().encode('base64'),
-                'title': sf,
-                'owner': current_owner.organization.organization
-                }
+            'file': f.read().encode('base64'),
+            'title': sf,
+            'owner': current_owner.organization.organization
+        }
         es.index(index=DEFAULT_INDEX, doc_type='attachment', body=es_dict)
         f.close()
 
     return redirect(url_for('.root'))
 
+
 @uni.route('/viz')
 @login_required
 def viz_all():
     q = {
-        "fields" : ["entities","title"],
-        "query" : {
-            "match_all" : {}
-            },
+        "fields": ["entities", "title"],
+        "query": {
+            "match_all": {}
+        },
         "size": 100
-        }
+    }
     r = es.search(body=q, index=DEFAULT_INDEX)
     graph = document_graph(r['hits']['hits'])
 
@@ -328,47 +343,48 @@ def viz_all():
 @uni.route('/geo')
 @login_required
 def geo_endpoint():
-    query=session['last_query']['query']
-    url='http://localhost:9200/dossiers/_search'
+    query = session['last_query']['query']
+    url = 'http://localhost:9200/dossiers/_search'
     q = {
-        "fields" : ["file"],
-        "query" : {
-            "term" : { "file" : query }
-            }
+        "fields": ["file"],
+        "query": {
+            "term": {"file": query}
         }
-    #r=requests.post(url,data=json.dumps(q))
-    r=es.search(body=q,index=DEFAULT_INDEX)
-    data=r
-    locations=[]
+    }
+    # r=requests.post(url,data=json.dumps(q))
+    r = es.search(body=q, index=DEFAULT_INDEX)
+    data = r
+    locations = []
     for hit in data['hits']['hits']:
-        for location in geodict_lib.find_locations_in_text(re.sub('\s', ' ', str(hit['fields']['file']))):
+        for location in geodict_lib.find_locations_in_text(
+                re.sub('\s', ' ', str(hit['fields']['file']))):
             for token in location['found_tokens']:
-                locations.append({'lat':token['lat'],'lon':token['lon'],'name':token['matched_string']})
-    
-    #geo=map(lambda x: x['found_tokens'])
+                locations.append({'lat': token['lat'], 'lon': token[
+                                 'lon'], 'name': token['matched_string']})
+
+    # geo = map(lambda x: x['found_tokens'])
     return json.dumps(locations)
-
-
 
 
 @uni.route('/viz/<query>')
 @login_required
 def viz_endpoint(query):
-    url='http://localhost:9200/dossiers/_search'
+    url = 'http://localhost:9200/dossiers/_search'
     q = {
         "_source": ["entity"],
-        "fields" : ["entities","title"],
-        "query" : {
-            "term" : { "file" : query }
-            },
+        "fields": ["entities", "title"],
+        "query": {
+            "term": {"file": query}
+        },
         "size": 100
-        }
-    #r=requests.post(url,data=json.dumps(q))
-    r=es.search(body=q,index=DEFAULT_INDEX)
-    data=r
-    #graph = make_graph(data)
+    }
+    # r = requests.post(url,data=json.dumps(q))
+    r = es.search(body=q, index=DEFAULT_INDEX)
+    data = r
+    # graph = make_graph(data)
     graph = document_graph(data['hits']['hits'])
     return json.dumps(graph)
+
 
 @uni.route('/viz_latest')
 @login_required
@@ -381,88 +397,95 @@ def viz_latest():
 def wc_latest():
     return wc(session['last_query']['query'])
 
+
 @uni.route('/url_list')
 @uni.route('/url_list/<query>')
 @login_required
 def url_fetch(query=""):
-    #query="http"
+    # query="http"
     if not query:
-        query=session['last_query']['query']
-    stopset=set(stopwords.words('english'))
-    url='http://localhost:9200/dossiers/_search'
+        query = session['last_query']['query']
+    stopset = set(stopwords.words('english'))
+    url = 'http://localhost:9200/dossiers/_search'
     q = {
-        "fields" : ["file"],
-        "query" : {
-            "term" : { "file" : query }
-            }
+        "fields": ["file"],
+        "query": {
+            "term": {"file": query}
         }
-    #r=requests.post(url,data=json.dumps(q))    
-    r=es.search(body=q,index=DEFAULT_INDEX)
-    data=r['hits']['hits']
-    urls=[]
-    pn=[]
+    }
+    # r=requests.post(url,data=json.dumps(q))
+    r = es.search(body=q, index=DEFAULT_INDEX)
+    data = r['hits']['hits']
+    urls = []
+    pn = []
     for doc in data:
         urls.append(re.findall(r'(https?://[^\s]+)', doc['fields']['file'][0]))
         try:
-            for match in phonenumbers.PhoneNumberMatcher(doc['fields']['file'][0], region=None):
-                    pn.append({'number':phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164),'location':geocoder.description_for_number(match.number,"en")})     
+            for match in phonenumbers.PhoneNumberMatcher(
+                    doc['fields']['file'][0], region=None):
+                pn.append({'number': phonenumbers.format_number(
+                    match.number, phonenumbers.PhoneNumberFormat.E164),
+                    'location': geocoder.description_for_number(
+                    match.number, "en")})
         except KeyError:
             pass
-    urls=filter(lambda x: x!=[],urls)
-    #urls_flat=reduce(lambda x,y: x.extend(y),urls)
-    urls_flat=[item for sublist in urls for item in sublist]
-    return json.dumps({'urls':dict(Counter(urls_flat)), 'pn':pn})
+    urls = filter(lambda x: x != [], urls)
+    # urls_flat = reduce(lambda x,y: x.extend(y),urls)
+    urls_flat = [item for sublist in urls for item in sublist]
+    return json.dumps({'urls': dict(Counter(urls_flat)), 'pn': pn})
+
 
 @uni.route('/wordcloud/<query>')
 @login_required
 def wc(query):
-    stopset=set(stopwords.words('english'))
-    url='http://localhost:9200/dossiers/_search'
+    stopset = set(stopwords.words('english'))
+    url = 'http://localhost:9200/dossiers/_search'
     q = {
-        "fields" : ["file"],
-        "query" : {
-            "term" : { "file" : query }
-            }
+        "fields": ["file"],
+        "query": {
+            "term": {"file": query}
         }
-    #r=requests.post(url,data=json.dumps(q))
-    r=es.search(body=q,index=DEFAULT_INDEX)
-    #r=requests.post(url,data=json.dumps(q))
-    data=r
-    frequency=[]
-    documents=[]
+    }
+    # r=requests.post(url,data=json.dumps(q))
+    r = es.search(body=q, index=DEFAULT_INDEX)
+    # r=requests.post(url,data=json.dumps(q))
+    data = r
+    frequency = []
+    documents = []
     for hit in data['hits']['hits']:
-        text=hit['fields']['file'][0]
-        nowhite=re.sub('\s', ' ', text)
-        nowhite=re.sub(r'[^\w\s]', '',text)
-        wt=word_tokenize(nowhite)
+        text = hit['fields']['file'][0]
+        nowhite = re.sub('\s', ' ', text)
+        nowhite = re.sub(r'[^\w\s]', '', text)
+        wt = word_tokenize(nowhite)
         documents.append(wt)
 
-    docflat=[item for sublist in documents for item in sublist]
-    wc=dict(Counter(docflat))
-    for k,v in wc.iteritems():
-                frequency.append(dict({"text":k,"size":v*3}))
-    frequency=filter(lambda x:x['size']>6 and x['text'].lower() not in stopset,frequency)
+    docflat = [item for sublist in documents for item in sublist]
+    wc = dict(Counter(docflat))
+    for k, v in wc.iteritems():
+        frequency.append(dict({"text": k, "size": v * 3}))
+    frequency = filter(lambda x: x['size'] > 6 and x[
+                       'text'].lower() not in stopset, frequency)
     return json.dumps(frequency)
+
 
 @uni.route('/topicmodel')
 @uni.route('/topicmodel/<query>')
 @login_required
 def tm(query):
-    #count_vectorizer.fit_transform(train_set)
-    #print "Vocabulary:", count_vectorizer.vocabulary
+    # count_vectorizer.fit_transform(train_set)
+    # print "Vocabulary:", count_vectorizer.vocabulary
     # Vocabulary: {'blue': 0, 'sun': 1, 'bright': 2, 'sky': 3}
-    #freq_term_matrix = count_vectorizer.transform(test_set)
-    #print freq_term_matrix.todense()
-    stopset=set(stopwords.words('english'))
-    url='http://localhost:9200/dossiers/_search'
+    # freq_term_matrix = count_vectorizer.transform(test_set)
+    # print freq_term_matrix.todense()
+    stopset = set(stopwords.words('english'))
+    url = 'http://localhost:9200/dossiers/_search'
     q = {
-        "fields" : ["file"],
-        "query" : {
-            "term" : { "file" : query }
-            }
+        "fields": ["file"],
+        "query": {
+            "term": {"file": query}
         }
-    
-  
+    }
+
     return json.dumps(topic_words[0])
 
 
@@ -471,16 +494,16 @@ def tm(query):
 def more_like_this(doc_id):
     ''' Returns similar documents '''
     q = {
-      "fields": ["title"],
+        "fields": ["title"],
         "query": {
-            "more_like_this" : {
-            "docs" : [
-            {
-                "_index" : "dossiers",
-                "_type" : "attachment",
-                "_id" : doc_id
-            }]
-          }
+            "more_like_this": {
+                "docs": [
+                    {
+                        "_index": "dossiers",
+                        "_type": "attachment",
+                        "_id": doc_id
+                    }]
+            }
         },
         "size": 10
     }
@@ -492,16 +515,18 @@ def more_like_this(doc_id):
             results['results'].append({
                 'id': r['_id'],
                 'name': r['fields']['title'][0]
-                })
-    except KeyError, IndexError:
+            })
+    except (KeyError, IndexError):
         pass
 
     return jsonify(results)
+
 
 @uni.route('/index.html')
 @login_required
 def reroute_index():
     return redirect(url_for('.root'))
+
 
 @uni.route('/register', methods=['POST'])
 @login_required
@@ -529,6 +554,7 @@ def handle_registration():
 # Registration blueprint:
 ######################################
 
+
 @uni.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == 'GET':
@@ -538,13 +564,14 @@ def login():
     password = request.form["password"]
     user = User.query.filter_by(email=email).first()
     if user and flask_bcrypt.check_password_hash(user.password,
-            password):
-            if login_user(user):
-                return redirect(url_for('.root'))
-            else:
-                flash("Invalid email or password")
+                                                 password):
+        if login_user(user):
+            return redirect(url_for('.root'))
+        else:
+            flash("Invalid email or password")
 
     return render_template("/user-login.html")
+
 
 @uni.route('/logout')
 @login_required
@@ -557,18 +584,22 @@ def logout():
 def login_redirect():
     return redirect(url_for('.login'))
 
+
 @login_manager.user_loader
 def load_user(userid):
     return User.query.get(userid)
 
+
 def is_owner_of_doc(doc):
     owner = es.get(index=DEFAULT_INDEX, doc_type='attachment', id=doc,
-            fields='owner')['fields']['owner'][0]
+                   fields='owner')['fields']['owner'][0]
     return is_owner(owner)
+
 
 def is_owner(org):
     return current_user.organization.organization == 'admins' or \
-            current_user.organization.organization == org
+        current_user.organization.organization == org
+
 
 @app.errorhandler(403)
 def permission_denied(e):
