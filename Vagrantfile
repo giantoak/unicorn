@@ -25,7 +25,7 @@ Vagrant.configure(2) do |config|
    config.vm.network "forwarded_port", guest: 5000, host: 5000
    config.vm.network "forwarded_port", guest: 9200, host: 9200
 
- 
+
  # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   # config.vm.network "private_network", ip: "192.168.33.10"
@@ -66,8 +66,16 @@ Vagrant.configure(2) do |config|
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
-  # config.vm.provision "shell", inline: <<-SHELL
-  #   sudo apt-get update
-  #   sudo apt-get install -y apache2
-  # SHELL
+  config.vm.provision "shell", inline: <<-SHELL
+     sudo apt-get -y autoremove
+     sudo apt-get -y update
+     sudo apt-get -y install git
+     sudo apt-get -y install python-pip build-essential python-dev python-setuptools python-numpy python-scipy libatlas-dev libatlas3gf-base
+     sudo update-alternatives --set libblas.so.3  /usr/lib/atlas-base/atlas/libblas.so.3
+     sudo update-alternatives --set liblapack.so.3 /usr/lib/atlas-base/atlas/liblapack.so.3
+     sudo apt-get -y install postgresql postgresql-contrib python-psycopg2 libpq-dev
+     sudo apt-get -y install mysql-server-5.5 mysql-server mysql-client libmysqlclient-dev
+     sudo apt-get -y install libssl-dev libffi-dev
+     sudo apt-get -y install unoconv
+  SHELL
 end
