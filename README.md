@@ -9,7 +9,8 @@ $ git clone https://github.com/giantoak/unicorn.git
 $ cd unicorn
 $ vagrant up
 $ vagrant ssh
-> cd /vagrant
+> cp -r /vagrant unicorn
+> cd unicorn
 ```
 
 Next, make usable copies of `runconfig.py` and `app/config.py` from their template files:
