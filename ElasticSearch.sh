@@ -16,9 +16,9 @@ if [ -z "$1" ]; then
   echo ""
   exit 1
 fi
- 
+
 ELASTICSEARCH_VERSION=$1
- 
+
 if [[ ! "${ELASTICSEARCH_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
   echo ""
   echo "  The specified Elasticsearch version isn't valid!"
@@ -27,13 +27,13 @@ if [[ ! "${ELASTICSEARCH_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
   echo ""
   exit 2
 fi
- 
+
 ### Install OpenJDK
 cd ~
 sudo apt-get update
 sudo apt-get install openjdk-7-jre-headless -y
 
-### To install Java 8 instead, uncomment the following two lines  
+### To install Java 8 instead, uncomment the following two lines
 # sudo update-java-alternatives -s java-8-oracle
 # sudo apt-get install oracle-java8-set-default
 
@@ -49,9 +49,12 @@ sudo mv *servicewrapper*/service /usr/local/share/elasticsearch/bin/
 rm -Rf *servicewrapper*
 sudo /usr/local/share/elasticsearch/bin/service/elasticsearch install
 sudo ln -s `readlink -f /usr/local/share/elasticsearch/bin/service/elasticsearch` /usr/local/bin/rcelasticsearch
- 
-### Start ElasticSearch 
+
+### Start ElasticSearch
 sudo service elasticsearch start
+
+### wait for it to start
+sleep 10
 
 ### Make sure service is running
 curl http://localhost:9200
@@ -69,6 +72,3 @@ curl http://localhost:9200
 #  },
 #  "tagline" : "You Know, for Search"
 # }
-
-
-
