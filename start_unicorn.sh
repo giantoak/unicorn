@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo unoconv -l &
 sudo service postgres start
 sudo service mysql start
 sudo service elasticsearch start
