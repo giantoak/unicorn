@@ -27,7 +27,6 @@ def amend_history(hist, last):
     if len(hist) > MAX_HIST:
         del hist[0]
 
-
     hist.append(last)
     last['active'] = True
     return hist

@@ -16,7 +16,6 @@ def document_graph(hits):
     Entities will have attributes:
         - `entity`, the entity (primary key)
         - `category`, the entity type
-
     """
     
     # Create a graph that has two types of nodes:
@@ -44,9 +43,7 @@ def document_graph(hits):
         for ent in edges:
             # Add previously unseen entities as nodes
             if ent not in g:
-                g.add_node(ent, dict(
-                    type = 'entity',
-                    category=edges[ent]))
+                g.add_node(ent, dict(type='entity', category=edges[ent]))
 
             # Link entity node with current doc node
             g.add_edge(_id, ent)
@@ -66,12 +63,12 @@ def make_graph(data):
     g = nx.Graph()
     
     for hits in data['hits']['hits']:
-        temp=[]
+        temp = []
         try:
             for entity in hits['_source']['entity']:
                 temp.append(entity['entity'])
-                g.add_node(entity['entity'], 
-                        dict(origin=hits['fields']['title'][0]))
+                g.add_node(entity['entity'],
+                           dict(origin=hits['fields']['title'][0]))
 
             edges = combinations(temp, 2)
             g.add_edges_from(list(edges))

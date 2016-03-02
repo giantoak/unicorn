@@ -1,8 +1,4 @@
-# import urllib2
 import simplejson as json
-# import nltk
-# from nltk import word_tokenize
-# from nltk.tokenize import RegexpTokenizer
 import requests
 
 

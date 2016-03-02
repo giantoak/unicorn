@@ -6,8 +6,8 @@ from config import es_url, es_port, admin_username, admin_password, db_conn_str
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.login import LoginManager
-from flask.ext.admin import Admin
-from flask.ext.admin.contrib.sqla import ModelView
+from flask_admin.base import Admin
+from flask_admin.contrib.sqla import ModelView
 
 app = Flask(__name__, static_folder='unicorn/static',
             static_url_path='/unicorn/static')
@@ -17,12 +17,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_conn_str
 
 db = SQLAlchemy(app)
 flask_bcrypt = Bcrypt(app)
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 
 from app.models import *
-from app.admin_view import UserView,OrgView,AdminView
+from app.admin_view import UserView, OrgView, AdminView
 admin = Admin(app, index_view=AdminView())
 
 admin.add_view(UserView(db.session))
