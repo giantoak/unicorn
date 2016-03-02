@@ -22,13 +22,16 @@ Vagrant.configure(2) do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
-   config.vm.network "forwarded_port", guest: 5000, host: 5000
-   config.vm.network "forwarded_port", guest: 9200, host: 9200
+  # config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 3306, host: 3306
+  config.vm.network "forwarded_port", guest: 5000, host: 5000
+  config.vm.network "forwarded_port", guest: 5432, host: 5432
+  config.vm.network "forwarded_port", guest: 9200, host: 9200
 
 
  # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.33.10"
+  # config.vm.network "private_network", ip: "192.111.192.111"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -67,15 +70,30 @@ Vagrant.configure(2) do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
-     sudo apt-get -y autoremove
-     sudo apt-get -y update
-     sudo apt-get -y install git
-     sudo apt-get -y install python-pip build-essential python-dev python-setuptools python-numpy python-scipy libatlas-dev libatlas3gf-base
-     sudo update-alternatives --set libblas.so.3  /usr/lib/atlas-base/atlas/libblas.so.3
-     sudo update-alternatives --set liblapack.so.3 /usr/lib/atlas-base/atlas/liblapack.so.3
-     sudo apt-get -y install postgresql postgresql-contrib python-psycopg2 libpq-dev
-     sudo apt-get -y install mysql-server-5.5 mysql-server mysql-client libmysqlclient-dev
-     sudo apt-get -y install libssl-dev libffi-dev
-     sudo apt-get -y install unoconv
+  apt-get -y update && apt-get -y upgrade && apt-get -y autoremove
+  apt-get install -y curl git
+  curl http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh --output ~/miniconda.sh
+  bash ~/miniconda.sh -b -p /usr/local/miniconda
+  bash -c "echo 'export PATH=/usr/local/miniconda/bin:$PATH' > /etc/profile.d/prepend_conda.sh"
+  export PATH=/usr/local/miniconda/bin:$PATH
+  rm ~/miniconda.sh
+  chown -R vagrant /usr/local/miniconda
+  chgrp -R vagrant /usr/local/miniconda
+  conda install -y pip
+  conda config --add channels pmlandwehr
+  conda config --add channels auto
+  cp -r /vagrant /home/vagrant/unicorn
+  cd /home/vagrant/unicorn
+  rm Vagrantfile Dockerfile .dockerignore README.md
+  rm -rf *.git
+  sed s/==/=/ requirements.txt > conda_reqs.txt
+  conda install -y --file conda_reqs.txt
+  conda install -y openssl
+  conda upgrade -y openssl
+  conda upgrade -y python
+  rm conda_reqs.txt
+  ./install.sh
+  chown -R vagrant /home/vagrant/unicorn
+  chgrp -R vagrant /home/vagrant/unicorn
   SHELL
 end
