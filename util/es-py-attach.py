@@ -1,5 +1,5 @@
 from elasticsearch import Elasticsearch
-import json
+# import simplejson as json
 import sys
 
 # default configuration settings (localhost:9200)

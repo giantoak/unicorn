@@ -1,5 +1,4 @@
 # import urllib2
-# import json
 import simplejson as json
 # import nltk
 # from nltk import word_tokenize

@@ -17,8 +17,8 @@ from flask import Blueprint
 from werkzeug import secure_filename
 import flask
 import tempfile
-import json
 from elasticsearch_dsl import Search, Q
+import simplejson as json
 import io
 import re
 import magic

@@ -1,5 +1,5 @@
 from elasticsearch import Elasticsearch
-import json
+# import simplejson as json
 import sys
 
 import os
@@ -7,7 +7,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from iterate_search import iterate_over_query
 import requests
-import json
 from collections import defaultdict
 
 import phonenumbers

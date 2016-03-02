@@ -1,7 +1,7 @@
 import elasticsearch
 from elasticsearch import Elasticsearch
-import json
 import sys
+# import simplejson as json
 
 # default configuration settings (localhost:9200)
 es = Elasticsearch()

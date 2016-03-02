@@ -2,7 +2,7 @@ import sys
 import os
 import unittest
 from mock import MagicMock, patch
-import json
+# import simplejson as json
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
 import app
