@@ -1,5 +1,6 @@
 MAX_HIST = 10
 
+
 def active_history_terms(hist):
     terms = []
     for q in hist:
@@ -8,12 +9,14 @@ def active_history_terms(hist):
 
     return terms
 
+
 def update_history(hist, query, active):
     for q in hist:
         if q['query'] == query:
             q['active'] = bool(int(active))
 
     return hist
+
 
 def amend_history(hist, last):
     for q in hist:

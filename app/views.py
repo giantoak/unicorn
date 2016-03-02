@@ -1,27 +1,32 @@
 from app import app, es, db, flask_bcrypt, login_manager
-from app import User, Organization
+from app import User
+# from app import Organization
 from flask import jsonify
 from flask import make_response
 from flask import render_template
 from flask import url_for
 from flask import redirect
-from flask import Response
+# from flask import Response
 from flask import request
 from flask import session
 from flask import abort
 from flask import flash
 from flask import send_file
-from flask.ext.login import (current_user, login_required, login_user,
-                             logout_user, confirm_login, fresh_login_required)
+from flask.ext.login import current_user
+from flask.ext.login import login_required
+from flask.ext.login import login_user
+from flask.ext.login import logout_user
+# from flask.ext.login import confirm_login
+# from flask.ext.login import fresh_login_required
 from flask import Blueprint
 
 import pandas as pd
 
 from werkzeug import secure_filename
-import flask
+# import flask
 import tempfile
-import json
-from elasticsearch_dsl import Search, Q
+import simplejson as json
+# from elasticsearch_dsl import Search, Q
 import io
 import re
 import magic
@@ -30,22 +35,25 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
 import os
-import sys
+# import sys
 import subprocess
 
 from bulk import bulk_download, bulk_search
 from config import tmp_dir
 from util.historical import amend_history
-from util.network import make_graph, document_graph
+from util.historical import active_history_terms
+from util.historical import update_history
+# from util.network import make_graph
+from util.network import document_graph
 from util.roundTime import round_month_up, round_month_down, week_delta
 import time
 import datetime
-from datetime import date, timedelta
+# from datetime import date, timedelta
 
-import sklearn
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn import decomposition
-import corex as ce
+# import sklearn
+# from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn import decomposition
+# import corex as ce
 import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
@@ -128,7 +136,7 @@ def get_entities(doc_id):
         print entities
         print type(entities)
 
-    except KeyError, IndexError:
+    except (KeyError, IndexError):
         return jsonify([])
 
     return jsonify({'entities': entities})
@@ -137,9 +145,11 @@ def get_entities(doc_id):
 @uni.route('/view/<doc_id>')
 @login_required
 def view_doc(doc_id):
-    ''' In-depth view of a particular document.
-    Displays pdf version of document, extracted entities,
-    as well as other analytics. '''
+    """
+    In-depth view of a particular document. Displays pdf version of document, extracted entities,
+    as well as other analytics.
+    :param doc_id:
+    """
 
     if is_owner_of_doc(doc_id):
         return render_template('doc-view.html', doc_id=doc_id)
@@ -208,7 +218,7 @@ def alltopics(query):
         "size": 10000000
     }
 
-    # r=requests.post(url,data=json.dumps(q))
+    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
 
     # return doc ids specific to session query
@@ -277,8 +287,7 @@ def alltopics(query):
 
         response = es.search(body=q, index=DEFAULT_INDEX)
 
-        df = pd.DataFrame(response['aggregations'][
-                          'articles_over_time']['buckets'])
+        df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
         df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
         df.columns = ['Count', 'key', 'key_as_string', 'Date']
         df = df.drop(['key', 'key_as_string'], axis=1)
@@ -325,7 +334,9 @@ def delete_history():
 @uni.route('/hist/and')
 @login_required
 def history_query():
-    ''' AND query over all active history terms '''
+    """
+    AND query over all active history terms
+    """
     terms = active_history_terms(session['history'])
     body = {
         "_source": ["entity"],
@@ -648,15 +659,15 @@ def geo_endpoint():
     r = es.search(body=q, index=DEFAULT_INDEX)
     data = r
     locations = []
- #   for hit in data['hits']['hits']:
- #       print hit['fields']['file'][0]
- #       print
- #       for location in geodict_lib.find_locations_in_text(re.sub('\s', ' ', hit['_source']['file'])):
- #           for token in location['found_tokens']:
- #               locations.append({'lat':token['lat'],'lon':token['lon'],'name':token['matched_string']})
+    # for hit in data['hits']['hits']:
+    #   print hit['fields']['file'][0]
+    #   print
+    #   for location in geodict_lib.find_locations_in_text(re.sub('\s', ' ', hit['_source']['file'])):
+    #       for token in location['found_tokens']:
+    #       locations.append({'lat':token['lat'],'lon':token['lon'],'name':token['matched_string']})
 
-    #geo=map(lambda x: x['found_tokens'])
-#    return json.dumps(locations)
+    # geo = map(lambda x: x['found_tokens'])
+    # return json.dumps(locations)
     # print 'Number of Hits: ' + str(len(data['hits']['hits']))
 
     for hit in data['hits']['hits']:
@@ -686,7 +697,7 @@ def geo_endpoint():
             continue
             # print 'no locations'
 
-    #geo=map(lambda x: x['found_tokens'])
+    # geo = map(lambda x: x['found_tokens'])
     return json.dumps(locations)
 
 
@@ -820,7 +831,7 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
 @uni.route('/serve_clusters', methods=['POST'])
 @uni.route('/serve_clusters/<query>', methods=['POST'])
 @uni.route('/serve_clusters/<query>/<page>', methods=['POST'])
-#@login_required
+# @login_required
 def serve_clusters(query=None, page=None, box_only=True, dates={}, documents={}):
     if request.method == "POST":
         json_dict = request.get_json()
@@ -1009,7 +1020,7 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
 @uni.route('/viz/<query>')
 @login_required
 def viz_endpoint(query):
-    url = 'http://localhost:9200/dossiers/_search'
+    # url = 'http://localhost:9200/dossiers/_search'
     q = {
         "_source": ["entity"],
         "fields": ["entities", "title"],
@@ -1021,10 +1032,10 @@ def viz_endpoint(query):
         "size": 150
     }
 
-    # r=requests.post(url,data=json.dumps(q))
+    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
     data = r
-    #graph = make_graph(data)
+    # graph = make_graph(data)
     graph = document_graph(data['hits']['hits'])
     return json.dumps(graph)
 
@@ -1056,7 +1067,7 @@ def url_fetch(query=""):
             "term": {"file": query}
         }
     }
-    # r=requests.post(url,data=json.dumps(q))
+    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
     data = r['hits']['hits']
     urls = []
@@ -1070,7 +1081,7 @@ def url_fetch(query=""):
         except KeyError:
             pass
     urls = filter(lambda x: x != [], urls)
-    #urls_flat=reduce(lambda x,y: x.extend(y),urls)
+    # urls_flat=reduce(lambda x,y: x.extend(y),urls)
     urls_flat = [item for sublist in urls for item in sublist]
     return json.dumps({'urls': dict(Counter(urls_flat)), 'pn': pn})
 
@@ -1080,10 +1091,11 @@ def url_fetch(query=""):
 def wc(query):
     stop_words = set(stopwords.words('english'))
     # generating a corpus specific stopword list
-    stopset_state_specific = set(['review', 'na', 'declassifiedreleased', 'review', 'unclassified', 'confidential', 'secret', 'disposition',
-                                  'released', 'approved', 'document', 'classification', 'restrictions', 'state', 'department', 'date', 'eo', 'handling'])
+    stopset_state_specific = {'review', 'na', 'declassifiedreleased', 'review', 'unclassified', 'confidential',
+                              'secret', 'disposition', 'released', 'approved', 'document', 'classification',
+                              'restrictions', 'state', 'department', 'date', 'eo', 'handling'}
     stopset = stop_words.union(stopset_state_specific)
-    url = 'http://localhost:9200/dossiers/_search'
+    # url = 'http://localhost:9200/dossiers/_search'
     q = {
         "fields": ["file", "body"],  # added body to query
         "query": {
@@ -1094,10 +1106,11 @@ def wc(query):
     }
     # r=requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
-    # swithced to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the uploader
+    # switched to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the
+    # uploader
     # to include the most relevant information (e.g. excluding headers)
     data = r['hits']['hits'][0]['fields']['body'][0]
-    nowhite = re.sub('\s', ' ', data)
+    # nowhite = re.sub('\s', ' ', data)
     # updated to disallow numbers from the wordcloud
     nowhite = re.sub(r'[^A-Za-z\s]', '', data)
     wt = word_tokenize(nowhite)
@@ -1121,7 +1134,7 @@ def tm(query):
     # print freq_term_matrix.todense()
     stopset = set(stopwords.words('english'))
 
-    url = 'http://localhost:9200/dossiers/_search'
+    # url = 'http://localhost:9200/dossiers/_search'
     q = {
         "fields": ["file"],
         "query": {
@@ -1135,7 +1148,11 @@ def tm(query):
 @uni.route('/<doc_id>/related')
 @login_required
 def more_like_this(doc_id):
-    ''' Returns similar documents '''
+    """
+    Returns similar documents
+    :param doc_id:
+    :return:
+    """
     q = {
         "fields": ["title"],
         "query": {

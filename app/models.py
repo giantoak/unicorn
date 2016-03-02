@@ -1,6 +1,7 @@
 from app import db
 from flask.ext.login import UserMixin
 
+
 class Organization(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     organization = db.Column(db.String(256), unique=True)
@@ -23,8 +24,8 @@ class User(db.Model, UserMixin):
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'))
     organization = db.relationship('Organization')
 
-    def __init__(self, email='', password='', organization=Organization(), moderator=False, 
-            admin=False, active=True):
+    def __init__(self, email='', password='', organization=Organization(), moderator=False,
+                 admin=False, active=True):
         self.email = email
         self.password = password
         self.organization = organization

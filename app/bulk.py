@@ -1,12 +1,13 @@
 from app import es
-import zipfile
+# import zipfile
 import tablib
+
 
 def bulk_search(queries):
     data = tablib.Dataset(headers=['filename', 'id', 'query'])
     for q in queries:
         r = es.search(q=q, fields=['title'], size=100, index="dossiers",
-                doc_type="attachment")
+                      doc_type="attachment")
         for res in r['hits']['hits']:
             title = res['fields']['title'][0]
             _id = res['_id']
@@ -15,19 +16,19 @@ def bulk_search(queries):
 
     return data
 
+
 def bulk_download(ids):
-    '''
+    """
     Construct ElasticSearch query for all files, return tablib Dataset.
-    '''
-    
-    
+    :param ids:
+    :return:
+    """
     data = tablib.Dataset(headers=['title', 'text'])
 
     for doc_id in ids:
         # Grab file for doc_id
-
-        r = es.get(index="dossiers", doc_type="attachment", id=doc_id, 
-                fields=['title', 'file'])
+        r = es.get(index="dossiers", doc_type="attachment", id=doc_id,
+                   fields=['title', 'file'])
         
         f = r['fields']
         data.append((f['title'][0], f['file'][0]))

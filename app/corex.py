@@ -14,6 +14,7 @@ License: GPL2
 import numpy as np  # Tested with 1.8.0
 from scipy.misc import logsumexp  # Tested with 0.13.0
 
+
 class Corex(object):
     """
     Correlation Explanation

@@ -1,18 +1,14 @@
-import urllib2
-import json
-import simplejson
-import nltk
-from nltk import word_tokenize
-from nltk.tokenize import RegexpTokenizer
+# import urllib2
+# import json
+import simplejson as json
+# import nltk
+# from nltk import word_tokenize
+# from nltk.tokenize import RegexpTokenizer
 import requests
 
 
 def run(term=""):
-	url=''+term
-	r=requests.get(url)
-	data=r.json()
-	titles=[]
-	for hit in data['hits']['hits']:
-		titles.append(hit['_source']['title'])
-
-	return json.dumps(titles)
+    r = requests.get(''+term)
+    data = r.json()
+    titles = [x['_source']['title'] for x in data['hits']['hits']]
+    return json.dumps(titles)

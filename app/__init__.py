@@ -1,4 +1,5 @@
-from flask import Flask, Blueprint
+from flask import Flask
+from flask import Blueprint
 import random
 from elasticsearch import Elasticsearch
 from config import es_url, es_port, admin_username, admin_password, db_conn_str
@@ -9,7 +10,7 @@ from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 
 app = Flask(__name__, static_folder='unicorn/static',
-        static_url_path='/unicorn/static')
+            static_url_path='/unicorn/static')
 app.secret_key = str(random.SystemRandom().random())
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_conn_str
