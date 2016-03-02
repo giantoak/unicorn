@@ -2,10 +2,6 @@
 
 # We assume that git, wget, python, and pip are installed
 
-# Save IP Address.
-# IP=`wget -qO- ipecho.net/plain`
-IP=127.0.0.1
-
 # Install postgresql for security DB
 sudo apt-get install -y postgresql postgresql-contrib python-psycopg2 libpq-dev
 
@@ -76,7 +72,7 @@ fi
 # If the user hasn't made an app/config.py, create a default
 # We point the default at the standard unicorn db
 if [ ! -f app/config.py ]; then
-  cat app/config.py.template | sed s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@$IP:5432"/ | sed s/"''"/"'admin'"/ > app/config.py
+  cat app/config.py.template | sed s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@127.0.0.1:5432"/ | sed s/"''"/"'admin'"/ > app/config.py
 fi
 
 # delete any index call dossiers then recreate it (wipe it)
