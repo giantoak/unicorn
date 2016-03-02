@@ -1,8 +1,8 @@
 *.pyc
 *.swp
 data/
-ve/
 runconfig.py
 app/config.py
 util/utilconfig.py
 .vagrant/
+.idea/
