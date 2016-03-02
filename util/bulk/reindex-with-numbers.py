@@ -7,9 +7,10 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from iterate_search import iterate_over_query
 import requests
-from collections import defaultdict
+# from collections import defaultdict
 
-import phonenumbers
+# import phonenumbers
+
 
 def call_mitie(text):
     r = requests.post(url="http://127.0.0.1:10001/saruman",
@@ -18,6 +19,7 @@ def call_mitie(text):
     entities = parse_mitie_output(entities_raw)
     
     return entities
+
 
 def parse_mitie_output(raw):
     entities = set()
@@ -28,6 +30,7 @@ def parse_mitie_output(raw):
         return list()
     
     return list(entities)
+
 
 def update_partial(entities, doc_id):
     # Partial update doc

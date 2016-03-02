@@ -1,5 +1,6 @@
 from app import app, es, db, flask_bcrypt, login_manager
-from app import User, Organization
+from app import User
+from app import Organization
 from flask import jsonify
 from flask import render_template
 from flask import url_for
@@ -17,8 +18,9 @@ from flask import Blueprint
 from werkzeug import secure_filename
 import flask
 import tempfile
-from elasticsearch_dsl import Search, Q
 import simplejson as json
+# from elasticsearch_dsl import Search
+# from elasticsearch_dsl import Q
 import io
 import re
 import magic
@@ -27,12 +29,13 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
 import os
-import sys
+# import sys
 import subprocess
 
 from bulk import bulk_download, bulk_search
 from config import tmp_dir
-from util.network import make_graph, document_graph
+# from util.network import make_graph
+from util.network import document_graph
 import time
 
 # import sklearn
