@@ -37,8 +37,8 @@ def document_graph(hits):
 
         # Create node for the new document
         g.add_node(_id, dict(
-            type = 'document',
-            title = title))
+            type='document',
+            title=title))
         
         for ent in edges:
             # Add previously unseen entities as nodes
