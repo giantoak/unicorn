@@ -1,6 +1,0 @@
-es_url = 'localhost'
-es_port = 9200
-admin_username = ''
-admin_password = ''
-tmp_dir = '/tmp/'
-db_conn_str = 'postgresql://<username>:<password>@<hostname>:<port>/<db>'
