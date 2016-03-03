@@ -37,7 +37,8 @@ import os
 import subprocess
 
 from bulk import bulk_download, bulk_search
-from config import tmp_dir
+# from config import tmp_dir
+from util.config import tmp_dir
 # from util.network import make_graph
 from util.network import document_graph
 import time
