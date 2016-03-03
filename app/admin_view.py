@@ -5,7 +5,7 @@ from flask_admin.base import AdminIndexView
 from flask_admin.base import expose
 from flask_admin.contrib.sqla import ModelView
 from wtforms.fields import PasswordField
-from flask.ext.login import current_user
+from flask_login import current_user
 from flask import redirect
 
 from app import flask_bcrypt

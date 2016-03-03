@@ -1,32 +1,33 @@
 from app import app, es, db, flask_bcrypt, login_manager
 from app import User
-# from app import Organization
+from app import Organization
 from flask import jsonify
 from flask import make_response
 from flask import render_template
 from flask import url_for
 from flask import redirect
-# from flask import Response
+from flask import Response
 from flask import request
 from flask import session
 from flask import abort
 from flask import flash
 from flask import send_file
-from flask.ext.login import current_user
-from flask.ext.login import login_required
-from flask.ext.login import login_user
-from flask.ext.login import logout_user
-# from flask.ext.login import confirm_login
-# from flask.ext.login import fresh_login_required
+from flask_login import current_user
+from flask_login import login_required
+from flask_login import login_user
+from flask_login import logout_user
+from flask_login import confirm_login
+from flask_login import fresh_login_required
 from flask import Blueprint
 
 import pandas as pd
 
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 # import flask
 import tempfile
 import simplejson as json
-# from elasticsearch_dsl import Search, Q
+# from elasticsearch_dsl import Search
+# from elasticsearch_dsl import Q
 import io
 import re
 import magic

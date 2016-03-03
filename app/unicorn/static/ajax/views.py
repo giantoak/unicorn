@@ -11,8 +11,12 @@ from flask import session
 from flask import abort
 from flask import flash
 from flask import send_file
-from flask.ext.login import (current_user, login_required, login_user,
-                             logout_user, confirm_login, fresh_login_required)
+from flask_login import current_user
+from flask_login import login_required
+from flask_login import login_user
+from flask_login import logout_user
+from flask_login import confirm_login
+from flask_login import fresh_login_required
 from flask import Blueprint
 
 from werkzeug import secure_filename

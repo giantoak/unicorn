@@ -3,9 +3,10 @@ from flask import Blueprint
 import random
 from elasticsearch import Elasticsearch
 from config import es_url, es_port, admin_username, admin_password, db_conn_str
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.bcrypt import Bcrypt
-from flask.ext.login import LoginManager
+# from util.config import es_url, es_port, admin_username, admin_password, db_conn_str
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager
 from flask_admin.base import Admin
 from flask_admin.contrib.sqla import ModelView
 
