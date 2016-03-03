@@ -70,8 +70,15 @@ Vagrant.configure(2) do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
+  # Initial setup
   apt-get -y update && apt-get -y upgrade && apt-get -y autoremove
   apt-get install -y curl git
+  export ES_VER=1.7.5
+  export MAPPER_VER=2.7.1
+  export CARROT_VER=1.9.1
+  export UNICORN_HOME=/home/vagrant/unicorn
+
+  # Get conda
   curl http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh --output ~/miniconda.sh
   bash ~/miniconda.sh -b -p /usr/local/miniconda
   bash -c "echo 'export PATH=/usr/local/miniconda/bin:$PATH' > /etc/profile.d/prepend_conda.sh"
@@ -79,20 +86,80 @@ Vagrant.configure(2) do |config|
   rm ~/miniconda.sh
   chown -R vagrant /usr/local/miniconda
   chgrp -R vagrant /usr/local/miniconda
-  conda install -y pip
   conda config --add channels pmlandwehr
   conda config --add channels auto
-  cp -r /vagrant /home/vagrant/unicorn
-  cd /home/vagrant/unicorn
-  rm Vagrantfile Dockerfile .dockerignore README.md
-  rm -rf *.git
-  sed s/==/=/ requirements.txt > conda_reqs.txt
-  conda install -y --file conda_reqs.txt
-  conda install -y openssl
-  conda upgrade -y openssl
-  conda upgrade -y python
-  rm conda_reqs.txt
-  ./install.sh
+
+  # Copy, enter, and clean repo
+  cp -r /vagrant $UNICORN_HOME
+  cd $UNICORN_HOME
+  rm -rf Vagrantfile Dockerfile .dockerignore README.md *.git *.template
+  conda install -y --file requirements.txt
+  conda install -y openssl && conda upgrade -y openssl python
+
+  # Set up postgres
+  apt-get install -y postgresql postgresql-contrib python-psycopg2 libpq-dev
+  service postgresql start
+  sudo -u postgres psql -c "CREATE USER unicorn WITH SUPERUSER CREATEROLE CREATEDB PASSWORD 'unicorn';"
+  sudo -u postgres psql -c "CREATE DATABASE unicorn;"
+
+  # Set up mysql
+  debconf-set-selections <<< 'mysql-server mysql-server/root_password password geodict_root'
+  debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password geodict_root'
+  apt-get -y install mysql-server mysql-client libmysqlclient-dev
+
+  # Get SSL libraries
+  apt-get install -y libssl-dev libffi-dev
+
+  # Install NLTK dependencies
+  # python nltk_deps.py
+  python -m nltk.downloader -d /usr/local/share/nltk_data stopwords
+  python -m nltk.downloader -d /usr/local/share/nltk_data punkt
+
+  # Install unoconv
+  apt-get install -y unoconv
+
+  # Clone the geodict library into the local dir.
+  # It isn't a module
+  git clone https://github.com/giantoak/geodict $UNICORN_HOME/geodict
+
+  # Start MySQL if it's off and populate with geodict data
+  service mysql start
+  cd $UNICORN_HOME/geodict
+  python populate_database.py
+  cd ..
+
+  # Initialize unoconv
+  unoconv -l &
+
+  # Run elasticsearch as a service set up script
+  bash ElasticSearch.sh $ES_VER
+
+  # stop elasticsearch
+  sudo service elasticsearch stop
+
+  # install the elasticsearch mapper attachment plugin
+  /usr/share/elasticsearch/bin/plugin --install elasticsearch/elasticsearch-mapper-attachments/$MAPPER_VER
+
+  # install the elasticsearch carrot2 plugin
+  /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/$CARROT_VER
+
+  # Reboot elasticsearch as a service, load dossiers
+  service elasticsearch start
+  sleep 10
+  curl -XPUT http://127.0.0.1:9200/dossiers/
+  curl -XPUT http://127.0.0.1:9200/dossiers/_mapping/attachment -d @dossiers_mapping.json
+  curl -XPUT http://127.0.0.1:9200/dossiers/_bulk --data-binary @dossiers.json
+
+  mv $UNICORN_HOME/runconfig.py.default runconfig.py
+  cp $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/config.py
+  mv $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/util/config.py
+  # sed -e s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@127.0.0.1:5432"/ -e s/"''"/"'admin'"/ /vagrant/app/config.py.template > $UNICORN_HOME/app/config.py
+  # sed -e s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@127.0.0.1:5432"/ -e s/"''"/"'admin'"/ /vagrant/app/config.py.template > $UNICORN_HOME/app/util/config.py
+  python createdb.py
+
+  # clean up extra repositories
+  sudo apt-get autoremove -y
+
   chown -R vagrant /home/vagrant/unicorn
   chgrp -R vagrant /home/vagrant/unicorn
   SHELL
