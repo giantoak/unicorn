@@ -85,10 +85,9 @@ def bulk_search_route():
 @uni.route('/bulk_download')
 @login_required
 def bulk_download_route():
-    if 'last_query' not in session:
+    last_query = session.get('last_query', None)
+    if last_query is None:
         return abort(404)
-
-    last_query = session['last_query']
 
     ids = last_query['ids']
     query = last_query['query']
@@ -114,7 +113,9 @@ def request_doc(doc_id):
 
 
 def get_file(doc_id):
-    ''' Render base64 encoded contents of a given file by its doc_id '''
+    """
+    Render base64 encoded contents of a given file by its doc_id
+    """
     response = request_doc(doc_id)
     try:
         base64 = response['hits']['hits'][0]['_source']['file']
@@ -203,7 +204,9 @@ def get_topics(doc_id):
 @uni.route('/topics_latest')
 @login_required
 def topics_latest():
-    return alltopics(session['last_query']['query'])
+    last_query = session.get('last_query', None)
+    if last_query is not None:
+        return alltopics(last_query['query'])
 
 
 @uni.route('/all_topics')
@@ -223,9 +226,7 @@ def alltopics(query):
     r = es.search(body=q, index=DEFAULT_INDEX)
 
     # return doc ids specific to session query
-    uids = []
-    for hit in r['hits']['hits']:
-        uids.append(str(hit['_id']))
+    uids = [str(hit['_id']) for hit in r['hits']['hits']]
 
     topics = json.loads(open('topics.json').read())
 
@@ -638,6 +639,9 @@ def get_clusters():
 @uni.route('/geo')
 @login_required
 def geo_endpoint():
+    last_query = session.get('last_query', None)
+    if last_query is None:
+        return json.dumps([])
     query = session['last_query']['query']
     # print 'Query: ' + query
     url = 'http://localhost:9200/dossiers/_search'
@@ -730,7 +734,7 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
 
     if not query and not page:
         last_query = session.get('last_query', None)
-        if last_query:
+        if last_query is not None:
             query, page = last_query['query'], last_query['page']
         else:
             # better error
@@ -839,11 +843,11 @@ def serve_clusters(query=None, page=None, box_only=True, dates={}, documents={})
 
     if not query and not page:
         last_query = session.get('last_query', None)
-    if last_query:
-        query, page = last_query['query'], last_query['page']
-    else:
-        # better error
-        return abort(404)
+        if last_query is not None:
+            query, page = last_query['query'], last_query['page']
+        else:
+            # better error
+            return abort(404)
 
     q = {
         "query": {
@@ -938,7 +942,7 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
 
     if not query and not page:
         last_query = session.get('last_query', None)
-        if last_query:
+        if last_query is not None:
             query, page = last_query['query'], last_query['page']
         else:
             # better error
@@ -1044,22 +1048,27 @@ def viz_endpoint(query):
 @uni.route('/viz_latest')
 @login_required
 def viz_latest():
-    return viz_endpoint(session['last_query']['query'])
+    last_query = session.get('last_query', None)
+    if last_query is not None:
+        return viz_endpoint(last_query['query'])
 
 
 @uni.route('/wc_latest')
 @login_required
 def wc_latest():
-    return wc(session['last_query']['query'])
+    last_query = session.get('last_query', None)
+    if last_query is not None:
+        return wc(last_query['query'])
 
 
 @uni.route('/url_list')
 @uni.route('/url_list/<query>')
 @login_required
 def url_fetch(query=""):
-    # query="http"
     if not query:
-        query = session['last_query']['query']
+        last_query = session.get('last_query', None)
+        if last_query is not None:
+            query = session['last_query']['query']
     stopset = set(stopwords.words('english'))
     url = 'http://localhost:9200/dossiers/_search'
     q = {

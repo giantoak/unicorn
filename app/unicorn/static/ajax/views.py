@@ -77,10 +77,9 @@ def bulk_search_route():
 @uni.route('/bulk_download')
 @login_required
 def bulk_download_route():
-    if 'last_query' not in session:
+    last_query = session.get('last_query', None)
+    if last_query is None:
         return abort(404)
-
-    last_query = session['last_query']
 
     ids = last_query['ids']
     query = last_query['query']
@@ -222,7 +221,7 @@ def search_preserve(query, page):
 def search_endpoint(query=None, page=None, box_only=False):
     if not query and not page:
         last_query = session.get('last_query', None)
-        if last_query:
+        if last_query is not None:
             query, page = last_query['query'], last_query['page']
         else:
             # better error
