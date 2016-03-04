@@ -212,7 +212,6 @@ def topics_latest():
 
 @uni.route('/all_topics')
 def alltopics(query):
-
     q = {
         "_source": False,
         "query": {
@@ -237,44 +236,36 @@ def alltopics(query):
     # pick random document to get number of topics
     num_topics = len(documents[uids[0]])
 
-    docs = len(documents)
-
-    dist = {}
-    count = 0
+    num_docs = len(documents)
 
     # use argmax to return the highest rated topic per document, then enumerate bins across all documents
     # returns proportion of results per document where each document can only
     # be its maximum scored topic
+    dist = {}
+    count = 0
     for idx, x in enumerate(np.bincount([np.argmax(item[1]) for item in documents.items()],  minlength=num_topics)):
-        dist['topic' + str(count)] = float(x) / docs
+        dist['topic{}'.format(count)] = float(x) / num_docs
         count += 1
     topics['dist'] = dist
 
     # initialize a blank dict
-    date_ids = {}
-
     # enumerate topic + i as keys to blank lists
-    for i in range(num_topics):
-        date_ids['topic' + str(i)] = []
+    date_ids = {'topic{}'.format(i): [] for i in range(num_topics)}
 
     # iterate over returned documents and pick best topic
     # add doc id to date_ids list for best topic
-    for doc in documents:
-        doc_topic = np.argmax(documents[doc])
-        _id = doc
+    for doc_id in documents:
+        doc_topic = np.argmax(documents[doc_id])
         id_list = date_ids['topic' + str(doc_topic)]
-        id_list.append(_id)
-        date_ids['topic' + str(doc_topic)] = id_list
+        id_list.append(doc_id)
+        date_ids['topic{}'.format(doc_topic)] = id_list
 
-    topic_dates = {}
-
-    for topic in date_ids:
-
-        q = {
+    topic_dates = {topic: '[]' for topic in date_ids}
+    topic_query_dict = {
             "query": {
                 "ids": {
                     # should return list of ids for the given topic
-                    "values": date_ids[topic]
+                    "values": ''
                 }
             },
 
@@ -288,12 +279,17 @@ def alltopics(query):
             }
         }
 
-        response = es.search(body=q, index=DEFAULT_INDEX)
+    for topic in date_ids:
+        if len(date_ids[topic]) == 0:
+            continue
+
+        topic_query_dict['query']['ids']['values'] = date_ids[topic]
+        response = es.search(body=topic_query_dict, index=DEFAULT_INDEX)
 
         df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
-        df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
+        df['Date'] = df.key_as_string.apply(lambda x: x[:10])
         df.columns = ['Count', 'key', 'key_as_string', 'Date']
-        df = df.drop(['key', 'key_as_string'], axis=1)
+        df.drop(['key', 'key_as_string'], axis=1, inplace=True)
         date_count_json = df.to_json(orient='records')
 
         topic_dates[topic] = date_count_json
