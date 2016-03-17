@@ -126,7 +126,7 @@ def get_file(doc_id):
     try:
         base64 = response['hits']['hits'][0]['_source']['file']
         fn = response['hits']['hits'][0]['_source']['title']
-    except KeyError, IndexError:
+    except (KeyError, IndexError):
         abort(404)
 
     return base64, fn
@@ -1188,7 +1188,7 @@ def more_like_this(doc_id):
                 'id': r['_id'],
                 'name': r['fields']['title'][0]
             })
-    except KeyError, IndexError:
+    except (KeyError, IndexError):
         pass
 
     return jsonify(results)
