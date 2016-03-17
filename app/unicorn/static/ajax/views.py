@@ -1,11 +1,11 @@
 from app import app, es, db, flask_bcrypt, login_manager
 from app import User
-from app import Organization
+# from app import Organization
 from flask import jsonify
 from flask import render_template
 from flask import url_for
 from flask import redirect
-from flask import Response
+# from flask import Response
 from flask import request
 from flask import session
 from flask import abort
@@ -15,12 +15,12 @@ from flask_login import current_user
 from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
-from flask_login import confirm_login
-from flask_login import fresh_login_required
+# from flask_login import confirm_login
+# from flask_login import fresh_login_required
 from flask import Blueprint
 
 from werkzeug import secure_filename
-import flask
+# import flask
 import tempfile
 import simplejson as json
 # from elasticsearch_dsl import Search

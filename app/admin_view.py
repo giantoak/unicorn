@@ -1,7 +1,7 @@
 from flask import Flask
-# from flask_admin.base import Admin
+from flask_admin.base import Admin
 from flask_admin.base import AdminIndexView
-# from flask_admin.base import BaseView
+from flask_admin.base import BaseView
 from flask_admin.base import expose
 from flask_admin.contrib.sqla import ModelView
 from wtforms.fields import PasswordField

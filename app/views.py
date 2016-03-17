@@ -1,12 +1,12 @@
 from app import app, es, db, flask_bcrypt, login_manager
 from app import User
-from app import Organization
+# from app import Organization
 from flask import jsonify
 from flask import make_response
 from flask import render_template
 from flask import url_for
 from flask import redirect
-from flask import Response
+# from flask import Response
 from flask import request
 from flask import session
 from flask import abort
@@ -16,18 +16,15 @@ from flask_login import current_user
 from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
-from flask_login import confirm_login
-from flask_login import fresh_login_required
+# from flask_login import confirm_login
+# from flask_login import fresh_login_required
 from flask import Blueprint
 
 import pandas as pd
 
 from werkzeug.utils import secure_filename
-# import flask
 import tempfile
 import simplejson as json
-# from elasticsearch_dsl import Search
-# from elasticsearch_dsl import Q
 import io
 import re
 import magic
@@ -36,22 +33,10 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
 import os
-# import sys
 import subprocess
-
 from bulk import bulk_download, bulk_search
-# from config import tmp_dir
-from util.config import tmp_dir
-from util.historical import amend_history
-from util.historical import active_history_terms
-from util.historical import update_history
-# from util.network import make_graph
-from util.network import document_graph
-from util.round_time import round_month_up, round_month_down, week_delta
 import time
 import datetime
-# from datetime import date, timedelta
-
 # import sklearn
 # from sklearn.feature_extraction.text import CountVectorizer
 # from sklearn import decomposition
@@ -60,6 +45,12 @@ import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
 
+from util.config import tmp_dir
+from util.historical import amend_history
+from util.historical import active_history_terms
+from util.historical import update_history
+from util.network import document_graph
+from util.round_time import round_month_up, round_month_down, week_delta
 
 from config import es_port
 from config import es_url
