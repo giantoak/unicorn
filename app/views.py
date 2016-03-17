@@ -78,9 +78,6 @@ def bulk_search_route():
     return send_file(io.BytesIO(data.xls), as_attachment=True,
                      attachment_filename='bulk_{}.xls'.format(time.time()))
 
-    # Bulk search all of these queries
-    # Bundle results into excel
-
 
 @uni.route('/bulk_download')
 @login_required
@@ -167,8 +164,8 @@ def view_doc(doc_id):
 
     if is_owner_of_doc(doc_id):
         return render_template('doc-view.html', doc_id=doc_id)
-    else:
-        return abort(403)
+
+    return abort(403)
 
 
 @uni.route('/pdf/<doc_id>')
@@ -314,9 +311,7 @@ def download_endpoint(doc_id):
 
     base64, fn = get_file(doc_id)
     f = io.BytesIO(base64.decode('base64'))
-    return send_file(f,
-                     as_attachment=True,
-                     attachment_filename=fn)
+    return send_file(f, as_attachment=True, attachment_filename=fn)
 
 
 @uni.route('/search/<query>/<page>/preserve')
@@ -361,7 +356,8 @@ def history_query():
         }
     }
     r = es.search(body=body, index=es_index, size=100)
-    graph = make_response(json.dumps(document_graph(r['hits']['hits'])))
+    data = r['hits']['hits']
+    graph = make_response(json.dumps(document_graph(data)))
 
     return graph
 
@@ -393,7 +389,7 @@ def search_endpoint(query=None, page=None, box_only=False):
 
     q = {
         "fields": ["title", "highlight", "entities", "owner", "date"],
-        "from": start,
+        # "from": start,
         "query": {
             "match": {
                 "file": query
@@ -615,7 +611,8 @@ def viz_all():
         "size": 100
     }
     r = es.search(body=q, index=es_index)
-    graph = document_graph(r['hits']['hits'])
+    data = r['hits']['hits']
+    graph = document_graph(data)
 
     return json.dumps(graph)
 
@@ -1045,9 +1042,8 @@ def viz_endpoint(query):
     }
 
     r = es.search(body=q, index=es_index)
-    data = r
-    # graph = make_graph(data)
-    graph = document_graph(data['hits']['hits'])
+    data = r['hits']['hits']
+    graph = document_graph(data)
     return json.dumps(graph)
 
 
@@ -1108,7 +1104,7 @@ def wc(query):
     stopset_state_specific = {'review', 'na', 'declassifiedreleased', 'review', 'unclassified', 'confidential',
                               'secret', 'disposition', 'released', 'approved', 'document', 'classification',
                               'restrictions', 'state', 'department', 'date', 'eo', 'handling'}
-    stopset = stop_words.union(stopset_state_specific)
+    stop_set = stop_words.union(stopset_state_specific)
     q = {
         "fields": ["file", "body"],  # added body to query
         "query": {
@@ -1122,16 +1118,14 @@ def wc(query):
     # uploader
     # to include the most relevant information (e.g. excluding headers)
     data = r['hits']['hits'][0]['fields']['body'][0]
-    # nowhite = re.sub('\s', ' ', data)
+    # no_white = re.sub('\s', ' ', data)
     # updated to disallow numbers from the wordcloud
-    nowhite = re.sub(r'[^A-Za-z\s]', '', data)
-    wt = word_tokenize(nowhite)
-    wc = dict(Counter(wt))
+    no_white = re.sub(r'[^A-Za-z\s]', '', data)
+    w_c = dict(Counter(word_tokenize(no_white)))
     frequency = []
-    for k, v in wc.iteritems():
+    for k, v in w_c.iteritems():
         frequency.append(dict({"text": k, "size": v * 3}))
-    frequency = filter(lambda x: x['size'] > 3 and x[
-                       'text'].lower() not in stopset, frequency)
+    frequency = filter(lambda x: x['size'] > 3 and x['text'].lower() not in stop_set, frequency)
     return json.dumps(frequency)
 
 
