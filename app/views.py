@@ -67,7 +67,10 @@ uni = Blueprint('unicorn', __name__, url_prefix='/unicorn')
 @uni.route('/_bulk_search', methods=['POST'])
 @login_required
 def bulk_search_route():
-
+    """
+    Bulk search all of these queries
+    :returns: Excel file bundling query responses
+    """
     search_results = request.form['searches']
     searches = search_results.split('\n')
 
@@ -98,6 +101,11 @@ def bulk_download_route():
 @uni.route('/<doc_id>/debug')
 @login_required
 def request_doc(doc_id):
+    """
+    Searches elastic index for a document matching a particular ID.
+    :param str doc_id: A specific document ID
+    :returns: results of elastic search matching doc_id
+    """
     q = {
         "query": {
             "match": {
@@ -111,6 +119,8 @@ def request_doc(doc_id):
 def get_file(doc_id):
     """
     Render base64 encoded contents of a given file by its doc_id
+    :param str doc_id: A specific document ID
+    :returns tuple: Base 64 encoded document contents and the document's title
     """
     response = request_doc(doc_id)
     try:
@@ -125,6 +135,11 @@ def get_file(doc_id):
 @uni.route('/<doc_id>/entities')
 @login_required
 def get_entities(doc_id):
+    """
+
+    :param str doc_id: A specific document ID
+    :returns str: json for the list of retrieved entities
+    """
     response = request_doc(doc_id)
     try:
         entities = json.loads(response['hits']['hits'][
@@ -146,7 +161,8 @@ def view_doc(doc_id):
     """
     In-depth view of a particular document. Displays pdf version of document, extracted entities,
     as well as other analytics.
-    :param doc_id:
+    :param str doc_id: A specific document ID
+    :returns: rendered template for the current document
     """
 
     if is_owner_of_doc(doc_id):
@@ -571,6 +587,9 @@ def upload_form():
 @uni.route('/_upload-documents', methods=['POST'])
 @login_required
 def upload_endpoint():
+    """
+    Takes a document and stores it in the elasticsearch index
+    """
     files = request.files.getlist('file[]')
     d = {}
     for f in files:
@@ -1254,11 +1273,21 @@ def is_owner_of_doc(doc):
     owner = es.get(index=DEFAULT_INDEX, doc_type='attachment', id=doc,
                    fields='owner')['fields']['owner'][0]
     return is_owner(owner)
+    """
+    Function for checking document ownership.
+    :param str doc: A specific document ID
+    :returns bool: whether the document's owner matches the current owner
+    """
 
 
 def is_owner(org):
     return current_user.organization.organization == 'admins' or \
         current_user.organization.organization == org
+    """
+    Function for checking if a user's org has ownership rights
+    :param str org: An organization
+    :returns bool: whether the organization matches the current user or the group of admins
+    """
 
 
 @app.errorhandler(403)
