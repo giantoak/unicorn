@@ -1,7 +1,7 @@
 #!/bin/bash
 sudo unoconv -l &
 sleep 3
-sudo service postgres start
+sudo service postgresql start
 sleep 3
 sudo service mysql start
 sleep 3
