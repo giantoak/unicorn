@@ -60,11 +60,16 @@ import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
 
+
+from config import es_port
+from config import es_url
+from config import es_index
+
+es_path = 'http://{}:{}/{}'.format(es_url, es_port, es_index)
+
 parent = os.path.dirname(os.path.realpath(__file__))
 
 # import geodict_lib
-
-DEFAULT_INDEX = 'dossiers'
 uni = Blueprint('unicorn', __name__, url_prefix='/unicorn')
 
 
@@ -109,8 +114,7 @@ def request_doc(doc_id):
             }
         },
     }
-    response = es.search(body=q, index=DEFAULT_INDEX)
-    return response
+    return es.search(body=q, index=es_index)
 
 
 def get_file(doc_id):
@@ -223,7 +227,7 @@ def alltopics(query):
     }
 
     # r = requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
 
     # return doc ids specific to session query
     uids = [str(hit['_id']) for hit in r['hits']['hits']]
@@ -284,7 +288,7 @@ def alltopics(query):
             continue
 
         topic_query_dict['query']['ids']['values'] = date_ids[topic]
-        response = es.search(body=topic_query_dict, index=DEFAULT_INDEX)
+        response = es.search(body=topic_query_dict, index=es_index)
 
         df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
         df['Date'] = df.key_as_string.apply(lambda x: x[:10])
@@ -351,7 +355,7 @@ def history_query():
             }
         }
     }
-    r = es.search(body=body, index=DEFAULT_INDEX, size=100)
+    r = es.search(body=body, index=es_index, size=100)
     graph = make_response(json.dumps(document_graph(r['hits']['hits'])))
 
     return graph
@@ -406,8 +410,10 @@ def search_endpoint(query=None, page=None, box_only=False):
         }
     }
 
-    raw_response = es.search(body=q, index=DEFAULT_INDEX,
-                             df="file",
+    raw_response = es.search(index=es_index,
+                             body=q,
+                             df='file',
+                             from_=start,
                              size=10)
 
     hits = []
@@ -477,7 +483,7 @@ def timeline_new(query=None, page=None, box_only=False):
         }
     }
 
-    response = es.search(body=q_daterange, index=DEFAULT_INDEX)
+    response = es.search(body=q_daterange, index=es_index)
 
     print response['aggregations']['min_date']
     print response['aggregations']['max_date']
@@ -527,7 +533,7 @@ def timeline_new(query=None, page=None, box_only=False):
         }
     }
 
-    response = es.search(body=q, index=DEFAULT_INDEX)
+    response = es.search(body=q, index=es_index)
 
     print response['aggregations']['articles_over_time']['buckets']
 
@@ -584,7 +590,7 @@ def upload_endpoint():
             'title': sf,
             'owner': 'blank'  # current_owner.organization.organization
         }
-        es.index(index=DEFAULT_INDEX, doc_type='attachment', body=es_dict)
+        es.index(index=es_index, doc_type='attachment', body=es_dict)
         f.close()
 
     return redirect(url_for('.root'))
@@ -600,7 +606,7 @@ def viz_all():
         },
         "size": 100
     }
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     graph = document_graph(r['hits']['hits'])
 
     return json.dumps(graph)
@@ -613,7 +619,7 @@ def get_clusters():
     query = ''
     if last_query is not None:
         query = last_query['query']
-    url = 'http://localhost:9200/dossiers/attachment/_search_with_clusters'
+    url = '{}/attachment/_search_with_clusters'.format(es_path)
     request = {
         "search_request": {
             "query": {"match": {"_all": query}},
@@ -639,7 +645,7 @@ def geo_endpoint():
         return json.dumps([])
     query = last_query['query']
 
-    url = 'http://localhost:9200/dossiers/_search'
+    url = '{}/_search'.format(es_path)
 
     loc_q = {
         "size": 30000,
@@ -655,7 +661,7 @@ def geo_endpoint():
             "query_string": {"query": query}
         }
     }
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     data = r
     locations = []
     # for hit in data['hits']['hits']:
@@ -783,7 +789,7 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
         }
     }
 
-    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+    raw_response = es.search(body=q, index=es_index,
                              df="file",
                              size=10)
 
@@ -872,7 +878,7 @@ def serve_clusters(query=None, page=None, box_only=True, dates={}, documents={})
         }
     }
 
-    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+    raw_response = es.search(body=q, index=es_index,
                              df="file",
                              size=10)
 
@@ -973,7 +979,7 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
                       }
     }
 
-    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+    raw_response = es.search(body=q, index=es_index,
                              df="file",
                              size=10)
 
@@ -1018,7 +1024,7 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
 @uni.route('/viz/<query>')
 @login_required
 def viz_endpoint(query):
-    # url = 'http://localhost:9200/dossiers/_search'
+    # url = '{}/_search'.format(es_path)
     q = {
         "_source": ["entity"],
         "fields": ["entities", "title"],
@@ -1031,7 +1037,7 @@ def viz_endpoint(query):
     }
 
     # r = requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     data = r
     # graph = make_graph(data)
     graph = document_graph(data['hits']['hits'])
@@ -1063,7 +1069,7 @@ def url_fetch(query=""):
         if last_query is not None:
             query = session['last_query']['query']
     stopset = set(stopwords.words('english'))
-    url = 'http://localhost:9200/dossiers/_search'
+    url = '{}/_search'.format(es_path)
     q = {
         "fields": ["file"],
         "query": {
@@ -1071,7 +1077,7 @@ def url_fetch(query=""):
         }
     }
     # r = requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     data = r['hits']['hits']
     urls = []
     pn = []
@@ -1098,7 +1104,7 @@ def wc(query):
                               'secret', 'disposition', 'released', 'approved', 'document', 'classification',
                               'restrictions', 'state', 'department', 'date', 'eo', 'handling'}
     stopset = stop_words.union(stopset_state_specific)
-    # url = 'http://localhost:9200/dossiers/_search'
+    # url = '{}/_search'.format(es_path)
     q = {
         "fields": ["file", "body"],  # added body to query
         "query": {
@@ -1108,7 +1114,7 @@ def wc(query):
         }
     }
     # r=requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     # switched to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the
     # uploader
     # to include the most relevant information (e.g. excluding headers)
@@ -1137,7 +1143,7 @@ def tm(query):
     # print freq_term_matrix.todense()
     stopset = set(stopwords.words('english'))
 
-    # url = 'http://localhost:9200/dossiers/_search'
+    # url = '{}/_search'.format(es_path)
     q = {
         "fields": ["file"],
         "query": {
@@ -1171,7 +1177,7 @@ def more_like_this(doc_id):
         "size": 10
     }
 
-    response = es.search(body=q, index=DEFAULT_INDEX)
+    response = es.search(body=q, index=es_index)
     results = {'results': []}
     try:
         for r in response['hits']['hits']:
