@@ -1270,24 +1270,26 @@ def load_user(userid):
 
 
 def is_owner_of_doc(doc):
-    owner = es.get(index=DEFAULT_INDEX, doc_type='attachment', id=doc,
-                   fields='owner')['fields']['owner'][0]
-    return is_owner(owner)
     """
     Function for checking document ownership.
+    SINCE WE ARE KEEPING ACCESS CONTROL SIMPLE, WE ARE DEFAULTING THIS TO TRUE
     :param str doc: A specific document ID
     :returns bool: whether the document's owner matches the current owner
     """
+    # owner = es.get(index=es_index, doc_type='attachment', id=doc, fields='owner')['fields']['owner'][0]
+    # return is_owner(owner)
+    return True
 
 
 def is_owner(org):
-    return current_user.organization.organization == 'admins' or \
-        current_user.organization.organization == org
     """
     Function for checking if a user's org has ownership rights
+    SINCE WE ARE KEEPING ACCESS CONTROL SIMPLE, WE ARE DEFAULTING THIS TO TRUE
     :param str org: An organization
     :returns bool: whether the organization matches the current user or the group of admins
     """
+    return True
+    # return current_user.organization.organization == 'admins' or current_user.organization.organization == org
 
 
 @app.errorhandler(403)
