@@ -364,7 +364,7 @@ def history_query():
 def search_endpoint(query=None, page=None, box_only=False):
     if not query and not page:
         last_query = session.get('last_query', None)
-        if last_query:
+        if last_query is not None:
             query, page = last_query['query'], last_query['page']
         else:
             # better error
@@ -453,7 +453,7 @@ def search_endpoint(query=None, page=None, box_only=False):
 def timeline_new(query=None, page=None, box_only=False):
     if not query and not page:
         last_query = session.get('last_query', None)
-        if last_query:
+        if last_query is not None:
             query, page = last_query['query'], last_query['page']
         else:
             # better error
@@ -531,24 +531,21 @@ def timeline_new(query=None, page=None, box_only=False):
 
     print response['aggregations']['articles_over_time']['buckets']
 
-    df = pd.DataFrame(response['aggregations'][
-                      'articles_over_time']['buckets'])
+    df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
     df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
     df.columns = ['Count', 'key', 'key_as_string', 'Date']
-    df = df.drop(['key', 'key_as_string'], axis=1)
-    df = df.set_index('Date')
+    df.drop(['key', 'key_as_string'], axis=1, inplace=True)
+    df.set_index('Date', inplace=True)
 
     output = rngframe.join(df, how="left")
     output = output.fillna(0)
     output = output.reset_index()
     output.columns = ['Date', 'Count']
 
-    date_count_json = output.to_json(orient='records')
-
-    out = {'date_data': date_count_json, 'time_min': timeline_minimum}
+    out = {'date_data': output.to_json(orient='records'),
+           'time_min': timeline_minimum}
 
     print json.dumps(out)
-
     return json.dumps(out)
 
 
@@ -565,7 +562,6 @@ def root():
 @login_required
 def user_page():
     # If current user is admin
-
     return render_template('user-invite.html')
 
 
@@ -613,8 +609,10 @@ def viz_all():
 @uni.route('/clusters')
 @login_required
 def get_clusters():
-    query = session['last_query']['query']
-    # print 'Query: ' + query
+    last_query = session.get('last_query', None)
+    query = ''
+    if last_query is not None:
+        query = last_query['query']
     url = 'http://localhost:9200/dossiers/attachment/_search_with_clusters'
     request = {
         "search_request": {
@@ -639,8 +637,8 @@ def geo_endpoint():
     last_query = session.get('last_query', None)
     if last_query is None:
         return json.dumps([])
-    query = session['last_query']['query']
-    # print 'Query: ' + query
+    query = last_query['query']
+
     url = 'http://localhost:9200/dossiers/_search'
 
     loc_q = {
@@ -657,7 +655,6 @@ def geo_endpoint():
             "query_string": {"query": query}
         }
     }
-    # r=requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=DEFAULT_INDEX)
     data = r
     locations = []
@@ -686,7 +683,6 @@ def geo_endpoint():
 
         try:
             doc_file = str(hit['fields']['file'][0].replace('\n', '<br>'))
-
         except:
             continue
 
