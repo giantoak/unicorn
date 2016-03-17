@@ -582,7 +582,7 @@ def upload_endpoint():
         es_dict = {
             'file': f.read().encode('base64'),
             'title': sf,
-            'owner': current_owner.organization.organization
+            'owner': 'blank'  # current_owner.organization.organization
         }
         es.index(index=DEFAULT_INDEX, doc_type='attachment', body=es_dict)
         f.close()
