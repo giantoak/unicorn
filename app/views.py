@@ -232,8 +232,6 @@ def alltopics(query):
         },
         "size": 10000000
     }
-
-    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=es_index)
 
     # return doc ids specific to session query
@@ -1046,7 +1044,6 @@ def viz_endpoint(query):
         "size": 150
     }
 
-    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=es_index)
     data = r
     # graph = make_graph(data)
@@ -1079,14 +1076,12 @@ def url_fetch(query=""):
         if last_query is not None:
             query = session['last_query']['query']
     stopset = set(stopwords.words('english'))
-    url = '{}/_search'.format(es_path)
     q = {
         "fields": ["file"],
         "query": {
             "term": {"file": query}
         }
     }
-    # r = requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=es_index)
     data = r['hits']['hits']
     urls = []
@@ -1114,7 +1109,6 @@ def wc(query):
                               'secret', 'disposition', 'released', 'approved', 'document', 'classification',
                               'restrictions', 'state', 'department', 'date', 'eo', 'handling'}
     stopset = stop_words.union(stopset_state_specific)
-    # url = '{}/_search'.format(es_path)
     q = {
         "fields": ["file", "body"],  # added body to query
         "query": {
@@ -1123,7 +1117,6 @@ def wc(query):
             }
         }
     }
-    # r=requests.post(url,data=json.dumps(q))
     r = es.search(body=q, index=es_index)
     # switched to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the
     # uploader
