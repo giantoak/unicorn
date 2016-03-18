@@ -119,10 +119,10 @@ def get_file(doc_id):
     :param str doc_id: A specific document ID
     :returns tuple: Base 64 encoded document contents and the document's title
     """
-    response = request_doc(doc_id)
+    r = request_doc(doc_id)
     try:
-        base64 = response['hits']['hits'][0]['_source']['file']
-        fn = response['hits']['hits'][0]['_source']['title']
+        base64 = r['hits']['hits'][0]['_source']['file']
+        fn = r['hits']['hits'][0]['_source']['title']
     except (KeyError, IndexError):
         abort(404)
 
@@ -190,9 +190,8 @@ def pdf_endpoint(doc_id):
         try:
             subprocess.check_output(['unoconv', '-o', out_fname, fname],
                                     stderr=subprocess.STDOUT)
-            with open(out_fname, 'rb') as converted_stream:
-                out = send_file(out_fname, as_attachment=True,
-                                attachment_filename=fn + '.pdf')
+            out = send_file(out_fname, as_attachment=True, attachment_filename='{}.pdf'.format(fn))
+
         except subprocess.CalledProcessError as e:
             print e.output
             # Return error pdf
@@ -714,7 +713,10 @@ def geo_endpoint():
 @uni.route('/serve_geo_new/<query>', methods=['POST'])
 @uni.route('/serve_geo_new/<query>/<page>', methods=['POST'])
 @login_required
-def serve_geo_new(query=None, page=None, box_only=True, bounds={}):
+def serve_geo_new(query=None, page=None, box_only=True, bounds=None):
+
+    if bounds is None:
+        bounds = {}
 
     if request.method == "POST":
         json_dict = request.get_json()
@@ -926,7 +928,10 @@ def serve_clusters(query=None, page=None, box_only=True, dates={}, documents={})
 @uni.route('/serve_timeline/<query>', methods=['POST'])
 @uni.route('/serve_timeline/<query>/<page>', methods=['POST'])
 @login_required
-def serve_timeline(query=None, page=None, box_only=True, dates={}):
+def serve_timeline(query=None, page=None, box_only=True, dates=None):
+
+    if dates is None:
+        dates = {}
 
     if request.method == "POST":
         json_dict = request.get_json()
@@ -934,13 +939,13 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
         # print type(json_dict)
 
     dates = json_dict['dates']
-    startdate = dates[0][0:10]
-    enddate = dates[1][0:10]
+    start_date = dates[0][0:10]
+    end_date = dates[1][0:10]
 
-    if startdate == enddate:
-        startdate = "1973-01-01"
-        enddate = "1974-01-01"
-    # print startdate, enddate
+    if start_date == end_date:
+        start_date = "1973-01-01"
+        end_date = "1974-01-01"
+    # print start_date, end_date
 
     # print 'running a new query...'
 
@@ -972,8 +977,8 @@ def serve_timeline(query=None, page=None, box_only=True, dates={}):
         "filter": {
             "range": {
                 "date": {
-                    "gte": startdate,
-                    "lte": enddate,
+                    "gte": start_date,
+                    "lte": end_date,
                     "format": "yyyy-MM-dd"
                 }
             }

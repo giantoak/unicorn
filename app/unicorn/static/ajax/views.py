@@ -499,7 +499,9 @@ def tm(query):
 @uni.route('/<doc_id>/related')
 @login_required
 def more_like_this(doc_id):
-    ''' Returns similar documents '''
+    """
+    Returns similar documents
+    """
     q = {
         "fields": ["title"],
         "query": {
