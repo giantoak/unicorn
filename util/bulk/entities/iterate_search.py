@@ -1,22 +1,36 @@
+from config import es_index
 import elasticsearch
 from elasticsearch import Elasticsearch
-# import simplejson as json
-# import sys
+
 
 # default configuration settings (localhost:9200)
-es = Elasticsearch()
-DEFAULT_INDEX = 'dossiers'
+# es = Elasticsearch()
 
+def iterate_over_query(query,
+                       es,
+                       index=es_index,
+                       batch_size=10,
+                       count=None,
+                       count_args=None,
+                       **args):
+    """
+    Uses `scroll` API to iterate over search results
+    :param query:
+    :param es:
+    :param index:
+    :param batch_size:
+    :param count:
+    :param count_args:
+    """
+    if count_args is None:
+        count_args = {}
 
-def iterate_over_query(query, es=es, index=DEFAULT_INDEX,
-                       batch_size=10, count=None, count_args={}, **args):
-    """Uses `scroll` API to iterate over search results"""
-
-    if not count:
+    if count is None:
         count = es.count(index=index, q=query, **count_args)['count']
     
     # Initialize scroll scan
-    r = es.search(index=index, doc_type='attachment', q=query, size=count, scroll='10m', search_type='scan', **args)
+    r = es.search(index=index, doc_type='attachment', q=query, size=count,
+                  scroll='10m', search_type='scan', **args)
     
     s = es.scroll(scroll_id=r['_scroll_id'])
     while True:

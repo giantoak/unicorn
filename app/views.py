@@ -231,7 +231,8 @@ def alltopics(query):
     r = es.search(body=q, index=es_index)
 
     # return doc ids specific to session query
-    uids = [str(hit['_id']) for hit in r['hits']['hits']]
+    data = r['hits']['hits']
+    uids = [str(hit['_id']) for hit in data]
 
     topics = json.loads(open('topics.json').read())
 
@@ -857,7 +858,6 @@ def serve_clusters(query=None, page=None, box_only=True, dates={}, documents={})
 
     q = {
         "query": {
-
             "bool": {
                 "must": [
                     {

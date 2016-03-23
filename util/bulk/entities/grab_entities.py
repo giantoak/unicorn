@@ -1,9 +1,10 @@
 from elasticsearch import helpers, Elasticsearch
 from iterate_search import iterate_over_query
-
-es = Elasticsearch(timeout=10000)
 import csv
 from collections import defaultdict
+
+es = Elasticsearch(timeout=10000)
+
 # Read and prepare dictionary of entities
 entities = {}
 with open('pathfinder.csv', 'rb') as f:

@@ -4,9 +4,14 @@ import tablib
 
 
 def bulk_search(queries):
+    """
+
+    :param list queries: List of elasticsearch queries
+    :return tablib.Dataset:
+    """
     data = tablib.Dataset(headers=['filename', 'id', 'query'])
     for q in queries:
-        r = es.search(q=q, fields=['title'], size=100, index="dossiers",
+        r = es.search(q=q, fields=['title'], size=100, index=es_index,
                       doc_type="attachment")
         for res in r['hits']['hits']:
             title = res['fields']['title'][0]
@@ -21,7 +26,7 @@ def bulk_download(ids):
     """
     Construct ElasticSearch query for all files, return tablib Dataset.
     :param ids:
-    :return:
+    :return tablib.Dataset:
     """
     data = tablib.Dataset(headers=['title', 'text'])
 

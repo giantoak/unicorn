@@ -10,7 +10,8 @@ from flask_login import LoginManager
 from flask_admin.base import Admin
 # from flask_admin.contrib.sqla import ModelView
 
-app = Flask(__name__, static_folder='unicorn/static',
+app = Flask(__name__,
+            static_folder='unicorn/static',
             static_url_path='/unicorn/static')
 app.secret_key = str(random.SystemRandom().random())
 
