@@ -41,7 +41,7 @@ In the following installed:
 If you want to tweak any of these settings, you can do so by editing [`install.sh`.](https://github.com/giantoak/unicorn/blob/master/install.sh) Detailed instructions for doing so go beyond the scope of this README.
 
 ## The default run and Postgres configurations
-If `install.sh` doesn't see a copy of `runconfig.py` or `app/config.py`, it will create instances of each from the default versions ([`runconfig.py.default`](https://github.com/giantoak/unicorn/blob/master/runconfig.py.default) and ['app/config.py.default'](https://github.com/giantoak/unicorn/blob/master/app/config.py.default)). In doing so it will set a default username and password of `admin` and `admin` for Unicorn and will use the default instance of Postgres for storage.
+If `install.sh` doesn't see a copy of `app/config.py`, it will create one from ['app/config.py.default'](https://github.com/giantoak/unicorn/blob/master/app/config.py.default)). In doing so it will set a default username and password of `admin` and `admin` for Unicorn and use the default instance of Postgres for storage.
 
 ## The default MySQL configuration
 When installing MySQL, `install.sh` will set a a default password of `geodict_root` for root. If you want to use a different password you can. However, you will need to update the password stored in [`geodict_config.py`](https://github.com/giantoak/geodict/blob/master/geodict_config.py) in the cloned copy of [`geodict`](https://github.com/giantoak/geodict) that `install.sh` will create.

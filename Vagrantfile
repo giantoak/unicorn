@@ -150,7 +150,6 @@ Vagrant.configure(2) do |config|
   curl -XPUT http://127.0.0.1:9200/dossiers/_mapping/attachment -d @dossiers_mapping.json
   curl -XPUT http://127.0.0.1:9200/dossiers/_bulk --data-binary @dossiers.json
 
-  mv $UNICORN_HOME/runconfig.py.default runconfig.py
   cp $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/config.py
   mv $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/util/config.py
   # sed -e s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@127.0.0.1:5432"/ -e s/"''"/"'admin'"/ /vagrant/app/config.py.template > $UNICORN_HOME/app/config.py
