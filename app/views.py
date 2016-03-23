@@ -1119,8 +1119,8 @@ def wc(query):
         }
     }
     r = es.search(body=q, index=es_index)
-    # switched to return 'body' instead of 'file' which is the portion of the 'file' that has been regex'd by the
-    # uploader
+    # switched to return 'body' instead of 'file':
+    # 'body' is the portion of the 'file' that has been regex'd by the uploader
     # to include the most relevant information (e.g. excluding headers)
     data = r['hits']['hits'][0]['fields']['body'][0]
     # no_white = re.sub('\s', ' ', data)
