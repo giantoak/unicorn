@@ -1,7 +1,9 @@
 from app import app, es, db, flask_bcrypt, login_manager
+from app.config import es_url, es_port, es_index
 from app import User
 # from app import Organization
 from flask import jsonify
+
 from flask import render_template
 from flask import url_for
 from flask import redirect
@@ -19,28 +21,21 @@ from flask_login import logout_user
 # from flask_login import fresh_login_required
 from flask import Blueprint
 
-from werkzeug import secure_filename
-# import flask
+import pandas as pd
+from werkzeug.utils import secure_filename
 import tempfile
 import simplejson as json
-# from elasticsearch_dsl import Search
-# from elasticsearch_dsl import Q
 import io
 import re
 import magic
-# import requests
+
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
 import os
-# import sys
 import subprocess
 
 from bulk import bulk_download, bulk_search
-# from config import tmp_dir
-from util.config import tmp_dir
-# from util.network import make_graph
-from util.network import document_graph
 import time
 
 # import sklearn
@@ -51,28 +46,34 @@ import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
 
+from util.config import tmp_dir
+# from util.historical import amend_history
+# from util.historical import active_history_terms
+# from util.historical import update_history
+from util.network import document_graph
+# from util.round_time import round_month_up, round_month_down, week_delta
+
+es_path = 'http://{}:{}/{}'.format(es_url, es_port, es_index)
+
 parent = os.path.dirname(os.path.realpath(__file__))
-# sys.path.append('/home/gmueller/geodict')  # change path to MITIE top level
 
 import geodict_lib
-
-DEFAULT_INDEX = 'dossiers'
 uni = Blueprint('unicorn', __name__, url_prefix='/unicorn')
 
 
 @uni.route('/_bulk_search', methods=['POST'])
 @login_required
 def bulk_search_route():
-
+    """
+    Bulk search all of these queries
+    :returns: Excel file bundling query responses
+    """
     search_results = request.form['searches']
     searches = search_results.split('\n')
 
     data = bulk_search(searches)
     return send_file(io.BytesIO(data.xls), as_attachment=True,
                      attachment_filename='bulk_{}.xls'.format(time.time()))
-
-    # Bulk search all of these queries
-    # Bundle results into excel
 
 
 @uni.route('/bulk_download')
@@ -94,6 +95,11 @@ def bulk_download_route():
 @uni.route('/<doc_id>/debug')
 @login_required
 def request_doc(doc_id):
+    """
+    Searches elastic index for a document matching a particular ID.
+    :param str doc_id: A specific document ID
+    :returns: results of elastic search matching doc_id
+    """
     q = {
         "query": {
             "match": {
@@ -101,16 +107,19 @@ def request_doc(doc_id):
             }
         },
     }
-    response = es.search(body=q, index=DEFAULT_INDEX)
-    return response
+    return es.search(body=q, index=es_index)
 
 
 def get_file(doc_id):
-    """Render base64 encoded contents of a given file by its doc_id"""
-    response = request_doc(doc_id)
+    """
+    Render base64 encoded contents of a given file by its doc_id
+    :param str doc_id: A specific document ID
+    :returns tuple: Base 64 encoded document contents and the document's title
+    """
+    r = request_doc(doc_id)
     try:
-        base64 = response['hits']['hits'][0]['_source']['file']
-        fn = response['hits']['hits'][0]['_source']['title']
+        base64 = r['hits']['hits'][0]['_source']['file']
+        fn = r['hits']['hits'][0]['_source']['title']
     except (KeyError, IndexError):
         abort(404)
 
@@ -120,9 +129,15 @@ def get_file(doc_id):
 @uni.route('/<doc_id>/entities')
 @login_required
 def get_entities(doc_id):
-    response = request_doc(doc_id)
+    """
+
+    :param str doc_id: A specific document ID
+    :returns str: json for the list of retrieved entities
+    """
+    r= request_doc(doc_id)
     try:
-        entities = response['hits']['hits'][0]['_source']['entities']
+        data = r['hits']['hits']
+        entities = data[0]['_source']['entities']
     except (KeyError, IndexError):
         return jsonify([])
 
@@ -133,15 +148,15 @@ def get_entities(doc_id):
 @login_required
 def view_doc(doc_id):
     """
-    In-depth view of a particular document.
-    Displays pdf version of document, extracted entities,
-    as well as other analytics.
+    In-depth view of a particular document. Displays pdf version of document,
+    extracted entities, and other analytics.
+    :param str doc_id: A specific document ID
+    :returns: rendered template for the current document
     """
-
     if is_owner_of_doc(doc_id):
         return render_template('doc-view.html', doc_id=doc_id)
-    else:
-        return abort(403)
+
+    return abort(403)
 
 
 @uni.route('/pdf/<doc_id>')
@@ -166,9 +181,10 @@ def pdf_endpoint(doc_id):
         try:
             subprocess.check_output(['unoconv', '-o', out_fname, fname],
                                     stderr=subprocess.STDOUT)
-            with open(out_fname, 'rb') as converted_stream:
-                out = send_file(out_fname, as_attachment=True,
-                                attachment_filename=fn + '.pdf')
+            out = send_file(out_fname,
+                            as_attachment=True,
+                            attachment_filename='{}.pdf'.format(fn))
+
         except subprocess.CalledProcessError as e:
             print(e.output)
             # Return error pdf
@@ -251,7 +267,7 @@ def search_endpoint(query=None, page=None, box_only=False):
                       "post_tags": ["</span>"]
                       }
     }
-    raw_response = es.search(body=q, index=DEFAULT_INDEX,
+    raw_response = es.search(body=q, index=es_index,
                              df="file",
                              size=10)
 
@@ -325,7 +341,7 @@ def upload_endpoint():
             'title': sf,
             'owner': current_owner.organization.organization
         }
-        es.index(index=DEFAULT_INDEX, doc_type='attachment', body=es_dict)
+        es.index(index=es_index, doc_type='attachment', body=es_dict)
         f.close()
 
     return redirect(url_for('.root'))
@@ -341,7 +357,7 @@ def viz_all():
         },
         "size": 100
     }
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     graph = document_graph(r['hits']['hits'])
 
     return json.dumps(graph)
@@ -358,8 +374,7 @@ def geo_endpoint():
             "term": {"file": query}
         }
     }
-    # r = requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     data = r
     locations = []
     for hit in data['hits']['hits']:
@@ -386,7 +401,7 @@ def viz_endpoint(query):
         "size": 100
     }
     # r = requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     data = r
     # graph = make_graph(data)
     graph = document_graph(data['hits']['hits'])
@@ -421,7 +436,7 @@ def url_fetch(query=""):
         }
     }
     # r = requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     data = r['hits']['hits']
     urls = []
     pn = []
@@ -454,7 +469,7 @@ def wc(query):
         }
     }
     # r = requests.post(url,data=json.dumps(q))
-    r = es.search(body=q, index=DEFAULT_INDEX)
+    r = es.search(body=q, index=es_index)
     # r = requests.post(url,data=json.dumps(q))
     data = r
     frequency = []
@@ -517,7 +532,7 @@ def more_like_this(doc_id):
         "size": 10
     }
 
-    response = es.search(body=q, index=DEFAULT_INDEX)
+    response = es.search(body=q, index=es_index)
     results = {'results': []}
     try:
         for r in response['hits']['hits']:
@@ -600,7 +615,7 @@ def load_user(userid):
 
 
 def is_owner_of_doc(doc):
-    owner = es.get(index=DEFAULT_INDEX, doc_type='attachment', id=doc,
+    owner = es.get(index=es_index, doc_type='attachment', id=doc,
                    fields='owner')['fields']['owner'][0]
     return is_owner(owner)
 
