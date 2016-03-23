@@ -6,3 +6,4 @@ app/config.py
 util/utilconfig.py
 .vagrant/
 .idea/
+.DS_Store
