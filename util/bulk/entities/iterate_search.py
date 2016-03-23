@@ -1,10 +1,5 @@
-from config import es_index
+from app.config import es_index
 import elasticsearch
-from elasticsearch import Elasticsearch
-
-
-# default configuration settings (localhost:9200)
-# es = Elasticsearch()
 
 def iterate_over_query(query,
                        es,
@@ -16,11 +11,11 @@ def iterate_over_query(query,
     """
     Uses `scroll` API to iterate over search results
     :param query:
-    :param es:
-    :param index:
-    :param batch_size:
+    :param elasticsearch.Elasticsearch es:
+    :param str index:
+    :param int batch_size:
     :param count:
-    :param count_args:
+    :param dict count_args:
     """
     if count_args is None:
         count_args = {}
@@ -29,8 +24,13 @@ def iterate_over_query(query,
         count = es.count(index=index, q=query, **count_args)['count']
     
     # Initialize scroll scan
-    r = es.search(index=index, doc_type='attachment', q=query, size=count,
-                  scroll='10m', search_type='scan', **args)
+    r = es.search(index=index,
+                  doc_type='attachment',
+                  q=query,
+                  size=count,
+                  scroll='10m',
+                  search_type='scan',
+                  **args)
     
     s = es.scroll(scroll_id=r['_scroll_id'])
     while True:

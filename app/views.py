@@ -1,4 +1,5 @@
 from app import app, es, db, flask_bcrypt, login_manager
+from app.config import es_url, es_port, es_index
 from app import User
 # from app import Organization
 from flask import jsonify
@@ -21,7 +22,6 @@ from flask_login import logout_user
 from flask import Blueprint
 
 import pandas as pd
-
 from werkzeug.utils import secure_filename
 import tempfile
 import simplejson as json
@@ -34,6 +34,7 @@ from nltk.corpus import stopwords
 from collections import Counter
 import os
 import subprocess
+
 from bulk import bulk_download, bulk_search
 import time
 import datetime
@@ -51,10 +52,6 @@ from util.historical import active_history_terms
 from util.historical import update_history
 from util.network import document_graph
 from util.round_time import round_month_up, round_month_down, week_delta
-
-from config import es_port
-from config import es_url
-from config import es_index
 
 es_path = 'http://{}:{}/{}'.format(es_url, es_port, es_index)
 
@@ -137,9 +134,9 @@ def get_entities(doc_id):
     :param str doc_id: A specific document ID
     :returns str: json for the list of retrieved entities
     """
-    response = request_doc(doc_id)
+    r = request_doc(doc_id)
     try:
-        data = response['hits']['hits']
+        data = r['hits']['hits']
         entities = json.loads(data[0]['_source']['entities'])
         entities = [ent for ent in entities if ent['category'] != 'locations']
 
@@ -156,12 +153,11 @@ def get_entities(doc_id):
 @login_required
 def view_doc(doc_id):
     """
-    In-depth view of a particular document. Displays pdf version of document, extracted entities,
-    as well as other analytics.
+    In-depth view of a particular document. Displays pdf version of document,
+    extracted entities, and other analytics.
     :param str doc_id: A specific document ID
     :returns: rendered template for the current document
     """
-
     if is_owner_of_doc(doc_id):
         return render_template('doc-view.html', doc_id=doc_id)
 
@@ -190,7 +186,9 @@ def pdf_endpoint(doc_id):
         try:
             subprocess.check_output(['unoconv', '-o', out_fname, fname],
                                     stderr=subprocess.STDOUT)
-            out = send_file(out_fname, as_attachment=True, attachment_filename='{}.pdf'.format(fn))
+            out = send_file(out_fname,
+                            as_attachment=True,
+                            attachment_filename='{}.pdf'.format(fn))
 
         except subprocess.CalledProcessError as e:
             print e.output
@@ -215,7 +213,6 @@ def topics_latest():
     last_query = session.get('last_query', None)
     if last_query is not None:
         return alltopics(last_query['query'])
-
 
 @uni.route('/all_topics')
 def alltopics(query):

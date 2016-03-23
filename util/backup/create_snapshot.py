@@ -1,11 +1,11 @@
+from app.config import es_index
 from elasticsearch import Elasticsearch
 
 # default configuration settings (localhost:9200)
 es = Elasticsearch()
-DEFAULT_INDEX = 'dossiers'
 
 q = {
-        "indices": DEFAULT_INDEX,
+        "indices": es_index,
         "ignore_unavailable": False,
         "include_global_state": True
 }

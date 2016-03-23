@@ -1,3 +1,4 @@
+from config import es_index
 from app import es
 # import zipfile
 import tablib
@@ -32,7 +33,7 @@ def bulk_download(ids):
 
     for doc_id in ids:
         # Grab file for doc_id
-        r = es.get(index="dossiers", doc_type="attachment", id=doc_id,
+        r = es.get(index=es_index, doc_type="attachment", id=doc_id,
                    fields=['title', 'file'])
         
         f = r['fields']

@@ -1,11 +1,12 @@
 from app.config import es_url
 from app.config import es_port
+from app.config import es_index
 import simplejson as json
 import requests
 
 
 def run(term=""):
-    url = '{}:{}/dossiers/_search'.format(es_url, es_port)
+    url = '{}:{}/{}/_search'.format(es_url, es_port, es_index)
     body = {
         "query": {
             "match": {

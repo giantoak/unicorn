@@ -1,11 +1,11 @@
+from app.config import es_index
 from elasticsearch import Elasticsearch
 
 # default configuration settings (localhost:9200)
 es = Elasticsearch()
-DEFAULT_INDEX = 'dossiers'
 
 
-def create_attachment_mapping(index=DEFAULT_INDEX):
+def create_attachment_mapping(index=es_index):
     mappings_config = {
             "attachment": {
                 "properties": {

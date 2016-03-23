@@ -1,3 +1,4 @@
+from app.config import es_index
 from elasticsearch import Elasticsearch
 import sys
 
@@ -10,7 +11,7 @@ def update_partial(doc_id, group):
     # Partial update doc
     partial_doc = {'doc': {'owner': group}}
 
-    es.update(index='dossiers',
+    es.update(index=es_index,
               doc_type='attachment',
               id=doc_id,
               body=partial_doc,
