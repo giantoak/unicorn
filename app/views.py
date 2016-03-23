@@ -139,8 +139,8 @@ def get_entities(doc_id):
     """
     response = request_doc(doc_id)
     try:
-        entities = json.loads(response['hits']['hits'][
-                              0]['_source']['entities'])
+        data = response['hits']['hits']
+        entities = json.loads(data[0]['_source']['entities'])
         entities = [ent for ent in entities if ent['category'] != 'locations']
 
         print entities
