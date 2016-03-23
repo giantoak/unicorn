@@ -1,4 +1,4 @@
-from config import es_index
+from app.config import es_index
 from app import es
 # import zipfile
 import tablib

@@ -1,5 +1,5 @@
 from app import app, es, db, flask_bcrypt, login_manager
-from app.config import es_url, es_port, es_index
+from app.config import es_url, es_port, es_index, tmp_dir
 from app import User
 # from app import Organization
 from flask import jsonify
@@ -46,7 +46,6 @@ import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
 
-from util.config import tmp_dir
 from util.historical import amend_history
 from util.historical import active_history_terms
 from util.historical import update_history

@@ -1,4 +1,4 @@
-from config import es_index
+from app.config import es_index
 from elasticsearch import Elasticsearch
 import simplejson as json
 import sys
