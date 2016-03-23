@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_admin.base import Admin
-from flask_admin.contrib.sqla import ModelView
+# from flask_admin.contrib.sqla import ModelView
 
 app = Flask(__name__, static_folder='unicorn/static',
             static_url_path='/unicorn/static')
