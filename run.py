@@ -5,11 +5,11 @@ try:
     from app.config import uni_cert_dir
     from OpenSSL import SSL
 except ImportError:
-    cert_dir = None
+    uni_cert_dir = None
 
 
 if __name__ == '__main__':
-    if uni_cert_dir:
+    if uni_cert_dir is not None:
         context = SSL.Context(SSL.TLSv1_2_METHOD)
         context.use_privatekey_file(os.path.join(uni_cert_dir, 'unicorn.key'))
         context.use_certificate_file(os.path.join(uni_cert_dir, 'unicorn.crt'))
