@@ -13,18 +13,12 @@ $ vagrant ssh
 > ./start_unicorn.sh
 ```
 
-In your browser, go to [http://localhost:5000/unicorn](http://localhost:5000/unicorn) (the box's private IP) and use the default username (`admin`) and password (`admin`) to browse the default data: a collection of state-department cables.
-
-
-
-
-```
-```
+In your browser, go to [http://localhost:5000/unicorn](http://localhost:5000/unicorn) and use the default username (`admin`) and password (`admin`) to browse the default data: a small collection of state-department cables.
 
 ## Prerequisites
 The installer assumes that you have a Linux/BSD environment, `sudo` permissions, `bash`, an access to the `apt-get` package manager - in essence, [Ubuntu.](http://www.ubuntu.com/) You should be able to swap out `apt-get` for your package manager of choice in order to make it friendly to other unices.
 
-In the following installed:
+You should also have the following packages installed:
 * [`git`](https://git-scm.com/)
 * [`curl`](https://curl.haxx.se/)
 * [`python 2.7`](https://www.python.org/)
@@ -34,8 +28,6 @@ In the following installed:
 [`install.sh`.](https://github.com/giantoak/unicorn/blob/master/install.sh) will install several pieces of helper software
 * [Elasticsearch 1.7.8](https://www.elastic.co/downloads/past-releases/elasticsearch-1-7-8) for files
 * [PostgreSQL](http://www.postgresql.org/) for authorization
-* [MySQL](https://www.mysql.com/) for the [`geodict`](https://github.com/giantoak/geodict) library for python.
-* A (local) copy of [`geodict`](https://github.com/giantoak/geodict)
 * The python libraries specified in [`requirements.txt`.](https://github.com/giantoak/unicorn/blob/master/requirements.txt)
 
 If you want to tweak any of these settings, you can do so by editing [`install.sh`.](https://github.com/giantoak/unicorn/blob/master/install.sh) Detailed instructions for doing so go beyond the scope of this README.
