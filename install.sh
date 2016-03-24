@@ -12,9 +12,9 @@ sudo -u postgres psql -c "CREATE DATABASE unicorn;"
 
 # Install mysql for geodict.
 # We use a weak default password of "geodict_root" for root
-sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password geodict_root'
-sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password geodict_root'
-sudo apt-get -y install mysql-server mysql-client libmysqlclient-dev
+# sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password geodict_root'
+# sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password geodict_root'
+# sudo apt-get -y install mysql-server mysql-client libmysqlclient-dev
 
 # Install packages for SSL
 sudo apt-get install -y libssl-dev libffi-dev
@@ -30,7 +30,10 @@ sudo apt-get install -y unoconv
 
 # Clone the geodict library into the local dir.
 # It isn't a module
-git clone https://github.com/giantoak/geodict geodict
+# git clone https://github.com/giantoak/geodict geodict
+
+# Clone MITIE into the local diretory
+# git clone https://github.com/mitll/MITIE.git mitie
 
 # Start MySQL if it's off and populate with geodict data
 sudo service mysql start
@@ -42,20 +45,15 @@ cd ..
 unoconv -l &
 
 # Run elasticsearch as a service set up script
-# sudo bash ElasticSearch.sh 1.5.2
 sudo bash ElasticSearch.sh 1.7.5
 
 # stop elasticsearch
 sudo service elasticsearch stop
 
 # install the elasticsearch mapper attachment plugin
-# sudo /usr/share/elasticsearch/bin/plugin --install elasticsearch/elasticsearch-mapper-attachments/2.5.0
 sudo /usr/share/elasticsearch/bin/plugin --install elasticsearch/elasticsearch-mapper-attachments/2.7.1
 
 # install the elasticsearch carrot2 plugin
-# sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.9.0
-# According to github.com/carrot2/elasticsearch-carrot2, for ES 1.5.2 we should be using v. 1.8.0 of the carrot 2 plugin
-# sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.8.0
 sudo /usr/share/elasticsearch/bin/plugin --install org.carrot2/elasticsearch-carrot2/1.9.1
 
 # Reboot elasticsearch as a service
@@ -63,17 +61,6 @@ sudo service elasticsearch start
 
 # Sleep for 10 seconds while Elasticsearch boots up
 sleep 10
-
-# If the user hasn't made a runconfig.py file, create a default
-if [ ! -f runconfig.py ]; then
-    cp runconfig.py.template runconfig.py
-fi
-
-# If the user hasn't made an app/config.py, create a default
-# We point the default at the standard unicorn db
-if [ ! -f app/config.py ]; then
-  cat app/config.py.template | sed s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@127.0.0.1:5432"/ | sed s/"''"/"'admin'"/ > app/config.py
-fi
 
 # delete any index call dossiers then recreate it (wipe it)
 curl -XDELETE http://127.0.0.1:9200/dossiers/

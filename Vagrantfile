@@ -71,8 +71,9 @@ Vagrant.configure(2) do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
   # Initial setup
-  apt-get -y update && apt-get -y upgrade && apt-get -y autoremove
+  apt-get -y update && apt-get -y upgrade
   apt-get install -y curl git
+  # apt-get install -y g++ g++-4.8 libstdc++-4.8-dev cmake libopenblas-dev liblapack-dev
   export ES_VER=1.7.5
   export MAPPER_VER=2.7.1
   export CARROT_VER=1.9.1
@@ -103,15 +104,15 @@ Vagrant.configure(2) do |config|
   sudo -u postgres psql -c "CREATE DATABASE unicorn;"
 
   # Set up mysql
-  debconf-set-selections <<< 'mysql-server mysql-server/root_password password geodict_root'
-  debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password geodict_root'
-  apt-get -y install mysql-server mysql-client libmysqlclient-dev
+  # Only needs to be installed if we're using geodict
+  # debconf-set-selections <<< 'mysql-server mysql-server/root_password password geodict_root'
+  # debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password geodict_root'
+  # apt-get -y install mysql-server mysql-client libmysqlclient-dev
 
   # Get SSL libraries
   apt-get install -y libssl-dev libffi-dev
 
   # Install NLTK dependencies
-  # python nltk_deps.py
   python -m nltk.downloader -d /usr/local/share/nltk_data stopwords
   python -m nltk.downloader -d /usr/local/share/nltk_data punkt
 
@@ -120,13 +121,16 @@ Vagrant.configure(2) do |config|
 
   # Clone the geodict library into the local dir.
   # It isn't a module
-  git clone https://github.com/giantoak/geodict $UNICORN_HOME/geodict
+  # Geodict is only needed if you want to re-enable
+  # on-the-fly location extaction
+  # git clone https://github.com/giantoak/geodict $UNICORN_HOME/geodict
 
   # Start MySQL if it's off and populate with geodict data
-  service mysql start
-  cd $UNICORN_HOME/geodict
-  python populate_database.py
-  cd ..
+  # Only needs to be enabled if we're using geodict
+  # service mysql start
+  # cd $UNICORN_HOME/geodict
+  # python populate_database.py
+  # cd $UNICORN_HOME
 
   # Initialize unoconv
   unoconv -l &
@@ -152,12 +156,10 @@ Vagrant.configure(2) do |config|
 
   cp $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/config.py
   mv $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/util/config.py
-  # sed -e s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@127.0.0.1:5432"/ -e s/"''"/"'admin'"/ /vagrant/app/config.py.template > $UNICORN_HOME/app/config.py
-  # sed -e s/"<username>:<password>@<hostname>:<port>\/<db>"/"unicorn:unicorn@127.0.0.1:5432"/ -e s/"''"/"'admin'"/ /vagrant/app/config.py.template > $UNICORN_HOME/app/util/config.py
   python createdb.py
 
   # clean up extra repositories
-  sudo apt-get autoremove -y
+  apt-get autoremove -y
 
   chown -R vagrant /home/vagrant/unicorn
   chgrp -R vagrant /home/vagrant/unicorn
