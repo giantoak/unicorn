@@ -117,8 +117,9 @@ def get_file(doc_id):
     """
     r = request_doc(doc_id)
     try:
-        base64 = r['hits']['hits'][0]['_source']['file']
-        fn = r['hits']['hits'][0]['_source']['title']
+        data = r['hits']['hits']
+        base64 = data[0]['_source']['file']
+        fn = data[0]['_source']['title']
     except (KeyError, IndexError):
         abort(404)
 
@@ -131,7 +132,7 @@ def get_entities(doc_id):
     """
 
     :param str doc_id: A specific document ID
-    :returns str: json for the list of retrieved entities
+    :returns str: JSON for the list of retrieved entities
     """
     r = request_doc(doc_id)
     try:
@@ -166,6 +167,10 @@ def view_doc(doc_id):
 @uni.route('/pdf/<doc_id>')
 @login_required
 def pdf_endpoint(doc_id):
+    """
+
+    :param str doc_id:
+    """
     base64, fn = get_file(doc_id)
     b = base64.decode('base64')
     mimetype = magic.from_buffer(b, mime=True)
@@ -212,6 +217,7 @@ def topics_latest():
     last_query = session.get('last_query', None)
     if last_query is not None:
         return alltopics(last_query['query'])
+
 
 @uni.route('/all_topics')
 def alltopics(query):
@@ -1130,26 +1136,26 @@ def wc(query):
     return json.dumps(frequency)
 
 
-@uni.route('/topicmodel')
-@uni.route('/topicmodel/<query>')
-@login_required
-def tm(query):
-    # count_vectorizer.fit_transform(train_set)
-    # print "Vocabulary:", count_vectorizer.vocabulary
-    # Vocabulary: {'blue': 0, 'sun': 1, 'bright': 2, 'sky': 3}
-    #freq_term_matrix = count_vectorizer.transform(test_set)
-    # print freq_term_matrix.todense()
-    stopset = set(stopwords.words('english'))
-
-    # url = '{}/_search'.format(es_path)
-    q = {
-        "fields": ["file"],
-        "query": {
-            "term": {"file": query}
-        }
-    }
-
-    return json.dumps(topic_words[0])
+# @uni.route('/topicmodel')
+# @uni.route('/topicmodel/<query>')
+# @login_required
+# def tm(query):
+#     # count_vectorizer.fit_transform(train_set)
+#     # print "Vocabulary:", count_vectorizer.vocabulary
+#     # Vocabulary: {'blue': 0, 'sun': 1, 'bright': 2, 'sky': 3}
+#     # freq_term_matrix = count_vectorizer.transform(test_set)
+#     # print freq_term_matrix.todense()
+#     stopset = set(stopwords.words('english'))
+#
+#     # url = '{}/_search'.format(es_path)
+#     q = {
+#         "fields": ["file"],
+#         "query": {
+#             "term": {"file": query}
+#         }
+#     }
+#
+#     return json.dumps(topic_words[0])
 
 
 @uni.route('/<doc_id>/related')
