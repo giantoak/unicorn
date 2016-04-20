@@ -79,7 +79,7 @@ curl -XPUT http://127.0.0.1:9200/dossiers/_mapping/attachment -d @dossiers_mappi
 # finally, load some dummy data
 # If you do not want to use the dummy data, comment this out
 curl -XPUT http://127.0.0.1:9200/dossiers/_bulk --data-binary @dossiers.json
-python createdb.py
+python create_db.py
 
 
 # clean up extra repositories

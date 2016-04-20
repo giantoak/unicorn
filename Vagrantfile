@@ -154,9 +154,7 @@ Vagrant.configure(2) do |config|
   curl -XPUT http://127.0.0.1:9200/dossiers/_mapping/attachment -d @dossiers_mapping.json
   curl -XPUT http://127.0.0.1:9200/dossiers/_bulk --data-binary @dossiers.json
 
-  cp $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/config.py
-  mv $UNICORN_HOME/app/config.py.default $UNICORN_HOME/app/util/config.py
-  python createdb.py
+  python create_db.py
 
   # clean up extra repositories
   apt-get autoremove -y
