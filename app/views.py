@@ -384,18 +384,15 @@ def search_endpoint(query=None, page=None, box_only=False):
     start = max(int(page) - 1, 0) * 10
 
     q = {
-        # "fields": ["title", "highlight", "entities", "owner", "date"],
         "query": {
             "match": {
                 "file": query
             }
         },
-
         "highlight": {"fields": {"file": {}},
                       "pre_tags": ["<span class='highlight'>"],
                       "post_tags": ["</span>"]
                       },
-
         "aggs": {
             "articles_over_time": {
                 "date_histogram": {
@@ -503,31 +500,31 @@ def timeline_new(query=None, page=None, box_only=False):
     print(max_date)
 
     q = {
-        "fields": ["title", "highlight", "entities", "owner", "date"],
-        "from": start,
         "query": {
             "match": {
                 "file": query
             }
         },
-
         "highlight": {"fields": {"file": {}},
                       "pre_tags": ["<span class='highlight'>"],
                       "post_tags": ["</span>"]
                       },
-
         "aggs": {
             "articles_over_time": {
                 "date_histogram": {
                     "field": "date",
                     "interval": "week"
-                }},
+                }
+            },
             "max_date": {"max": {"field": "date"}},
             "min_date": {"min": {"field": "date"}}
         }
     }
 
-    response = es.search(body=q, index=es_index)
+    response = es.search(body=q,
+                         index=es_index,
+                         fields=["title", "highlight", "entities", "owner", "date"],
+                         from_=start)
 
     print(response['aggregations']['articles_over_time']['buckets'])
 
@@ -597,13 +594,14 @@ def upload_endpoint():
 @login_required
 def viz_all():
     q = {
-        "fields": ["entities", "title"],
         "query": {
             "match_all": {}
-        },
-        "size": 100
+        }
     }
-    r = es.search(body=q, index=es_index)
+    r = es.search(body=q,
+                  index=es_index,
+                  fields=["entities", "title"],
+                  size=100)
     data = r['hits']['hits']
     graph = document_graph(data)
 
@@ -653,13 +651,14 @@ def geo_endpoint():
     }
 
     q = {
-        "size": 100000,
-        "fields": ["entities", "title", "file", "entities"],
         "query": {
             "query_string": {"query": query}
         }
     }
-    r = es.search(body=q, index=es_index)
+    r = es.search(body=q,
+                  index=es_index,
+                  fields=["entities", "title", "file", "entities"],
+                  size=100000)
     data = r
     locations = []
     # for hit in data['hits']['hits']:
@@ -750,8 +749,6 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds=None):
         start *= 10
 
     q = {
-        "fields": ["title", "highlight", "entities", "owner", "body"],
-        "from": start,
         "query": {
             "filtered": {
                 "query": {
@@ -777,9 +774,7 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds=None):
         },
         "highlight": {
             "fields": {
-                "file": {
-
-                }
+                "file": {}
             },
             "pre_tags": [
                 "<span class='highlight'>"
@@ -790,9 +785,12 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds=None):
         }
     }
 
-    raw_response = es.search(body=q, index=es_index,
+    raw_response = es.search(body=q,
+                             index=es_index,
                              df="file",
-                             size=10)
+                             fields=["title", "highlight", "entities", "owner", "body"],
+                             size=10,
+                             from_=start)
 
     hits = []
 
@@ -866,7 +864,6 @@ def serve_clusters(query=None, page=None, box_only=True, dates={}, documents={})
                 ]
             }
         },
-        "fields": ["title", "highlight", "entities", "owner", "date"],
         "highlight": {
             "fields": {
                 "file": {
@@ -878,8 +875,10 @@ def serve_clusters(query=None, page=None, box_only=True, dates={}, documents={})
         }
     }
 
-    raw_response = es.search(body=q, index=es_index,
+    raw_response = es.search(body=q,
+                             index=es_index,
                              df="file",
+                             fields=["title", "highlight", "entities", "owner", "date"],
                              size=10)
 
     hits = []
@@ -1104,14 +1103,15 @@ def wc(query):
                               'restrictions', 'state', 'department', 'date', 'eo', 'handling'}
     stop_set = stop_words.union(stopset_state_specific)
     q = {
-        "fields": ["file", "body"],  # added body to query
         "query": {
             "match": {
                 "file": query
             }
         }
     }
-    r = es.search(body=q, index=es_index)
+    r = es.search(body=q,
+                  index=es_index,
+                  fields=["file", "body"])
     # switched to return 'body' instead of 'file':
     # 'body' is the portion of the 'file' that has been regex'd by the uploader
     # to include the most relevant information (e.g. excluding headers)
@@ -1158,7 +1158,6 @@ def more_like_this(doc_id):
     :return:
     """
     q = {
-        "fields": ["title"],
         "query": {
             "more_like_this": {
                 "docs": [
@@ -1168,11 +1167,13 @@ def more_like_this(doc_id):
                         "_id": doc_id
                     }]
             }
-        },
-        "size": 10
+        }
     }
 
-    response = es.search(body=q, index=es_index)
+    response = es.search(body=q,
+                         index=es_index,
+                         fields=['title'],
+                         size=10)
     results = {'results': []}
     try:
         for r in response['hits']['hits']:
