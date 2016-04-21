@@ -109,7 +109,7 @@ def get_file(doc_id):
     """
     Render base64 encoded contents of a given file by its doc_id
     :param str doc_id: A specific document ID
-    :returns tuple: Base 64 encoded document contents and the document's title
+    :return tuple: Base 64 encoded document contents and the document's title
     """
     r = request_doc(doc_id)
     try:
@@ -176,30 +176,29 @@ def pdf_endpoint(doc_id):
         return send_file(io.BytesIO(b), as_attachment=True,
                          attachment_filename=fn)
 
-    else:
-        fd, fname = tempfile.mkstemp(prefix=tmp_dir)
-        stream = os.fdopen(fd, 'wb')
-        stream.write(b)
-        out_fname = fname + '.out'
-        stream.close()
+    fd, fname = tempfile.mkstemp(prefix=tmp_dir)
+    stream = os.fdopen(fd, 'wb')
+    stream.write(b)
+    out_fname = fname + '.out'
+    stream.close()
 
-        os.chmod(fname, 0777)
-        try:
-            subprocess.check_output(['unoconv', '-o', out_fname, fname],
-                                    stderr=subprocess.STDOUT)
-            out = send_file(out_fname,
-                            as_attachment=True,
-                            attachment_filename='{}.pdf'.format(fn))
+    os.chmod(fname, 0777)
+    try:
+        subprocess.check_output(['unoconv', '-o', out_fname, fname],
+                                stderr=subprocess.STDOUT)
+        out = send_file(out_fname,
+                        as_attachment=True,
+                        attachment_filename='{}.pdf'.format(fn))
 
-        except subprocess.CalledProcessError as e:
-            print e.output
-            # Return error pdf
-            out = "no pdf available"
+    except subprocess.CalledProcessError as e:
+        print e.output
+        # Return error pdf
+        out = "no pdf available"
 
-        os.remove(fname)
-        os.remove(out_fname)
+    os.remove(fname)
+    os.remove(out_fname)
 
-        return out
+    return out
 
 
 @uni.route('/topics/<doc_id>')
@@ -273,7 +272,6 @@ def alltopics(query):
                     "values": ''
                 }
             },
-
             "aggs": {
                 "articles_over_time": {
                     "date_histogram": {
@@ -382,13 +380,10 @@ def search_endpoint(query=None, page=None, box_only=False):
                                        session['last_query'])
 
     # convert pages to records for ES
-    start = int(page)
-    if start > 1:
-        start *= 10
+    start = int(page) * 10
 
     q = {
-        "fields": ["title", "highlight", "entities", "owner", "date"],
-        # "from": start,
+        # "fields": ["title", "highlight", "entities", "owner", "date"],
         "query": {
             "match": {
                 "file": query
@@ -414,6 +409,7 @@ def search_endpoint(query=None, page=None, box_only=False):
                              body=q,
                              df='file',
                              from_=start,
+                             fields=['title', 'highlight', 'entities', 'owner', 'date'],
                              size=10)
 
     hits = []

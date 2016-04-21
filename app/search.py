@@ -4,7 +4,7 @@ import requests
 
 def run(term=''):
     """
-    
+
     :param str term: Page to request?
     :return list: List of titles of elastic hits in response
     """
