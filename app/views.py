@@ -37,7 +37,8 @@ import subprocess
 
 from bulk import bulk_download, bulk_search
 import time
-import datetime
+from datetime import datetime
+from datetime import timedelta
 # import corex as ce
 import numpy as np
 import phonenumbers
@@ -471,9 +472,7 @@ def timeline_new(query=None, page=None, box_only=False):
         start *= 10
 
     q_daterange = {
-
         "aggs": {
-
             "max_date": {"max": {"field": "date"}},
             "min_date": {"min": {"field": "date"}}
         }
@@ -481,28 +480,29 @@ def timeline_new(query=None, page=None, box_only=False):
 
     response = es.search(body=q_daterange, index=es_index)
 
-    print response['aggregations']['min_date']
-    print response['aggregations']['max_date']
+    print("response['aggregations']['min_date']: {}".format(response['aggregations']['min_date']))
+    print("response['aggregations']['max_date']: {}".format(response['aggregations']['max_date']))
 
-    print
-    min_date_datetime = round_month_down(datetime.datetime.strptime(
-        response['aggregations']['min_date']['value_as_string'], "%Y-%m-%dT%H:%M:%S.%fZ"))
-    max_date_datetime = round_month_up(datetime.datetime.strptime(
-        response['aggregations']['max_date']['value_as_string'], "%Y-%m-%dT%H:%M:%S.%fZ"))
+    min_date_datetime = round_month_down(datetime.strptime(
+        response['aggregations']['min_date']['value_as_string'],
+        "%Y-%m-%dT%H:%M:%S.%fZ"))
+    max_date_datetime = round_month_up(datetime.strptime(
+        response['aggregations']['max_date']['value_as_string'],
+        "%Y-%m-%dT%H:%M:%S.%fZ"))
     min_date = min_date_datetime.strftime(format="%Y-%m-%d")
     max_date = max_date_datetime.strftime(format="%Y-%m-%d")
     time_delta = week_delta(min_date_datetime, max_date_datetime)
     rng = pd.date_range(min_date, periods=time_delta, freq='w')
     rng = rng.tolist()
-    rng = [date + datetime.timedelta(days=1) for date in rng]
+    rng = [date + timedelta(days=1) for date in rng]
     rng = [date.strftime("%Y-%m-%d") for date in rng]
     rngframe = pd.DataFrame(index=rng)
 
-    timeline_minimum = min_date_datetime - datetime.timedelta(days=7)
+    timeline_minimum = min_date_datetime - timedelta(days=7)
     timeline_minimum = timeline_minimum.strftime(format="%Y-%m-%d")
 
-    print min_date
-    print max_date
+    print(min_date)
+    print(max_date)
 
     q = {
         "fields": ["title", "highlight", "entities", "owner", "date"],
@@ -531,7 +531,7 @@ def timeline_new(query=None, page=None, box_only=False):
 
     response = es.search(body=q, index=es_index)
 
-    print response['aggregations']['articles_over_time']['buckets']
+    print(response['aggregations']['articles_over_time']['buckets'])
 
     df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
     df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
@@ -547,7 +547,7 @@ def timeline_new(query=None, page=None, box_only=False):
     out = {'date_data': output.to_json(orient='records'),
            'time_min': timeline_minimum}
 
-    print json.dumps(out)
+    print(json.dumps(out))
     return json.dumps(out)
 
 
@@ -665,7 +665,7 @@ def geo_endpoint():
     data = r
     locations = []
     # for hit in data['hits']['hits']:
-    #   print hit['fields']['file'][0]
+    #   print(hit['fields']['file'][0])
     #   print
     #   for location in geodict_lib.find_locations_in_text(re.sub('\s', ' ', hit['_source']['file'])):
     #       for token in location['found_tokens']:
@@ -673,7 +673,7 @@ def geo_endpoint():
 
     # geo = map(lambda x: x['found_tokens'])
     # return json.dumps(locations)
-    # print 'Number of Hits: ' + str(len(data['hits']['hits']))
+    # print('Number of Hits: ' + str(len(data['hits']['hits'])))
 
     for hit in data['hits']['hits']:
         entity_locations = []
@@ -699,7 +699,7 @@ def geo_endpoint():
                                   'file': doc_file})
         except:
             continue
-            # print 'no locations'
+            # print('no locations')
 
     # geo = map(lambda x: x['found_tokens'])
     return json.dumps(locations)
@@ -716,8 +716,8 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds=None):
 
     if request.method == "POST":
         json_dict = request.get_json()
-        print json_dict
-        print type(json_dict)
+        print(json_dict)
+        print(type(json_dict))
         try:
             bounds = json_dict['bounds']['bounds']
             southwest_lat = bounds['southwest_lat']
@@ -731,8 +731,8 @@ def serve_geo_new(query=None, page=None, box_only=True, bounds=None):
             northeast_lat = 85
             northeast_lon = 189
 
-    print json_dict
-    print 'running a new query...'
+    print(json_dict)
+    print('running a new query...')
 
     if not query and not page:
         last_query = session.get('last_query', None)
@@ -930,8 +930,8 @@ def serve_timeline(query=None, page=None, box_only=True, dates=None):
 
     if request.method == "POST":
         json_dict = request.get_json()
-        # print json_dict
-        # print type(json_dict)
+        # print(json_dict)
+        # print(type(json_dict))
 
     dates = json_dict['dates']
     start_date = dates[0][0:10]
@@ -940,9 +940,9 @@ def serve_timeline(query=None, page=None, box_only=True, dates=None):
     if start_date == end_date:
         start_date = "1973-01-01"
         end_date = "1974-01-01"
-    # print start_date, end_date
+    # print(start_date, end_date)
 
-    # print 'running a new query...'
+    # print('running a new query...')
 
     if not query and not page:
         last_query = session.get('last_query', None)
@@ -988,8 +988,8 @@ def serve_timeline(query=None, page=None, box_only=True, dates=None):
                              df="file",
                              size=10)
 
-    # print q
-    # print raw_response
+    # print(q)
+    # print(raw_response)
 
     hits = []
 
@@ -1134,10 +1134,10 @@ def wc(query):
 # @login_required
 # def tm(query):
 #     # count_vectorizer.fit_transform(train_set)
-#     # print "Vocabulary:", count_vectorizer.vocabulary
+#     # print("Vocabulary:", count_vectorizer.vocabulary)
 #     # Vocabulary: {'blue': 0, 'sun': 1, 'bright': 2, 'sky': 3}
 #     # freq_term_matrix = count_vectorizer.transform(test_set)
-#     # print freq_term_matrix.todense()
+#     # print(freq_term_matrix.todense())
 #     stopset = set(stopwords.words('english'))
 #
 #     # url = '{}/_search'.format(es_path)
