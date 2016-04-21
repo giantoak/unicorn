@@ -38,9 +38,6 @@ import subprocess
 from bulk import bulk_download, bulk_search
 import time
 import datetime
-# import sklearn
-# from sklearn.feature_extraction.text import CountVectorizer
-# from sklearn import decomposition
 # import corex as ce
 import numpy as np
 import phonenumbers
@@ -56,7 +53,6 @@ es_path = 'http://{}:{}/{}'.format(es_url, es_port, es_index)
 
 parent = os.path.dirname(os.path.realpath(__file__))
 
-# import geodict_lib
 uni = Blueprint('unicorn', __name__, url_prefix='/unicorn')
 
 
@@ -65,7 +61,7 @@ uni = Blueprint('unicorn', __name__, url_prefix='/unicorn')
 def bulk_search_route():
     """
     Bulk search all of these queries
-    :returns: Excel file bundling query responses
+    :return: Excel file bundling query responses
     """
     search_results = request.form['searches']
     searches = search_results.split('\n')
@@ -97,7 +93,7 @@ def request_doc(doc_id):
     """
     Searches elastic index for a document matching a particular ID.
     :param str doc_id: A specific document ID
-    :returns: results of elastic search matching doc_id
+    :return: results of elastic search matching doc_id
     """
     q = {
         "query": {
@@ -132,7 +128,7 @@ def get_entities(doc_id):
     """
 
     :param str doc_id: A specific document ID
-    :returns str: JSON for the list of retrieved entities
+    :return str: JSON for the list of retrieved entities
     """
     r = request_doc(doc_id)
     try:
@@ -153,10 +149,10 @@ def get_entities(doc_id):
 @login_required
 def view_doc(doc_id):
     """
-    In-depth view of a particular document. Displays pdf version of document,
+    In-depth view of a particular document. Displays PDF version of document,
     extracted entities, and other analytics.
     :param str doc_id: A specific document ID
-    :returns: rendered template for the current document
+    :return: rendered template for the current document
     """
     if is_owner_of_doc(doc_id):
         return render_template('doc-view.html', doc_id=doc_id)
@@ -170,6 +166,7 @@ def pdf_endpoint(doc_id):
     """
 
     :param str doc_id:
+    :return:
     """
     base64, fn = get_file(doc_id)
     b = base64.decode('base64')
@@ -1268,7 +1265,7 @@ def is_owner_of_doc(doc):
     Function for checking document ownership.
     SINCE WE ARE KEEPING ACCESS CONTROL SIMPLE, WE ARE DEFAULTING THIS TO TRUE
     :param str doc: A specific document ID
-    :returns bool: whether the document's owner matches the current owner
+    :return bool: whether the document's owner matches the current owner
     """
     # owner = es.get(index=es_index, doc_type='attachment', id=doc, fields='owner')['fields']['owner'][0]
     # return is_owner(owner)
@@ -1280,7 +1277,7 @@ def is_owner(org):
     Function for checking if a user's org has ownership rights
     SINCE WE ARE KEEPING ACCESS CONTROL SIMPLE, WE ARE DEFAULTING THIS TO TRUE
     :param str org: An organization
-    :returns bool: whether the organization matches the current user or the group of admins
+    :return bool: whether the organization matches the current user or the group of admins
     """
     return True
     # return current_user.organization.organization == 'admins' or current_user.organization.organization == org
