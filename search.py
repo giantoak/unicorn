@@ -5,12 +5,17 @@ import simplejson as json
 import requests
 
 
-def run(term=""):
+def run(term=''):
+    """
+
+    :param str term:
+    :returns str:
+    """
     url = '{}:{}/{}/_search'.format(es_url, es_port, es_index)
     body = {
         "query": {
             "match": {
-                "file": term
+                "file": str(term)
             }
         },
         "highlight": {"fields": {"file": {}}}
