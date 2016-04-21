@@ -381,7 +381,7 @@ def search_endpoint(query=None, page=None, box_only=False):
                                        session['last_query'])
 
     # convert pages to records for ES
-    start = min(int(page) - 1, 0) * 10
+    start = max(int(page) - 1, 0) * 10
 
     q = {
         # "fields": ["title", "highlight", "entities", "owner", "date"],
@@ -467,9 +467,7 @@ def timeline_new(query=None, page=None, box_only=False):
 
     session['last_query'] = {'query': query, 'page': page, 'ids': []}
     # convert pages to records for ES
-    start = int(page)
-    if start > 1:
-        start *= 10
+    start = max(int(page) - 1, 0) * 10
 
     q_daterange = {
         "aggs": {
