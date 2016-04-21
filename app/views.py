@@ -380,7 +380,7 @@ def search_endpoint(query=None, page=None, box_only=False):
                                        session['last_query'])
 
     # convert pages to records for ES
-    start = int(page) * 10
+    start = min(int(page) - 1, 0) * 10
 
     q = {
         # "fields": ["title", "highlight", "entities", "owner", "date"],
