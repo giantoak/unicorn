@@ -2,8 +2,12 @@ import simplejson as json
 import requests
 
 
-def run(term=""):
-    r = requests.get(''+term)
+def run(term=''):
+    """
+    
+    :param str term: Page to request?
+    :return list: List of titles of elastic hits in response
+    """
+    r = requests.get(str(term).strip())
     data = r.json()
-    titles = [x['_source']['title'] for x in data['hits']['hits']]
-    return json.dumps(titles)
+    return json.dumps([x['_source']['title'] for x in data['hits']['hits']])
