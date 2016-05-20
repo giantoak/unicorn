@@ -43,6 +43,7 @@ from datetime import timedelta
 import numpy as np
 import phonenumbers
 from phonenumbers import geocoder
+from pprint import pprint
 
 from util.historical import amend_history
 from util.historical import active_history_terms
@@ -473,6 +474,10 @@ def timeline_new(query=None, page=None, box_only=False):
         }
     }
 
+    print('=== q_daterange ===')
+    pprint(q_daterange)
+    print('===={}===='.format('='*len('q_daterange')))
+
     response = es.search(body=q_daterange, index=es_index)
 
     print("response['aggregations']['min_date']: {}".format(response['aggregations']['min_date']))
@@ -526,7 +531,9 @@ def timeline_new(query=None, page=None, box_only=False):
                          fields=["title", "highlight", "entities", "owner", "date"],
                          from_=start)
 
-    print(response['aggregations']['articles_over_time']['buckets'])
+    print("=== response['aggregations']['articles_over_time']['buckets'] ===")
+    pprint(response['aggregations']['articles_over_time']['buckets'])
+    print('===={}===='.format('='*len("response['aggregations']['articles_over_time']['buckets']")))
 
     df = pd.DataFrame(response['aggregations']['articles_over_time']['buckets'])
     df['Date'] = df.key_as_string.apply(lambda x: str(x[:10]))
@@ -542,7 +549,9 @@ def timeline_new(query=None, page=None, box_only=False):
     out = {'date_data': output.to_json(orient='records'),
            'time_min': timeline_minimum}
 
-    print(json.dumps(out))
+    print('=== out ===')
+    pprint(out)
+    print('===========')
     return json.dumps(out)
 
 
