@@ -34,6 +34,6 @@ six==1.10.0
 sqlalchemy==1.0.12
 tablib==0.11.0
 urllib3==1.14
-werkzeug==0.11.4
+werkzeug==0.15.3
 wsgiref==0.1.2
 wtforms==2.0.2
