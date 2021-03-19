@@ -11,7 +11,7 @@ flask-login==0.3.2
 flask-sqlalchemy==2.0
 gunicorn==19.1.0
 itsdangerous==0.24
-jinja2==2.8
+jinja2==2.11.3
 markupsafe==0.23
 mysql-python==1.2.5
 networkx==1.11
