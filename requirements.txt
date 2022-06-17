@@ -16,7 +16,7 @@ markupsafe==0.23
 mysql-python==1.2.5
 networkx==1.11
 nltk==3.2
-numpy==1.10.4
+numpy==1.21.0
 pandas==0.17.1
 pbr==1.8.0
 phonenumbers==7.2.5
